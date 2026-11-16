@@ -1,0 +1,29 @@
+{
+  "generator": "tests/helpers/parsing-fixtures.py",
+  "assets": [
+    {
+      "file": "korean-columns.pdf",
+      "sha256": "35a35a6bea70302e28c11b17dda9da086ec347edd4361b76f6064f1ff902ab53"
+    },
+    {
+      "file": "korean-mixed.pdf",
+      "sha256": "e47c5fe8ba25b4cb2dc25df60c249cb41b0ad17c3bf3cac93ef8d7a98f94c9c7"
+    },
+    {
+      "file": "korean-scan.png",
+      "sha256": "ba6aad2630d22c6b12aa6d48731834d350236ac02d4322114ca93c6a651e3f5b"
+    },
+    {
+      "file": "merged-report.docx",
+      "sha256": "ca14622ec27c0e27315ecb6469aedeacd78c24eeee2bd7ccda1110b9d0b46334"
+    },
+    {
+      "file": "multi-sheet.xlsx",
+      "sha256": "7e61f599b44c75b97ff3a35d1f22b03c1346bc9aa7a335ecf82219227429b5d0"
+    },
+    {
+      "file": "grouped-slides.pptx",
+      "sha256": "88da71891a94dea41eb7c1ae9760f5223b25812b0c3639b618c1afb1513e604b"
+    }
+  ]
+}

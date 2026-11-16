@@ -1,0 +1,89 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: project workspace · signature: source-linked slide editor · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, keep source and slide content central */
+/* Purpose: Style dialogs within the light web application.
+ * Pattern: Shared design tokens and responsibility-based CSS.
+ * Usage: Imported by mock/styles.css.
+ * Related: mock/tokens.css, mock/index.html. */
+dialog {
+  max-inline-size: min(620px, calc(100% - 32px));
+  inline-size: 100%;
+  max-block-size: calc(100dvh - 48px);
+  margin: auto;
+  padding: var(--space-xl);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-dialog);
+  overflow: auto;
+}
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  background: var(--color-overlay);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+dialog.wide-dialog {
+  max-inline-size: min(1080px, calc(100% - 32px));
+}
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-block-end: var(--space-lg);
+}
+.dialog-heading h2 {
+  font-size: var(--text-heading);
+}
+.dialog-intro {
+  margin-block-end: var(--space-lg);
+  font-size: var(--text-label);
+  color: var(--color-muted);
+}
+.dialog-actions {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-lg);
+  border-block-start: 1px solid var(--color-rule);
+  margin-block-start: var(--space-xs);
+}
+.dialog-content-stack {
+  display: grid;
+  gap: var(--space-lg);
+}
+.navigation-dialog {
+  max-inline-size: min(360px, calc(100% - 32px));
+  margin-inline-start: var(--space-md);
+}
+.project-picker {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+  display: grid;
+  gap: var(--space-xs);
+}
+.project-picker a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  min-block-size: 56px;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-inner);
+  text-decoration: none;
+}
+.project-picker a .icon:last-child {
+  margin-inline-start: auto;
+  color: var(--color-accent);
+}
+.project-picker a[aria-current="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}

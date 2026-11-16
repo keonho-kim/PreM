@@ -1,0 +1,283 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Present extraction results as readable paper and source-page galleries.
+ * Pattern: Ruled content rows, bounded dialog scrolling and lazy passive images.
+ * Usage: ProcessingDialog and Admin processing settings.
+ * Related: content.tsx, processing-dialog.tsx, design/refract.tokens.json. */
+.processing-dialog {
+  max-width: 1180px;
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+}
+.processing-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin-block: 16px;
+}
+.processing-toolbar > div {
+  min-width: 240px;
+  max-width: 100%;
+  display: grid;
+  gap: 8px;
+}
+.processing-status {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.processing-status p {
+  margin-block: 8px;
+}
+.processing-eligibility {
+  font-weight: 500;
+}
+.processing-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-block: 20px;
+}
+.processing-page-filter {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.processing-block {
+  padding-block: 20px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.processing-block header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.processing-block pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.65;
+}
+.processing-block img {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+}
+.processing-pages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin-block: 20px;
+}
+.processing-page-preview {
+  aspect-ratio: 3 / 4;
+  display: grid;
+  place-items: center;
+  background: var(--color-paper);
+  padding: 12px;
+}
+.processing-page-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.processing-page-preview span {
+  color: var(--color-muted);
+  font-size: 14px;
+  text-align: center;
+}
+.processing-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-block: 20px;
+}
+/* Slides retain source colors inside an opaque paper surface. */
+.template-preview {
+  min-width: 0;
+}
+.template-preview-paper {
+  display: grid;
+  place-items: center;
+  width: min(100%, 880px);
+  margin-inline: auto;
+  background: #fff;
+  box-shadow: 0 3px 18px #26282414;
+}
+.template-preview-paper img,
+.template-thumbnail-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.template-preview-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+.template-preview-navigation p {
+  font-variant-numeric: tabular-nums;
+}
+.template-preview-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
+  gap: 16px;
+  padding: 4px;
+  margin-block: 16px;
+}
+.template-thumbnail {
+  display: grid;
+  height: auto;
+  min-width: 0;
+  padding: 8px;
+  gap: 8px;
+  white-space: normal;
+  border: 2px solid transparent;
+}
+.template-thumbnail[aria-pressed="true"] {
+  border-color: var(--color-annotation, #9c3d1e);
+}
+.template-thumbnail-image {
+  display: grid;
+  width: 100%;
+  background: #fff;
+}
+.template-image-error {
+  display: grid;
+  place-items: center;
+  white-space: normal;
+  padding: 16px;
+}
+@media (forced-colors: active) {
+  .template-thumbnail[aria-pressed="true"] {
+    border-color: Highlight;
+  }
+  .template-preview-paper {
+    outline: 1px solid CanvasText;
+  }
+}
+.processing-settings {
+  display: grid;
+  gap: 20px;
+  max-width: 800px;
+}
+.processing-settings > button {
+  justify-self: start;
+}
+@media (max-width: 600px) {
+  .processing-search {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .processing-search label {
+    grid-column: 1 / -1;
+  }
+  .processing-dialog {
+    max-height: 96dvh;
+  }
+  .processing-toolbar > div {
+    width: 100%;
+  }
+  .processing-pagination {
+    flex-wrap: wrap;
+  }
+}
+
+.asset-preview-heading {
+  flex: none;
+  padding-inline-end: 28px;
+}
+.asset-preview-heading h2 {
+  overflow-wrap: anywhere;
+}
+.asset-preview-heading p {
+  margin-block-start: 8px;
+}
+.asset-preview-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px;
+}
+.asset-preview-body .processing-status {
+  padding-block: 0 8px;
+  margin-block-end: 16px;
+}
+.template-preview-paper {
+  width: min(100%, 760px, 80dvh);
+}
+.template-preview-thumbnails {
+  border: 0;
+  min-inline-size: 0;
+}
+
+.asset-preview-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 16px;
+}
+.asset-preview-heading h2,
+.asset-preview-heading > p {
+  grid-column: 1;
+}
+.asset-preview-heading .processing-toolbar {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin: 0;
+}
+.asset-preview-body .processing-status[data-complete="true"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.template-preview-paper {
+  width: min(100%, 700px, 64dvh);
+}
+@media (max-width: 600px) {
+  .asset-preview-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .asset-preview-heading .processing-toolbar {
+    grid-column: 1;
+    grid-row: auto;
+    margin-block-start: 12px;
+  }
+}
+
+.extracted-table {
+  border-collapse: collapse;
+  min-inline-size: 360px;
+}
+.extracted-table td,
+.extracted-table th {
+  border: 1px solid var(--color-rule);
+  padding: 10px;
+  white-space: pre-wrap;
+  vertical-align: top;
+}
+.extracted-table th {
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}
+@media (forced-colors: active) {
+  .extracted-table td,
+  .extracted-table th {
+    border-color: CanvasText;
+  }
+}

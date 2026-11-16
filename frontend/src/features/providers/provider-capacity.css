@@ -1,0 +1,58 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Present request limits as a compact and readable team settings form.
+ * Pattern: Quiet live counts and labeled numeric fields; no technical execution graph.
+ * Usage: ProviderCapacity under the existing Admin tabs.
+ * Related: provider-capacity.tsx, design/refract.tokens.json. */
+.provider-capacity {
+  max-width: 800px;
+  display: grid;
+  gap: 24px;
+}
+.provider-capacity header p {
+  margin-top: 8px;
+  color: var(--color-muted);
+}
+.capacity-live {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  padding-block: 16px;
+  border-block: 1px solid var(--color-rule);
+}
+.capacity-live div {
+  display: grid;
+  gap: 8px;
+}
+.capacity-live dt {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.capacity-live dd {
+  margin: 0;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.provider-capacity form,
+.provider-capacity fieldset {
+  display: grid;
+  gap: 24px;
+}
+.provider-capacity fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}
+.capacity-field {
+  display: grid;
+  gap: 8px;
+}
+.capacity-field input {
+  width: min(100%, 240px);
+  font-size: 16px;
+}
+.capacity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}

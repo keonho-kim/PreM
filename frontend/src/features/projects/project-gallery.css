@@ -1,0 +1,236 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Style the shared Home gallery, filters, command menus and header creation command.
+ * Pattern: Three-column paper cards with responsive source order and native controls.
+ * Usage: Imported by ProjectDirectory.
+ * Related: project-card.tsx, project-menu.tsx, app/styles/theme.generated.css. */
+.workspace.project-workspace {
+  padding-block: 40px max(120px, calc(96px + env(safe-area-inset-bottom)));
+  min-block-size: calc(100dvh - 80px);
+}
+.projects-heading {
+  margin-block-end: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.projects-heading h1 {
+  margin-block: 8px 12px;
+}
+.workspace-label,
+.projects-notice {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+.project-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding-block: 20px;
+  border-block: 1px solid var(--color-rule);
+}
+.project-filters .filter-field {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  min-inline-size: 0;
+}
+.project-filters .project-search {
+  flex: 1 1 200px;
+}
+.project-filters input,
+.project-filters [role="combobox"] {
+  min-block-size: 44px;
+  min-inline-size: 0;
+  inline-size: 100%;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: 1px solid var(--color-control);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.project-filters input:user-invalid,
+.project-dialog input:user-invalid {
+  border-color: var(--color-error);
+}
+.projects-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block: 20px;
+}
+.project-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.project-card {
+  background: var(--color-paper);
+  min-inline-size: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.project-card-preview {
+  aspect-ratio: 16 / 7;
+  background: var(--color-well-2);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  border-radius: 8px 8px 0 0;
+}
+.project-card header {
+  padding: 20px 20px 12px;
+}
+.project-card-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-block-end: 12px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.deadline {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.deadline.urgent {
+  color: var(--color-accent);
+}
+.project-card h2 {
+  font-size: 20px;
+  line-height: 1.4;
+}
+.project-card dl {
+  padding: 8px 20px 20px;
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+  margin: 0;
+}
+.project-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.project-card dt {
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.project-card dd {
+  margin: 0;
+  text-align: end;
+}
+.project-card footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-block-start: 1px solid var(--color-rule);
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.project-card footer > button {
+  flex-shrink: 0;
+}
+.projects-empty {
+  padding-block: 72px;
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+.projects-empty h2 {
+  font-size: 24px;
+}
+.projects-empty > svg {
+  color: var(--color-muted);
+}
+.projects-error {
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-block: 20px;
+}
+.projects-pagination,
+.projects-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-start: 32px;
+}
+.projects-footer {
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.projects-footer a {
+  color: var(--color-accent);
+}
+.project-menu {
+  inline-size: min(240px, var(--radix-context-menu-content-available-width, calc(100vw - 16px)));
+  min-inline-size: 0;
+  max-inline-size: calc(100vw - 16px);
+}
+@media (max-width: 70rem) {
+  .project-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 42rem) {
+  .workspace.project-workspace {
+    padding-block-start: 24px;
+  }
+  .project-gallery {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .project-filters .filter-field {
+    flex: 1 1 130px;
+  }
+  .project-filters .project-search {
+    flex-basis: 100%;
+  }
+  .projects-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+@media (pointer: coarse) {
+  .project-filters input,
+  .project-filters [role="combobox"] {
+    min-block-size: 48px;
+  }
+}
+@media (forced-colors: active) {
+  .project-card,
+  .project-menu {
+    border: 1px solid CanvasText;
+  }
+  .project-menu [role="menuitem"]:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}
+
+#project-create-button {
+  scroll-margin-block-start: 96px;
+}
+
+.project-card h2 a {
+  color: inherit;
+}
+.project-card-preview {
+  text-decoration: none;
+}

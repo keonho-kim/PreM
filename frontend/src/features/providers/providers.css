@@ -1,0 +1,277 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Arrange provider settings and diagnostics as a focused light workspace.
+ * Pattern: Ruled horizontal sections, opaque result planes and responsive controls.
+ * Usage: Imported by ProviderDirectory; shared shadcn primitives retain focus behavior.
+ * Related: provider-directory.tsx, provider-form.tsx, design/refract.tokens.json. */
+.provider-workspace {
+  min-width: 0;
+}
+.provider-heading,
+.provider-summary {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 24px;
+}
+.provider-workspace > .provider-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.provider-workspace > .provider-heading > button {
+  align-self: start;
+}
+.provider-heading h1 {
+  margin-block: 8px 12px;
+}
+.provider-heading {
+  margin-block-end: 32px;
+}
+.provider-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.provider-summary {
+  padding-block: 28px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.provider-form {
+  max-inline-size: 680px;
+}
+.provider-form > .dialog-actions,
+.provider-confirmation .dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.provider-options-trigger {
+  justify-content: start;
+  padding-inline: 0;
+}
+.provider-options-trigger[data-state="open"] svg {
+  transform: rotate(180deg);
+}
+.provider-checks {
+  padding-block-start: 28px;
+}
+.provider-checks > p {
+  margin-block: 16px;
+}
+.provider-checks h2 span {
+  font-size: 14px;
+  margin-inline-start: 8px;
+}
+.provider-empty {
+  padding-block: 60px;
+  max-width: 650px;
+}
+.provider-result,
+.provider-models {
+  background: var(--color-paper);
+  padding: 24px;
+  margin-block: 20px;
+  overflow-wrap: anywhere;
+}
+.provider-result pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.provider-history {
+  margin-block-start: 32px;
+  overflow-x: auto;
+}
+.provider-history table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+}
+.provider-history caption {
+  text-align: start;
+  padding-block: 12px;
+  font-weight: 500;
+}
+.provider-history th,
+.provider-history td {
+  text-align: start;
+  padding: 12px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.provider-history small {
+  display: block;
+}
+.provider-dialog {
+  max-width: 580px;
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.provider-fields {
+  display: grid;
+  gap: 20px;
+  margin-block: 24px;
+}
+.provider-fields > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.provider-fields .field-hint {
+  margin: 0;
+}
+.provider-form input:user-invalid {
+  border-color: var(--color-focus);
+}
+@media (max-width: 600px) {
+  .provider-heading,
+  .provider-summary {
+    flex-direction: column;
+  }
+  .provider-heading > button {
+    align-self: stretch;
+  }
+  .provider-actions > button {
+    flex: 1 1 160px;
+  }
+  .provider-history {
+    font-size: 14px;
+  }
+}
+@media (forced-colors: active) {
+  .provider-connection-tab[aria-selected="true"] {
+    outline-color: Highlight;
+  }
+}
+
+.provider-tabs {
+  margin-block-start: 24px;
+}
+.provider-tabs [role="tablist"] {
+  display: flex;
+  justify-content: flex-start;
+  overflow-x: auto;
+  max-width: 100%;
+  height: auto;
+  padding: 4px;
+  gap: 12px;
+  border-radius: 0;
+  background: transparent;
+  border-block-end: 1px solid var(--color-rule);
+}
+.provider-tabs [role="tab"] {
+  position: relative;
+  flex: none;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.provider-tabs [role="tab"][aria-selected="true"] {
+  color: var(--color-ink);
+}
+.provider-tabs [role="tab"][aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 8px -4px;
+  border-block-end: 3px solid var(--color-focus);
+}
+.provider-tabs [role="tabpanel"] {
+  margin-block-start: 20px;
+}
+.provider-tabs .provider-summary {
+  padding-block-start: 8px;
+  border: 0;
+}
+.provider-tabs .provider-checks {
+  padding-block-start: 8px;
+}
+.provider-tabs .provider-history {
+  margin-block-start: 0;
+}
+@media (max-width: 600px) {
+  .provider-tabs [role="tablist"] {
+    gap: 0;
+  }
+  .provider-tabs [role="tab"] {
+    flex: 1 0 auto;
+    padding-inline: 8px;
+  }
+}
+@media (pointer: coarse) {
+  .provider-tabs [role="tab"] {
+    min-height: 48px;
+  }
+}
+@media (forced-colors: active) {
+  .provider-tabs [role="tab"][aria-selected="true"]::after {
+    border-color: Highlight;
+  }
+}
+
+.decision-form {
+  display: grid;
+  gap: 24px;
+  max-width: 900px;
+}
+.decision-form > div {
+  display: grid;
+  gap: 8px;
+}
+.decision-form textarea {
+  resize: vertical;
+  font-size: 1rem;
+}
+.decision-form .provider-actions {
+  display: flex;
+}
+
+.provider-connections {
+  min-inline-size: 0;
+}
+.provider-family-tabs {
+  width: 100%;
+  justify-content: start;
+  height: auto;
+  gap: 24px;
+  padding: 0;
+  background: transparent;
+  border-bottom: 1px solid var(--color-rule);
+  border-radius: 0;
+}
+.provider-family-tabs [role="tab"] {
+  min-height: 52px;
+  flex: 0 0 auto;
+  padding: 12px 24px;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  font-size: 18px;
+}
+.provider-family-tabs [role="tab"][aria-selected="true"] {
+  background: transparent;
+  border-bottom-color: var(--color-focus);
+  box-shadow: none;
+}
+.provider-family-help {
+  margin-block: 20px;
+}
+.provider-choice-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 680px;
+  gap: 20px;
+  margin-block: 24px;
+}
+.provider-choice-fields > div,
+.model-picker {
+  display: grid;
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .provider-choice-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (forced-colors: active) {
+  .provider-family-tabs [role="tab"][aria-selected="true"] {
+    border-bottom-color: Highlight;
+  }
+}

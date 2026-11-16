@@ -1,0 +1,112 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Present reusable document materials as readable source papers.
+ * Pattern: Neutral work wells, bounded previews and independent selection controls.
+ * Usage: Space reference preview; original document colors remain on opaque image planes.
+ * Related: reference-materials.tsx, processing.css, design/refract.tokens.json. */
+.reference-materials {
+  min-width: 0;
+}
+.reference-materials > .field-hint {
+  margin-block: 16px;
+}
+.material-search {
+  display: grid;
+  gap: 8px;
+  margin-block: 20px;
+}
+.material-search > div,
+.material-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.material-toolbar {
+  flex-wrap: wrap;
+  margin-block: 16px;
+}
+.material-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.material-card {
+  min-width: 0;
+  border-bottom: 1px solid var(--color-rule);
+  padding-block-end: 16px;
+}
+.material-image {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--color-paper);
+  display: grid;
+  place-items: center;
+}
+.material-image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.material-text {
+  height: 220px;
+  overflow: auto;
+  padding: 16px;
+  background: var(--color-paper);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.material-caption {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: start;
+  margin-block-start: 12px;
+}
+.material-caption > div {
+  min-width: 0;
+}
+.material-caption h3 {
+  font-size: 15px;
+  line-height: 1.5;
+  margin-block: 6px;
+  overflow-wrap: anywhere;
+}
+.material-caption span,
+.material-caption small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+@media (max-width: 960px) {
+  .material-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .material-gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (forced-colors: active) {
+  .material-image,
+  .material-text {
+    border: 1px solid CanvasText;
+  }
+}
+
+.material-review {
+  grid-template-columns: minmax(0, 1fr);
+  max-inline-size: 900px;
+  margin-inline: auto;
+}
+.material-review .material-image {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  max-block-size: 600px;
+}
+.material-review .material-text {
+  height: auto;
+  max-block-size: 600px;
+}

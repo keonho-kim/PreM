@@ -1,0 +1,270 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: project workspace · signature: source-linked slide editor · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, keep source and slide content central */
+/* Purpose: Style controls within the light web application.
+ * Pattern: Shared design tokens and responsibility-based CSS.
+ * Usage: Imported by mock/styles.css.
+ * Related: mock/tokens.css, mock/index.html. */
+.button,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-block-size: 44px;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-control);
+  border-radius: var(--radius-control);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  font-size: var(--text-label);
+  font-weight: 500;
+  line-height: 24px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.button.primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+.button.quiet-button {
+  background: transparent;
+  border-color: transparent;
+}
+.icon-button {
+  padding: var(--space-xs);
+  inline-size: 44px;
+  background: transparent;
+  border-color: transparent;
+  flex-shrink: 0;
+}
+.button.small-button {
+  padding-inline: var(--space-sm);
+}
+.button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-paper-3);
+  color: var(--color-ink-2);
+  font-size: var(--text-label);
+  white-space: nowrap;
+}
+.badge.good {
+  color: var(--color-success);
+  background: var(--color-paper-3);
+}
+.badge.wait {
+  color: var(--color-accent-2);
+  background: var(--color-warning-soft);
+}
+.badge .icon {
+  inline-size: 14px;
+  block-size: 14px;
+}
+.field {
+  display: grid;
+  gap: var(--space-xs);
+  min-inline-size: 0;
+}
+.field label,
+legend {
+  color: var(--color-ink-2);
+  font-size: var(--text-label);
+  font-weight: 500;
+}
+input:not([type="checkbox"]),
+select,
+textarea {
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-control);
+  border-radius: var(--radius-control);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-size: var(--text-label);
+  line-height: 24px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+textarea {
+  min-block-size: 100px;
+  resize: vertical;
+  line-height: 1.6;
+}
+input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  inline-size: 18px;
+  block-size: 18px;
+  flex-shrink: 0;
+}
+input[type="file"] {
+  padding: var(--space-sm);
+}
+input[type="file"]::file-selector-button {
+  margin-inline-end: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-control);
+  border-radius: var(--radius-inner);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+}
+.field-help,
+.form-message {
+  font-size: var(--text-label);
+  color: var(--color-muted);
+  min-block-size: 1lh;
+}
+.form-message:empty,
+.error-message:empty {
+  display: none;
+}
+.form-message:not(:empty) {
+  padding: var(--space-sm);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border-radius: var(--radius-inner);
+}
+.error-message {
+  color: var(--color-error);
+  font-size: var(--text-label);
+}
+.form-stack {
+  display: grid;
+  gap: var(--space-lg);
+}
+.two-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+fieldset {
+  margin: 0;
+  padding: var(--space-md);
+  min-inline-size: 0;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-inner);
+}
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-block-size: 44px;
+  font-size: var(--text-label);
+  cursor: pointer;
+}
+.search-form {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+.search-form input {
+  min-inline-size: 200px;
+}
+.search-form .field:has(select) {
+  min-inline-size: 128px;
+}
+.search-form label {
+  font-weight: 400;
+}
+.notice {
+  display: flex;
+  align-items: start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-paper-3);
+  border-radius: var(--radius-inner);
+  color: var(--color-ink-2);
+  font-size: var(--text-label);
+}
+.notice > .icon {
+  color: var(--color-accent);
+  margin-block-start: var(--space-2xs);
+}
+.empty-state {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: var(--space-md);
+  padding: var(--space-3xl) var(--space-lg);
+  border: 1px dashed var(--color-control);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+}
+.empty-state > .icon {
+  inline-size: 28px;
+  block-size: 28px;
+  color: var(--color-muted);
+}
+.empty-state p {
+  color: var(--color-muted);
+  max-inline-size: 48ch;
+  font-size: var(--text-label);
+}
+.state-demo {
+  margin-block-start: var(--space-xl);
+  padding-block-start: var(--space-md);
+  border-block-start: 1px solid var(--color-rule);
+  color: var(--color-muted);
+  font-size: var(--text-label);
+}
+.state-demo summary {
+  cursor: pointer;
+  min-block-size: 44px;
+  padding-block: var(--space-sm);
+  inline-size: fit-content;
+}
+.state-demo > .actions {
+  margin-block: var(--space-sm);
+}
+.skeleton-list {
+  display: grid;
+  gap: var(--space-md);
+}
+.skeleton-list div {
+  block-size: 84px;
+  background: var(--color-paper-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-inner);
+}
+.state-error {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-card);
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+@media (hover: hover) {
+  .button:hover {
+    background: var(--color-paper-3);
+  }
+  .button.primary:hover {
+    background: var(--color-accent-hi);
+    border-color: var(--color-accent-hi);
+  }
+  .icon-button:hover {
+    background: var(--color-paper-3);
+  }
+}

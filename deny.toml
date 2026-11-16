@@ -1,0 +1,28 @@
+# Purpose: Enforce dependency provenance, advisory checks and reviewed license families.
+# Pattern: Workspace policy covering product, build and test dependencies.
+# Usage: cargo deny --locked check.
+# Related: scripts/quality-check.sh, dev-docs/08-dependencies.md.
+[graph]
+all-features = true
+
+[advisories]
+yanked = "deny"
+ignore = []
+
+[licenses]
+allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause", "MIT-0", "Unicode-3.0", "Unicode-DFS-2016", "Zlib", "ISC", "CDLA-Permissive-2.0"]
+confidence-threshold = 0.95
+include-dev = true
+include-build = true
+
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

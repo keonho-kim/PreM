@@ -1,0 +1,134 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: fixed top workspace navigation · signature: source-linked slide proofs · redesign: full · axes: light/grotesk-sans/warm · posture: restrained · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, put richness in the original document */
+/* Purpose: Bind opaque paper and ruled work surfaces to the shared Folio tokens.
+ * Pattern: Material adapter; feature owners compose each task independently.
+ * Usage: Imported after shared responsive styles and before feature workspace styles.
+ * Related: design.md, design/refract.tokens.json, mock/styles/controls.css. */
+.app-frame,
+.app-main {
+  background: transparent;
+  border: 0;
+}
+.panel,
+.table-scroll,
+.split-view > section,
+.reference-preview,
+.template-item,
+.deck-row,
+.admin-content,
+.workflow-panel,
+.editor-grid {
+  background: var(--color-paper);
+  border: 0;
+  box-shadow: none;
+}
+.topbar {
+  background: var(--glass-chrome);
+  box-shadow: none;
+}
+.meta-strip {
+  border: 0;
+  background: transparent;
+}
+.button {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border-color: var(--color-rule);
+  box-shadow: var(--shadow-control);
+}
+.button.primary {
+  background: var(--color-brand);
+  color: var(--color-brand-ink);
+  border-color: var(--color-brand-border);
+  font-weight: 500;
+}
+.button:active:not(:disabled) {
+  box-shadow: var(--shadow-control-pressed);
+}
+.button:disabled,
+.button.quiet-button,
+.icon-button {
+  box-shadow: none;
+}
+.button.quiet-button,
+.icon-button {
+  border-color: transparent;
+  background: transparent;
+}
+.button[aria-pressed="true"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+input:not([type="checkbox"]),
+select,
+textarea {
+  background: var(--glass-control);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+}
+thead th {
+  background: var(--glass-header);
+}
+.admin-content .table-scroll,
+.admin-content .workflow-panel,
+.panel .table-scroll,
+dialog .table-scroll {
+  background: transparent;
+  box-shadow: none;
+}
+dialog {
+  background: var(--glass-dialog);
+  border: 0;
+  box-shadow: var(--shadow-dialog);
+}
+.empty-state {
+  background: var(--color-paper);
+  border: 1px dashed var(--color-control);
+  box-shadow: none;
+}
+.admin-content .empty-state,
+.panel .empty-state,
+dialog .empty-state {
+  background: transparent;
+}
+.preview-well {
+  background: var(--color-well-2);
+  box-shadow: none;
+}
+.slide-fit {
+  backdrop-filter: none;
+}
+.evidence-line {
+  border-inline-start: 2px solid var(--color-accent);
+  padding-inline-start: var(--space-xs);
+}
+@media (hover: hover) {
+  .button:hover,
+  .button.quiet-button:hover,
+  .icon-button:hover {
+    background: var(--color-paper-3);
+  }
+  .button.primary:hover {
+    background: var(--color-brand-hi);
+    border-color: var(--color-brand-border);
+  }
+}
+@media (forced-colors: active) {
+  .panel,
+  .table-scroll,
+  .guide-grid > form,
+  .guide-aside,
+  .reference-preview,
+  .template-item,
+  .deck-row,
+  .admin-content,
+  .workflow-panel,
+  .editor-grid,
+  .button,
+  .empty-state,
+  dialog {
+    border: 1px solid var(--color-rule);
+  }
+}

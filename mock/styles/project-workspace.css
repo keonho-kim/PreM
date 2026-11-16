@@ -1,0 +1,131 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: fixed top navigation · signature: slide proof beside a preparation ledger · redesign: full · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 · weakest: V, real slide preview carries the first screen */
+/* Purpose: Compose project collections and the overview as a document workbench.
+ * Pattern: Task-specific layout over shared controls and paper surfaces.
+ * Usage: Imported by mock/styles.css after common and feature styles.
+ * Related: mock/js/views/projects.js, mock/styles/collections.css, design.md. */
+.project-tabs {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border-block-end: 1px solid var(--color-rule);
+  inline-size: 100%;
+  margin-block-end: var(--space-lg);
+  gap: var(--space-lg);
+}
+.project-tabs .button {
+  min-inline-size: auto;
+  padding-inline: 0;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  gap: var(--space-xs);
+}
+.project-tabs .button[aria-pressed="true"] {
+  background: transparent;
+  border-block-end-color: var(--color-ink);
+  color: var(--color-ink);
+  box-shadow: none;
+}
+.project-tabs .num {
+  color: var(--color-muted);
+}
+.meta-strip {
+  gap: var(--space-xl);
+  margin-block-end: var(--space-xl);
+  padding-block: var(--space-md);
+  border-block: 1px solid var(--color-rule);
+}
+.meta-strip div {
+  gap: var(--space-sm);
+}
+.meta-strip dd {
+  font-size: var(--text-md);
+}
+.overview-main {
+  gap: var(--space-xl);
+}
+.overview-main > .panel {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.overview-main .section-title {
+  min-block-size: 32px;
+  margin-block-end: var(--space-md);
+}
+.presentation-focus .preview-well {
+  padding: var(--space-xl);
+  border-radius: var(--radius-inner);
+}
+.presentation-focus .preview-caption {
+  margin-block-start: 0;
+  padding: var(--space-md) 0;
+  border-block-end: 1px solid var(--color-rule);
+}
+.presentation-focus .preview-caption strong {
+  font-weight: 500;
+  font-size: var(--text-md);
+}
+.preparation-ledger .task-list {
+  border-block-start: 1px solid var(--color-ink);
+}
+.preparation-ledger .task-list a {
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: var(--space-sm);
+  padding-block: var(--space-md);
+}
+.preparation-ledger .task-list .badge {
+  background: transparent;
+  padding-inline: 0;
+}
+.preparation-ledger .notice {
+  background: transparent;
+  border-block-start: 1px solid var(--color-rule);
+  border-radius: 0;
+  padding: var(--space-md) 0 0;
+  margin-block-start: var(--space-md);
+}
+.overview-bottom {
+  gap: var(--space-xl);
+  margin-block-start: var(--space-xl);
+}
+.overview-bottom > .panel {
+  padding: var(--space-lg) 0 0;
+  background: transparent;
+  border-block-start: 1px solid var(--color-ink);
+  border-radius: 0;
+}
+.overview-bottom .file-list .badge {
+  background: transparent;
+}
+.overview-bottom .section-title {
+  margin-block-end: var(--space-xs);
+}
+@media (max-width: 64rem) {
+  .overview-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .meta-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm) var(--space-md);
+  }
+  .meta-strip div {
+    justify-content: space-between;
+  }
+  .meta-strip dt,
+  .meta-strip dd {
+    font-size: var(--text-label);
+  }
+  .presentation-focus .preview-well {
+    padding: var(--space-md);
+  }
+  .overview-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,144 @@
+/* Hallmark · Folio: plain conversation beside the current slide. */
+/* Purpose: Compose real chat, scoped request input and reviewable proposals without developer UI.
+ * Pattern: A bounded message scroller and persistent composer; native text remains safe React text.
+ * Usage: slide-chat.tsx in the right inspector; shadcn AI source owns scrolling and input grouping.
+ * Related: editor-workbench.css, components/ui/message-scroller.tsx. */
+.presentation-inspector .slide-chat-tab {
+  max-block-size: none;
+  overflow: visible;
+  scrollbar-gutter: auto;
+  padding: 16px 4px;
+}
+.slide-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  block-size: max(520px, var(--pane-height));
+  min-inline-size: 0;
+}
+.slide-chat-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.slide-chat-options > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+.slide-chat-options label {
+  font-size: 12px;
+}
+.slide-chat-options [role="combobox"] > span {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slide-chat .slide-chat-thread {
+  flex: 1;
+  min-block-size: 180px;
+  block-size: auto;
+}
+.slide-chat [data-slot="message-scroller-content"] {
+  gap: 24px;
+  padding-block: 12px 20px;
+}
+.slide-chat [data-slot="message-header"] {
+  padding-inline: 0;
+}
+.slide-chat [data-slot="bubble"] {
+  max-inline-size: 100%;
+}
+.slide-chat [data-slot="bubble-content"] {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+}
+.slide-chat-empty {
+  padding-block: 24px;
+}
+.slide-chat-empty h3 {
+  font-size: 16px;
+  margin-block-end: 12px;
+}
+.slide-chat-empty p,
+.slide-edit-proposal p {
+  font-size: 14px;
+  line-height: 1.65;
+}
+.slide-chat [data-slot="input-group"] {
+  min-block-size: 44px;
+  border-radius: 8px;
+  background: var(--color-paper);
+}
+.slide-chat textarea {
+  min-block-size: 80px;
+  max-block-size: 180px;
+  font-size: 16px;
+}
+.slide-chat [data-slot="input-group-addon"] {
+  justify-content: space-between;
+}
+.slide-chat [data-slot="input-group-addon"] button {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}
+.slide-chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 12px;
+}
+.slide-edit-proposal {
+  min-inline-size: 0;
+}
+.slide-edit-difference {
+  margin: 0;
+  padding: 12px 0;
+}
+.slide-edit-difference > div {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.slide-edit-difference dt {
+  font-size: 13px;
+  font-weight: 600;
+}
+.slide-edit-difference dd {
+  margin: 8px 0 0;
+}
+.slide-edit-difference dd > span {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.slide-edit-difference p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-block: 4px 12px;
+}
+@media (max-width: 640px) {
+  .slide-chat {
+    block-size: 600px;
+  }
+  .slide-chat-options {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-chat [data-slot="message-scroller-button"] {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .slide-chat [data-slot="input-group"],
+  .slide-edit-difference > div {
+    border-color: CanvasText;
+  }
+}
+
+@media (pointer: coarse) {
+  .slide-chat [data-slot="input-group-addon"] button {
+    min-inline-size: 48px;
+    min-block-size: 48px;
+  }
+}

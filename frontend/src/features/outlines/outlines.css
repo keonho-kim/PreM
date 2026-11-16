@@ -1,0 +1,304 @@
+/* Hallmark · Folio: the mock's horizontal outline and source review workspace. */
+/* Purpose: Focus authoring on one section and its source instead of a long input form.
+ * Pattern: Quiet ruled navigation, an opaque source paper and on-demand editing.
+ * Usage: OutlineWorkspace and its feature-owned dialogs.
+ * Related: mock/js/views/content.js, editor.tsx, mapping.tsx. */
+.outline-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-inline-size: 0;
+  margin-block: 24px 0;
+}
+.outline-section-heading,
+.outline-linked-heading,
+.outline-strip-heading,
+.outline-linked-actions,
+.outline-save,
+.outline-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.outline-section-heading h2 {
+  font-size: 28px;
+  font-weight: 500;
+}
+.outline-section-heading p {
+  margin-block-start: 8px;
+}
+.outline-section-heading > div:last-child {
+  min-inline-size: 160px;
+}
+.outline-generation {
+  display: flex;
+  align-items: start;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.outline-generation > :first-child {
+  flex: 1;
+}
+.outline-generation-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  padding-block: 16px;
+}
+.outline-generation-controls > div:first-child {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 240px;
+}
+.outline-run {
+  flex-basis: 100%;
+  display: grid;
+  gap: 8px;
+}
+.outline-coverage {
+  max-inline-size: 440px;
+}
+.outline-coverage .field-hint {
+  padding: 8px 12px;
+}
+.outline-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-block: 16px;
+  border-block: 1px solid var(--color-rule);
+}
+.outline-strip-heading {
+  flex: none;
+  gap: 8px;
+}
+.outline-strip > button {
+  flex: none;
+}
+.outline-content-tabs {
+  min-inline-size: 0;
+}
+.outline-content-tabs [role="tablist"] {
+  display: flex;
+  justify-content: start;
+  flex: 1;
+  min-inline-size: 0;
+  overflow-x: auto;
+  block-size: auto;
+  min-block-size: 48px;
+  padding: 4px;
+  border-radius: 0;
+  background: transparent;
+}
+.outline-content-tabs [role="tab"] {
+  flex: none;
+  gap: 12px;
+  min-block-size: 44px;
+  max-inline-size: 320px;
+  white-space: normal;
+  text-align: start;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  box-shadow: none;
+  font-weight: 400;
+}
+.outline-content-tabs [role="tab"][data-state="active"] {
+  background: var(--color-paper);
+  border-color: var(--color-muted);
+  color: var(--color-ink);
+}
+.outline-position,
+.outline-content-tabs [role="tab"] small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.outline-mapping {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 48px;
+  padding-block: 24px;
+  min-block-size: 360px;
+}
+.outline-mapping > * {
+  min-inline-size: 0;
+}
+.outline-linked-heading {
+  min-block-size: 48px;
+  margin-block-end: 16px;
+}
+.outline-linked-heading h3,
+.outline-source-paper h3 {
+  font-size: 18px;
+  font-weight: 500;
+}
+.outline-linked-heading p {
+  font-size: 14px;
+  margin-block-start: 4px;
+}
+.outline-linked-heading > button {
+  flex: none;
+}
+.outline-linked-list {
+  max-block-size: 400px;
+  overflow: auto;
+  padding: 4px;
+}
+.outline-source-block {
+  padding-block: 16px;
+  border-block-start: 1px solid var(--color-rule);
+  overflow-wrap: anywhere;
+}
+.outline-source-block header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.outline-source-block[data-active="true"] header::before {
+  content: "";
+  inline-size: 20px;
+  block-size: 2px;
+  flex: none;
+  background: var(--color-ink);
+}
+.outline-source-block header > span {
+  margin-inline-end: auto;
+}
+.outline-passage {
+  display: block;
+  inline-size: 100%;
+  text-align: start;
+  padding: 8px 0;
+  line-height: 1.7;
+  border-radius: 4px;
+}
+.outline-passage span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.outline-passage:hover {
+  color: var(--color-focus);
+}
+.outline-linked-actions {
+  margin-block-start: 20px;
+  flex-wrap: wrap;
+}
+.outline-source-paper {
+  background: var(--color-paper);
+  border-block-start: 2px solid var(--color-ink);
+  padding: 28px 32px;
+}
+.outline-source-reading {
+  max-block-size: 340px;
+  overflow: auto;
+  margin-block: 24px;
+  padding: 4px;
+}
+.outline-source-reading p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.outline-source-reading img {
+  max-inline-size: 100%;
+  max-block-size: 200px;
+  object-fit: contain;
+  margin-block-end: 16px;
+}
+.outline-source-paper footer {
+  border-block-start: 1px solid var(--color-rule);
+  padding-block-start: 16px;
+}
+.outline-source-paper footer button {
+  padding-inline-start: 0;
+}
+.outline-empty {
+  padding-block: 24px 40px;
+}
+.outline-empty h4 {
+  font-weight: 500;
+  margin-block-end: 8px;
+}
+.outline-save {
+  flex-wrap: wrap;
+  padding-block: 20px;
+  border-block-start: 1px solid var(--color-rule);
+}
+.outline-save p {
+  margin-inline-end: auto;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+.outline-pager {
+  flex-wrap: wrap;
+  padding-block: 12px;
+}
+.outline-block-search {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 800px) {
+  .outline-section-heading {
+    flex-wrap: wrap;
+  }
+  .outline-strip {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .outline-strip > [role="tablist"] {
+    flex-basis: 100%;
+  }
+  .outline-mapping {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .outline-source-paper {
+    padding: 24px;
+  }
+  .outline-linked-list {
+    max-block-size: 300px;
+  }
+  .outline-node-line {
+    flex-wrap: wrap;
+  }
+  .outline-node-line input {
+    flex-basis: 70%;
+  }
+  .outline-node-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .outline-child {
+    margin-inline-start: 12px;
+  }
+  .outline-generation-controls > div:first-child {
+    min-inline-size: 0;
+    flex-basis: 100%;
+  }
+  .outline-edit-dialog,
+  .outline-picker-dialog {
+    padding: 24px;
+  }
+}
+@media (forced-colors: active) {
+  .outline-source-paper,
+  .outline-strip,
+  .outline-save,
+  .outline-source-block {
+    border-color: CanvasText;
+  }
+  .outline-content-tabs [role="tab"][data-state="active"] {
+    border-color: Highlight;
+  }
+  .outline-source-block[data-active="true"] header::before {
+    background: CanvasText;
+  }
+}

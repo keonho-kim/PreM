@@ -1,0 +1,149 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Keep ordinary office tasks ahead of metadata and system explanations.
+ * Pattern: Compact navigation, readable task forms and progressively disclosed history/settings.
+ * Usage: Last feature stylesheet in mock/styles.css; shared Folio tokens remain canonical.
+ * Related: views/content.js, views/admin.js, studio.js, blueprint/07-ui-design.md. */
+.studio-progress {
+  padding-block: 8px 12px;
+  margin-block-end: 24px;
+}
+.studio-context {
+  margin-block-end: 8px;
+}
+.studio-stepper a {
+  min-block-size: 80px;
+  gap: 8px;
+}
+.page-heading {
+  margin-block-end: 24px;
+}
+.page-heading p {
+  max-inline-size: 68ch;
+}
+.guide-grid {
+  max-inline-size: 1080px;
+  margin-inline: 0;
+}
+.guide-grid > form {
+  padding: 24px;
+}
+.guide-section {
+  padding-block: 12px 24px;
+}
+.guide-fields textarea {
+  min-block-size: 160px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.mapping-source {
+  min-block-size: 0;
+}
+.mapping-panes {
+  align-items: start;
+  block-size: auto;
+}
+.mapping-source .source-caption {
+  margin-block-start: 24px;
+}
+.deck-provenance summary,
+.office-connection-details summary {
+  min-block-size: 44px;
+  display: list-item;
+  align-content: center;
+  cursor: pointer;
+  color: var(--color-ink-2);
+}
+.deck-provenance p {
+  margin-block: 8px;
+}
+.workflow-panel {
+  max-inline-size: 960px;
+  padding: 24px;
+}
+.workflow-panel > p {
+  margin-block: 16px;
+}
+.office-admin-layout {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.office-admin-nav {
+  border: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+.office-admin-nav summary {
+  min-block-size: 44px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.office-admin-nav .admin-tabs {
+  display: grid;
+  border: 0;
+  padding: 0;
+  gap: 4px;
+  margin-block: 8px;
+}
+.office-admin-nav .admin-tabs a {
+  border: 0;
+  min-block-size: 48px;
+  padding: 12px;
+  justify-content: flex-start;
+  display: flex;
+  gap: 8px;
+  text-decoration: none;
+}
+.office-admin-nav .admin-tabs a[aria-current="page"] {
+  background: var(--color-paper-3);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+.office-admin-layout .admin-content {
+  min-inline-size: 0;
+  border: 0;
+  padding: 0;
+}
+.office-routing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  max-inline-size: 800px;
+}
+.office-routing > .actions,
+.office-routing > .form-message {
+  grid-column: 1 / -1;
+}
+.office-connection-details {
+  border-block-start: 1px solid var(--color-rule);
+  padding-block: 12px;
+}
+.office-connection-details .field {
+  margin-block: 16px;
+}
+.sample-note {
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  margin-block: 24px;
+}
+@media (max-width: 720px) {
+  .office-admin-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .office-admin-nav .admin-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .office-routing {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .guide-grid > form {
+    padding: 16px;
+  }
+}
+@media (forced-colors: active) {
+  .office-admin-nav a[aria-current="page"] {
+    outline: 1px solid Highlight;
+  }
+}

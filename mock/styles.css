@@ -1,0 +1,49 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation, deal 2/3)
+ * nav: Home Studio Space and role-dependent Admin · signature: source-linked slide proofs · redesign: full · axes: light/grotesk-sans/warm · posture: restrained · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 · weakest: V, make the document and slide the visual */
+/* Hallmark · waive 39b · document-choice and document-page-open are resource preview targets · page previews need their full aspect ratio and commands retain 44px targets. */
+/* Hallmark · answered F4 · One tangerine primary command recipe; selected resources have a separate semantic state. */
+/* Hallmark · answered F7 · Shared control states are consistent; each route has its own composition and original content planes. */
+/* Purpose: Load the light web application's styles in cascade order.
+ * Pattern: CSS composition root.
+ * Usage: Linked once by mock/index.html.
+ * Related: mock/tokens.css, mock/base.css, mock/styles/. */
+@import url("./tokens.css");
+@import url("./base.css");
+@import url("./styles/shell.css");
+@import url("./styles/controls.css");
+@import url("./styles/collections.css");
+@import url("./styles/documents.css");
+@import url("./styles/slides.css");
+@import url("./styles/admin.css");
+@import url("./styles/dialogs.css");
+@import url("./styles/responsive.css");
+@import url("./styles/mobile.css");
+@import url("./styles/materials.css");
+@import url("./styles/editor.css");
+@import url("./styles/document-gallery.css");
+@import url("./styles/content-workspace.css");
+@import url("./styles/project-workspace.css");
+@import url("./styles/presentation-workspace.css");
+@import url("./styles/workspace-flow.css");
+@import url("./styles/space.css");
+
+@import url("./styles/asset-search.css");
+
+@import url("./styles/search-editor.css");
+
+@import url("./styles/editor-workbench.css");
+
+@import url("./styles/editor-interactions.css");
+
+@import url("./styles/editor-chat.css");
+
+@import url("./styles/project-menu.css");
+
+@import url("./styles/project-gallery.css");
+
+@import url("./styles/feedback.css");
+
+@import url("./styles/asset-preview.css");
+
+@import url("./styles/office-workspace.css");

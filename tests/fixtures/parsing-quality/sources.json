@@ -1,0 +1,31 @@
+{
+  "kordoc_commit": "9369148f06b2bd704c6df3f5e9930773a612b46f",
+  "font_commit": "16680f8688ffcd467d2eb2146a9ce0343404581d",
+  "assets": [
+    {
+      "file": "fonts/NanumGothic-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/16680f8688ffcd467d2eb2146a9ce0343404581d/ofl/nanumgothic/NanumGothic-Regular.ttf",
+      "sha256": "76f45ef4a6bcff344c837c95a7dcc26e017e38b5846d5ae0cdcb5b86be2e2d31"
+    },
+    {
+      "file": "fonts/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/16680f8688ffcd467d2eb2146a9ce0343404581d/ofl/nanumgothic/OFL.txt",
+      "sha256": "eeacf16032901d0ed0456876ec77b8f0fda6b3fecec7d972f8543eb602e6c30f"
+    },
+    {
+      "file": "public-nested.hwpx",
+      "url": "https://raw.githubusercontent.com/chrisryugj/kordoc/9369148f06b2bd704c6df3f5e9930773a612b46f/tests/fixtures/textbox-nested/textbox-nested.hwpx",
+      "sha256": "1484f9071c451a6dcaa4657ed935599417d83365a793baf462bbde19851b9d36"
+    },
+    {
+      "file": "KORDOC-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/chrisryugj/kordoc/9369148f06b2bd704c6df3f5e9930773a612b46f/LICENSE",
+      "sha256": "af5f2aced9ce13fa964a5ec9f7ab3271b139f10a1950f5c5408b7b3012369571"
+    },
+    {
+      "file": "../documents/nested.hwp",
+      "url": "https://raw.githubusercontent.com/chrisryugj/kordoc/9369148f06b2bd704c6df3f5e9930773a612b46f/tests/fixtures/textbox-nested/textbox-nested.hwp",
+      "sha256": "717b7c505640f97b62b874658d43fa7bfd74ffb8bfe8148e348dc8fa71c4cb02"
+    }
+  ]
+}

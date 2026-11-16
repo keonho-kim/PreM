@@ -1,0 +1,65 @@
+[package]
+name = "puputyx-backend"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "PuPuTyX application server"
+
+[[bin]]
+name = "PuPuTyX"
+path = "src/main.rs"
+
+[features]
+default = []
+embedded-ui = ["dep:rust-embed", "dep:mime_guess"]
+
+[dependencies]
+reqwest.workspace = true
+secrecy.workspace = true
+subtle.workspace = true
+chacha20poly1305.workspace = true
+getrandom.workspace = true
+url.workspace = true
+anyhow.workspace = true
+sha2.workspace = true
+file-format.workspace = true
+hex.workspace = true
+lopdf.workspace = true
+zip.workspace = true
+quick-xml.workspace = true
+html5ever.workspace = true
+comrak.workspace = true
+cfb.workspace = true
+cap-std.workspace = true
+fs4.workspace = true
+percent-encoding.workspace = true
+tempfile.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+axum.workspace = true
+clap.workspace = true
+mime_guess = { workspace = true, optional = true }
+rust-embed = { workspace = true, optional = true }
+serde.workspace = true
+serde_json.workspace = true
+rusqlite.workspace = true
+async-sqlite.workspace = true
+refinery.workspace = true
+tokio-util.workspace = true
+schemars.workspace = true
+jsonschema.workspace = true
+futures-util.workspace = true
+eventsource-stream.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+apalis-core = { version = "=1.2.0", default-features = false, features = ["sleep"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+tower.workspace = true
+
+[lints]
+workspace = true

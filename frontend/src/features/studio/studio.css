@@ -1,0 +1,273 @@
+/* Hallmark: Folio — paper workspace with quiet ruled task regions. */
+/* Purpose: Lay out project originals and a connected review timeline.
+ * Pattern: Responsive grid, opaque content planes and native hidden semantics.
+ * Usage: StudioWorkspace uses existing Folio tokens and shadcn controls.
+ * Related: studio-workspace.tsx, source-card.tsx, app/styles/tokens.css.
+ */
+.studio-workspace {
+  padding-block: 24px 32px;
+  max-width: 1440px;
+}
+.studio-heading,
+.studio-section-heading,
+.studio-review,
+.studio-direction footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+.studio-heading [data-slot="select-trigger"] {
+  inline-size: min(20rem, 100%);
+}
+.studio-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  padding: 8px 0;
+  margin: 0;
+  border-block: 1px solid var(--color-rule);
+}
+.studio-steps li {
+  position: relative;
+  text-align: center;
+}
+.studio-steps li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: calc(50% + 22px);
+  inset-block-start: 20px;
+  inline-size: calc(100% - 44px);
+  block-size: 1px;
+  background: var(--color-rule);
+}
+.studio-steps button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  inline-size: 100%;
+  min-block-size: 68px;
+  font-size: 0.875rem;
+  justify-content: flex-start;
+  padding-block: 4px;
+  line-height: 20px;
+}
+.studio-steps button > .studio-step-marker {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--color-rule);
+  border-radius: 50%;
+  background: var(--color-paper);
+}
+.studio-steps button[aria-current] > .studio-step-marker {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.studio-steps button:disabled {
+  color: var(--color-muted);
+  cursor: default;
+}
+.studio-steps small {
+  font-size: 0.75rem;
+}
+.studio-section-heading {
+  margin-block: 2rem 1.25rem;
+}
+.studio-source-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.studio-source-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  padding-block-end: 1rem;
+  border-block-end: 1px solid var(--color-rule);
+  min-inline-size: 0;
+}
+.studio-source-preview {
+  grid-column: 1 / -1;
+  min-block-size: 132px;
+  background: var(--color-paper-3);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.studio-source-preview svg {
+  inline-size: 32px;
+  block-size: 32px;
+}
+.studio-source-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.studio-source-title {
+  text-align: start;
+  min-block-size: 44px;
+}
+.studio-source-card p {
+  font-size: 0.875rem;
+  margin-block: 0.25rem;
+}
+.studio-empty {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  background: var(--color-paper-3);
+}
+.studio-review {
+  margin-block-start: 2rem;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--color-rule);
+}
+.studio-page-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-block: 1rem;
+}
+.studio-direction {
+  max-inline-size: 52rem;
+  margin: 2rem auto;
+  display: grid;
+  gap: 1rem;
+}
+.studio-direction footer {
+  margin-block-start: 1rem;
+}
+.studio-workspace [hidden] {
+  display: none;
+}
+@media (max-width: 800px) {
+  .studio-source-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .studio-heading,
+  .studio-section-heading,
+  .studio-review {
+    flex-wrap: wrap;
+  }
+  .studio-steps {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .studio-source-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studio-review > button {
+    inline-size: 100%;
+  }
+}
+
+.studio-source-title {
+  white-space: normal;
+  padding: 0;
+  justify-content: flex-start;
+}
+.studio-heading [role="combobox"] {
+  inline-size: min(20rem, 100%);
+}
+.studio-steps button {
+  border-radius: 0;
+}
+@media (forced-colors: active) {
+  .studio-steps button > .studio-step-marker,
+  .studio-source-card,
+  .studio-review {
+    border-color: CanvasText;
+  }
+  .studio-steps li::after {
+    background: CanvasText;
+  }
+}
+
+.studio-source-title {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.studio-steps li.is-connected::after {
+  background: var(--color-focus);
+}
+@media (forced-colors: active) {
+  .studio-steps li.is-connected::after {
+    background: Highlight;
+  }
+}
+
+.studio-heading > div:first-child {
+  margin-inline-end: auto;
+}
+.studio-heading h1 {
+  font-size: 20px;
+}
+
+/* Keep final commands reachable above the measured desktop work panel. */
+@media (min-width: 641px) {
+  .studio-workspace {
+    padding-block-end: calc(32px + var(--work-panel-reserve, 0px));
+  }
+}
+
+.studio-heading {
+  min-block-size: 44px;
+}
+.studio-heading [role="combobox"] {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  padding-inline-start: 0;
+}
+@media (forced-colors: active) {
+  .studio-heading [role="combobox"] {
+    border-color: ButtonText;
+  }
+}
+
+.studio-stepper {
+  position: sticky;
+  inset-block-start: var(--studio-nav-offset, 72px);
+  z-index: 4;
+  background: var(--color-paper-2);
+  margin-block: 12px 20px;
+}
+.studio-step-short {
+  display: none;
+}
+html:has(.studio-stepper) {
+  scroll-padding-block-start: calc(var(--studio-sticky-height, 160px) + 16px);
+}
+@media (max-width: 640px) {
+  .studio-step-label {
+    display: none;
+  }
+  .studio-step-short {
+    display: inline;
+    font-size: 12px;
+  }
+  .studio-steps button {
+    padding-inline: 0;
+    min-block-size: 60px;
+  }
+  .studio-steps button > .studio-step-marker {
+    inline-size: 28px;
+    block-size: 28px;
+  }
+  .studio-steps li:not(:last-child)::after {
+    inset-inline-start: calc(50% + 18px);
+    inline-size: calc(100% - 36px);
+    inset-block-start: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .studio-steps li:not(:last-child)::after {
+    inset-block-start: 18px;
+  }
+}

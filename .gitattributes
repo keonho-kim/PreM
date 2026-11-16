@@ -1,0 +1,16 @@
+# Preserve document fixtures and binary assets byte-for-byte.
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.hwp binary
+*.hwpx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.woff2 binary
+*.ttf binary
+tests/fixtures/** -text
+
+# Retain the upstream font license verbatim.
+tests/fixtures/parsing-quality/fonts/OFL.txt -whitespace

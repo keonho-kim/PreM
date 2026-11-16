@@ -1,0 +1,114 @@
+<!doctype html>
+<!-- Purpose: Host the standalone light web application and native dialogs.
+     Pattern: Accessible application shell with ordered deferred feature scripts.
+     Usage: Open directly or serve mock/ with a static HTTP server.
+     Related: mock/app.js, mock/js/, mock/styles.css. -->
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="PuPuTyX의 문서 분석, 콘텐츠 구성, 프레젠테이션 편집을 살펴보는 인터랙티브 목업입니다."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>프로젝트 | PuPuTyX 목업</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./icons.js"></script>
+    <script defer src="./editor-icons.js"></script>
+    <script defer src="./js/dom.js"></script>
+    <script defer src="./js/project-dates.js"></script>
+    <script defer src="./js/data.js"></script>
+    <script defer src="./js/ui.js"></script>
+    <script defer src="./js/slide-commands.js"></script>
+    <script defer src="./js/slide-list.js"></script>
+    <script defer src="./js/editor-selection.js"></script>
+    <script defer src="./js/chat-patch.js"></script>
+    <script defer src="./js/editor-chat.js"></script>
+    <script defer src="./js/canvas-text.js"></script>
+    <script defer src="./js/canvas-format.js"></script>
+    <script defer src="./js/canvas-editor.js"></script>
+    <script defer src="./js/editor-support.js"></script>
+    <script defer src="./js/chrome.js"></script>
+    <script defer src="./js/studio.js"></script>
+    <script defer src="./js/uploads.js"></script>
+    <script defer src="./js/asset-preview.js"></script>
+    <script defer src="./js/space.js"></script>
+    <script defer src="./js/feedback.js"></script>
+    <script defer src="./js/app-events.js"></script>
+    <script defer src="./js/project-gallery.js"></script>
+    <script defer src="./js/project-menu.js"></script>
+    <script defer src="./js/project-management.js"></script>
+    <script defer src="./js/views/projects.js"></script>
+    <script defer src="./js/views/documents.js"></script>
+    <script defer src="./js/asset-search.js"></script>
+    <script defer src="./js/views/content.js"></script>
+    <script defer src="./js/views/presentations.js"></script>
+    <script defer src="./js/views/admin.js"></script>
+    <script defer src="./js/dialogs.js"></script>
+    <script defer src="./js/workflow.js"></script>
+    <script defer src="./js/actions-project.js"></script>
+    <script defer src="./js/actions-presentation.js"></script>
+    <script defer src="./js/forms.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-title" data-action="skip-main">본문으로 이동</a>
+    <div class="app-frame">
+      <header class="app-header" aria-label="앱 탐색">
+        <div class="topbar">
+          <a class="wordmark" href="#view=projects" aria-label="PuPuTyX 프로젝트 목록">PuPuTyX</a>
+          <nav
+            id="global-navigation"
+            class="global-navigation"
+            aria-label="주요 메뉴"
+            data-active-scroll
+          >
+            <a href="#view=projects">Home</a
+            ><a href="#view=documents&amp;project=platform">Studio</a
+            ><a href="#view=space">Space</a>
+          </nav>
+          <div class="topbar-right">
+            <button
+              type="button"
+              class="account-preview"
+              data-action="account-preview"
+              aria-label="샘플 화면 설정"
+            >
+              <span data-icon="Settings2"></span><span id="account-preview">샘플 체험</span>
+            </button>
+            <button
+              type="button"
+              class="icon-button help-button"
+              data-action="help"
+              aria-label="사용 안내"
+            >
+              <span data-icon="CircleAlert"></span>
+            </button>
+          </div>
+        </div>
+      </header>
+      <div class="app-main">
+        <main id="workspace" class="workspace">
+          <h1 id="main-title" tabindex="-1">프로젝트</h1>
+          <p>
+            원본 문서에서 목차와 근거를 정리하고, 편집 가능한 프레젠테이션을 구성하는 목업입니다.
+          </p>
+          <noscript
+            ><p>
+              화면을 조작하려면 JavaScript를 켜 주세요. 이 목업은 서버로 데이터를 전송하지 않습니다.
+            </p></noscript
+          >
+        </main>
+      </div>
+    </div>
+    <dialog id="app-dialog" aria-labelledby="dialog-title" closedby="any">
+      <div id="dialog-content"></div>
+    </dialog>
+    <div class="sr-only" id="announcer" role="status" aria-atomic="true"></div>
+  </body>
+</html>

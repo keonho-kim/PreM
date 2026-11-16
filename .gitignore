@@ -1,0 +1,42 @@
+# Application data and local credentials
+/data/
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.sqlite
+*.sqlite-*
+*.db
+*.db-wal
+*.db-shm
+
+# Installed dependencies, builds and caches
+node_modules/
+/target/
+/frontend/dist/
+/release/
+coverage/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+*.log
+
+# Local design state and disposable QA output
+/.hallmark/
+.artifacts/
+/mock/captures/**
+!/mock/captures/**/
+!/mock/captures/**/README.md
+
+# Runtime installations are reconstructed from committed inputs
+/runtime/*
+!/runtime/README.md
+!/runtime/kordoc/
+/runtime/kordoc/*
+!/runtime/kordoc/package.json
+!/runtime/kordoc/package-lock.json

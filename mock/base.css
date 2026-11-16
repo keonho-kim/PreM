@@ -1,0 +1,177 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: project workspace · signature: source-linked slide editor · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, keep source and slide content central */
+/* Purpose: Set local fonts, semantic defaults, focus, and motion preferences.
+ * Pattern: Shared design tokens and responsibility-based CSS.
+ * Usage: Imported by mock/styles.css.
+ * Related: mock/tokens.css, mock/index.html. */
+@font-face {
+  font-family: "Red Hat Display";
+  src: url("./assets/fonts/display.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Red Hat Text";
+  src: url("./assets/fonts/body.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  overflow-x: clip;
+}
+html {
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--color-control) var(--color-paper);
+}
+body {
+  margin: 0;
+  color: var(--color-ink);
+  background-color: var(--color-workspace);
+  min-block-size: 100dvh;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+  caret-color: var(--color-accent);
+}
+::selection {
+  background: var(--color-selection);
+  color: var(--color-ink);
+}
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  line-height: 1.35;
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+h1 {
+  font-size: var(--text-page);
+}
+h2 {
+  font-size: var(--text-heading-sm);
+}
+h3 {
+  font-size: var(--text-md);
+  letter-spacing: 0;
+}
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button,
+a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+img,
+video,
+svg {
+  display: block;
+  max-inline-size: 100%;
+}
+img,
+video {
+  block-size: auto;
+}
+[hidden] {
+  display: none !important;
+}
+.icon {
+  inline-size: 18px;
+  block-size: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+}
+.quiet {
+  color: var(--color-muted);
+}
+.small,
+.field-label {
+  font-size: var(--text-label);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.sr-only,
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: clip;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip-link {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  inset-block-start: var(--space-sm);
+  inset-inline-start: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  transform: translateY(-200%);
+}
+.skip-link:focus-visible {
+  transform: none;
+}
+#main-title:focus:not(:focus-visible) {
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  body {
+    background-image: none;
+  }
+}

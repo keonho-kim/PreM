@@ -1,0 +1,41 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: fixed top navigation · signature: source-linked editing · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, preserve task density */
+/* Purpose: Adapt shared workspace collections while features own their task layouts.
+ * Pattern: Small viewport adjustments without sidebar or inspector reflow.
+ * Usage: Imported before feature-owned layout styles.
+ * Related: mock/styles/shell.css, mock/styles/mobile.css, mock/styles/editor.css. */
+@media (max-width: 80rem) {
+  .workspace {
+    padding: var(--space-lg);
+  }
+  .overview-main,
+  .overview-bottom {
+    gap: var(--space-md);
+  }
+  .panel {
+    padding: var(--space-md);
+  }
+  .activity-list li {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+}
+@media (max-width: 64rem) {
+  .template-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .overview-main,
+  .overview-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .optional-column {
+    display: none;
+  }
+  .deck-row {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+  .deck-row > .actions {
+    grid-column: 2;
+  }
+}

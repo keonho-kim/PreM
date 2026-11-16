@@ -1,0 +1,175 @@
+/* Hallmark · Folio: a focused candidate and source reading workspace. */
+/* Purpose: Size desktop reading panes and switch mobile lists into detail views.
+ * Pattern: Dynamic viewport sizing, normal-flow mobile reading and quiet paper surfaces.
+ * Usage: evidence-workbench.tsx.
+ * Related: related.css, app/feedback.tsx. */
+.evidence-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: stretch;
+  margin-block-start: 16px;
+  block-size: max(
+    240px,
+    calc(
+      100dvh -
+      var(--studio-sticky-height, var(--evidence-header-height, 72px)) -
+      32px -
+      var(--work-panel-reserve, 0px)
+    )
+  );
+  scroll-margin-block-start: 0;
+}
+.evidence-workbench > * {
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+.evidence-workbench .related-results {
+  overflow: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  padding-inline: 4px;
+}
+.evidence-workbench .related-result {
+  grid-template-columns: 72px minmax(0, 1fr) 44px;
+  gap: 16px;
+  padding: 16px 8px;
+  border-inline-start: 2px solid transparent;
+}
+.evidence-workbench .related-result[data-inspected="true"] {
+  border-inline-start-color: var(--color-ink);
+  background: var(--color-paper);
+}
+.evidence-workbench .related-thumbnail {
+  inline-size: 72px;
+  block-size: 88px;
+}
+.evidence-workbench .related-title {
+  font-size: 16px;
+}
+.evidence-workbench .match-text {
+  font-size: 14px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.evidence-workbench .related-source {
+  font-size: 12px;
+}
+.evidence-reader {
+  background: var(--color-paper);
+  border-block-start: 2px solid var(--color-ink);
+  padding: 24px;
+  overflow: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+.evidence-reader-heading {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  margin-block-end: 20px;
+}
+.evidence-reader-heading h3 {
+  font-size: 20px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.evidence-reader-empty {
+  min-block-size: 240px;
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  padding: 16px;
+}
+.evidence-reader-empty p {
+  color: var(--color-muted);
+}
+.evidence-passages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.evidence-passages li {
+  padding-block: 20px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.evidence-passages li > p:not(.field-hint) {
+  margin-block: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+.evidence-back {
+  display: none;
+}
+@media (max-width: 900px) {
+  .evidence-workbench {
+    grid-template-columns: minmax(0, 1fr);
+    block-size: auto;
+    gap: 0;
+  }
+  .evidence-workbench .related-results,
+  .evidence-workbench .evidence-reader {
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
+  .evidence-reader {
+    display: none;
+    padding: 20px;
+    min-block-size: max(
+      0px,
+      calc(100dvh - var(--studio-sticky-height, var(--evidence-header-height, 72px)) - 32px)
+    );
+  }
+  .evidence-workbench[data-detail="true"] .related-results {
+    display: none;
+  }
+  .evidence-workbench[data-detail="true"] .evidence-reader {
+    display: block;
+  }
+  .evidence-back {
+    display: inline-flex;
+    margin-block-end: 20px;
+  }
+  .evidence-reader {
+    scroll-margin-block-start: 0;
+  }
+  .related-workspace:has(.evidence-workbench[data-detail="true"]) > header,
+  .related-workspace:has(.evidence-workbench[data-detail="true"]) > .field-hint,
+  .related-workspace:has(.evidence-workbench[data-detail="true"]) .evidence-tabs > [role="tablist"],
+  .related-workspace:has(.evidence-workbench[data-detail="true"])
+    .evidence-search
+    > :not(.evidence-candidate-tabs),
+  .related-workspace:has(.evidence-workbench[data-detail="true"])
+    .evidence-search
+    > .evidence-candidate-tabs
+    > [role="tablist"],
+  .evidence-results-section:has(.evidence-workbench[data-detail="true"]) > .field-hint,
+  .evidence-results-section:has(.evidence-workbench[data-detail="true"]) > .related-pagination {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .evidence-workbench .related-result {
+    grid-template-columns: 56px minmax(0, 1fr) 44px;
+    gap: 8px;
+  }
+  .evidence-workbench .related-thumbnail {
+    inline-size: 56px;
+    block-size: 72px;
+  }
+  .evidence-workbench .related-select {
+    grid-column: auto;
+  }
+}
+@media (forced-colors: active) {
+  .evidence-reader,
+  .evidence-passages li {
+    border-color: CanvasText;
+  }
+  .evidence-workbench .related-result[data-inspected="true"] {
+    border-inline-start-color: Highlight;
+  }
+}

@@ -1,0 +1,311 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: top project workspace · signature: ruled source references · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, make evidence the visible material */
+/* Purpose: Compose guide, mapping, and reference tasks as editorial workspaces.
+ * Pattern: Feature-owned paper surfaces, ruled records, and bounded evidence panes.
+ * Usage: Imported after materials.css by mock/styles.css.
+ * Related: mock/js/views/content.js, mock/styles/documents.css, design.md. */
+.guide-grid {
+  grid-template-columns: minmax(0, 1fr);
+  inline-size: min(100%, 78rem);
+  margin-inline: auto;
+  gap: var(--space-xl);
+}
+.guide-grid > form {
+  gap: 0;
+  padding: var(--space-xl);
+  background: var(--color-paper);
+  border: 0;
+  border-block-start: 2px solid var(--color-ink);
+  border-radius: 0;
+  box-shadow: none;
+}
+.guide-section {
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-lg) 0 var(--space-xl);
+  border: 0;
+}
+.guide-section + .guide-section {
+  border-block-start: 1px solid var(--color-rule);
+}
+.guide-section legend {
+  padding: 0 var(--space-md) 0 0;
+  font-size: var(--text-heading-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+.guide-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+.guide-fields textarea {
+  min-block-size: 104px;
+}
+.guide-free-field {
+  grid-column: 1 / -1;
+}
+.guide-save {
+  border-block-start: 1px solid var(--color-rule);
+  padding-block-start: var(--space-lg);
+}
+.guide-grid > .guide-history {
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  border-block-start: 1px solid var(--color-rule);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.guide-history > summary {
+  min-block-size: 56px;
+  align-content: center;
+  color: var(--color-ink);
+  font-size: var(--text-heading-sm);
+  cursor: pointer;
+}
+.guide-history[open] > summary {
+  margin-block-end: var(--space-md);
+}
+.guide-history .revision-list li {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-md);
+}
+.guide-history .revision-list .button {
+  grid-column: auto;
+  justify-self: end;
+}
+.guide-history .notice {
+  max-inline-size: 72ch;
+}
+.mapping-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-lg);
+  min-block-size: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  overflow: visible;
+}
+.mapping-workspace > .outline-strip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-sm) 0;
+  background: transparent;
+  border: 0;
+  border-block: 1px solid var(--color-rule);
+  border-radius: 0;
+  box-shadow: none;
+}
+.outline-strip-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+.outline-strip-heading h2 {
+  white-space: nowrap;
+}
+.outline-strip .outline-tree {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xs);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-xs);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+.outline-strip .outline-tree li {
+  flex: 0 0 auto;
+}
+.outline-strip .outline-tree button {
+  inline-size: auto;
+  max-inline-size: none;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  white-space: nowrap;
+}
+.outline-strip .outline-tree button small {
+  margin-inline-start: var(--space-xs);
+}
+.outline-strip .outline-tree button[aria-pressed="true"] {
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border-color: var(--color-control);
+  box-shadow: none;
+}
+.mapping-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-xl);
+  block-size: clamp(28rem, calc(100dvh - var(--app-header-height, 96px) - 18rem), 46rem);
+  min-inline-size: 0;
+}
+.mapping-panes > .mapping-content,
+.mapping-panes > .mapping-source {
+  min-inline-size: 0;
+  min-block-size: 0;
+  padding: var(--space-lg);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.mapping-panes > .mapping-content {
+  padding-inline-start: 0;
+  background: transparent;
+}
+.mapping-content {
+  display: flex;
+  flex-direction: column;
+}
+.mapping-content > .section-title,
+.mapping-content > .actions {
+  flex-shrink: 0;
+}
+.mapping-content > .block-list {
+  min-block-size: 0;
+  align-content: start;
+  gap: 0;
+  padding: var(--space-xs);
+  overflow-y: auto;
+  overscroll-behavior-block: contain;
+  scrollbar-gutter: stable;
+}
+.mapping-content .content-block {
+  padding: var(--space-lg) 0;
+  background: transparent;
+  border: 0;
+  border-block-start: 1px solid var(--color-rule);
+  border-radius: 0;
+}
+.source-reference {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-ink-2);
+}
+.source-reference::before {
+  content: "";
+  inline-size: 20px;
+  border-block-start: 2px solid var(--color-ink);
+}
+.mapping-panes > .mapping-source {
+  grid-column: auto;
+  padding: var(--space-xl);
+  background: var(--color-paper);
+  border-block-start: 2px solid var(--color-ink);
+  overflow-y: auto;
+  overscroll-behavior-block: contain;
+  scrollbar-gutter: stable;
+}
+.mapping-source h2 {
+  color: var(--color-ink);
+}
+.reference-workspace {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: var(--space-xl);
+}
+.reference-workspace > section,
+.reference-workspace > .reference-preview {
+  min-inline-size: 0;
+  max-block-size: max(28rem, calc(100dvh - var(--app-header-height, 96px) - 14rem));
+  overflow-y: auto;
+  overscroll-behavior-block: contain;
+  scrollbar-gutter: stable;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.reference-workspace > section {
+  background: transparent;
+  border-block-start: 1px solid var(--color-rule);
+}
+.reference-workspace .selection-list li {
+  padding: var(--space-lg);
+  border-inline-start: 2px solid transparent;
+}
+.reference-workspace [data-reference-active="true"] {
+  background: var(--color-paper);
+  border-inline-start-color: var(--color-ink);
+}
+.reference-workspace > .reference-preview {
+  padding: var(--space-xl);
+  background: var(--color-paper);
+  border-block-start: 2px solid var(--color-ink);
+}
+.reference-workspace blockquote {
+  margin-block: var(--space-xl);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: var(--text-lg);
+  line-height: 1.9;
+}
+.reference-workspace .evidence-line {
+  padding-block-start: var(--space-md);
+  border-block-start: 1px solid var(--color-rule);
+}
+@media (max-width: 64rem) {
+  .mapping-workspace > .outline-strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-xs);
+  }
+  .outline-strip-heading {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 48rem) {
+  .guide-fields,
+  .mapping-panes,
+  .reference-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mapping-panes {
+    block-size: auto;
+  }
+  .mapping-content > .block-list,
+  .mapping-panes > .mapping-source,
+  .reference-workspace > section,
+  .reference-workspace > .reference-preview {
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+@media (max-width: 40rem) {
+  .guide-grid > form,
+  .mapping-panes > .mapping-source,
+  .reference-workspace > .reference-preview {
+    padding: var(--space-lg);
+  }
+  .mapping-panes > .mapping-content {
+    padding: var(--space-md) 0;
+  }
+  .guide-history .revision-list li {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-xs);
+  }
+  .guide-history .revision-list .button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+@media (forced-colors: active) {
+  .guide-grid > form,
+  .mapping-panes > .mapping-source,
+  .reference-workspace > .reference-preview {
+    border: 1px solid var(--color-rule);
+  }
+  .outline-strip .outline-tree button[aria-pressed="true"] {
+    outline: 2px solid var(--color-focus);
+    outline-offset: -2px;
+  }
+}

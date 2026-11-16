@@ -1,0 +1,25 @@
+/* Hallmark · Folio: readable, restrained document search annotations. */
+/* Purpose: Style safe search matches consistently across discovery features.
+ * Pattern: Native highlight ranges and semantic fallback share contrast and underline.
+ * Usage: Imported by MatchText; source HTML is never interpreted.
+ * Related: match-text.tsx, app/styles/theme.generated.css. */
+::highlight(document-search-matches) {
+  background-color: var(--color-paper-3);
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+.match-text mark {
+  background-color: var(--color-paper-3);
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+@media (forced-colors: active) {
+  ::highlight(document-search-matches) {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+  .match-text mark {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}

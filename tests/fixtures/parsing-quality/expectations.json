@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "note": "Human-authored fixture expectations from source construction, not extracted output. These are fixture criteria, not production accuracy targets.",
+  "cases": [
+    {
+      "id": "korean-columns",
+      "file": "korean-columns.pdf",
+      "checks": [
+        {
+          "type": "text",
+          "values": [
+            "업무 개선 검토 보고서",
+            "현황 조사",
+            "원인 분석",
+            "개선 목표",
+            "실행 계획",
+            "결과 확인",
+            "후속 조치"
+          ]
+        },
+        {
+          "type": "order",
+          "values": [
+            "왼쪽 첫째",
+            "왼쪽 둘째",
+            "왼쪽 셋째",
+            "오른쪽 첫째",
+            "오른쪽 둘째",
+            "오른쪽 셋째"
+          ]
+        },
+        { "type": "images", "minimum": 1 },
+        { "type": "previews", "minimum": 1 }
+      ]
+    },
+    {
+      "id": "korean-mixed",
+      "file": "korean-mixed.pdf",
+      "checks": [
+        {
+          "type": "page_text",
+          "page": 1,
+          "values": ["업무 점검 안내", "다음 장은 스캔된 한글 점검표입니다."]
+        },
+        {
+          "type": "page_text",
+          "page": 2,
+          "values": ["월간 운영 점검", "운영지원팀", "문서 보관 상태", "120건", "담당자 확인"]
+        },
+        {
+          "type": "ocr_cer",
+          "page": 2,
+          "reference": "월간 운영 점검\n대상 부서: 운영지원팀\n점검 항목: 문서 보관 상태\n처리 건수: 120건\n후속 조치: 담당자 확인",
+          "maximum": 0.08
+        },
+        { "type": "previews", "minimum": 2 }
+      ]
+    },
+    {
+      "id": "merged-report",
+      "file": "merged-report.docx",
+      "checks": [
+        {
+          "type": "text",
+          "values": [
+            "분기 운영 보고",
+            "분기 실적 집계",
+            "운영팀",
+            "120",
+            "지원팀",
+            "85",
+            "후속 계획"
+          ]
+        },
+        {
+          "type": "order",
+          "values": [
+            "보고 개요",
+            "분기 실적 집계",
+            "표 다음 설명",
+            "그림 설명",
+            "후속 계획",
+            "마지막 확인"
+          ]
+        },
+        { "type": "table_shape", "rows": 4, "cols": 3 },
+        {
+          "type": "table_merges",
+          "description": "The first table row spans three columns; preserve machine-readable cell spans."
+        },
+        { "type": "images", "minimum": 1 }
+      ]
+    },
+    {
+      "id": "multi-sheet",
+      "file": "multi-sheet.xlsx",
+      "checks": [
+        {
+          "type": "page_text",
+          "page": 1,
+          "values": ["분기 예산", "자료 정리", "120", "자료 검토", "80", "200"]
+        },
+        {
+          "type": "page_text",
+          "page": 2,
+          "values": ["검토 시작", "운영팀", "최종 확인", "지원팀"]
+        },
+        { "type": "table_merges", "description": "A1:C1 is a merged header on the first sheet." },
+        {
+          "type": "formula",
+          "value": "SUM(B3:B4)",
+          "description": "Retain a formula separately from its cached displayed value 200."
+        }
+      ]
+    },
+    {
+      "id": "grouped-slides",
+      "file": "grouped-slides.pptx",
+      "checks": [
+        { "type": "page_text", "page": 1, "values": ["운영 현황", "업무 건수", "120", "80"] },
+        {
+          "type": "page_text",
+          "page": 2,
+          "values": ["검토 흐름", "자료 수집", "내용 검토", "결과 공유"]
+        },
+        { "type": "materials", "kinds": ["slide", "chart", "diagram", "image", "text"] },
+        { "type": "previews", "minimum": 2 }
+      ]
+    },
+    {
+      "id": "public-nested-hwp",
+      "file": "../documents/nested.hwp",
+      "checks": [
+        {
+          "type": "text",
+          "values": [
+            "글상자 앞 본문",
+            "결재 구분",
+            "1차 검토",
+            "2차 검토",
+            "검토자 서명",
+            "가람",
+            "나래",
+            "협조 의견란",
+            "결재 비고 사항",
+            "글상자 뒤 본문"
+          ]
+        },
+        {
+          "type": "order",
+          "values": [
+            "글상자 앞 본문",
+            "글상자 첫 문단 안내",
+            "결재 구분",
+            "글상자 끝 문단 안내",
+            "글상자 뒤 본문"
+          ]
+        },
+        {
+          "type": "table_merges",
+          "description": "The public source contains a 4x6 outer table with merged and nested cells."
+        }
+      ]
+    },
+    {
+      "id": "public-nested-hwpx",
+      "file": "public-nested.hwpx",
+      "checks": [
+        {
+          "type": "text",
+          "values": [
+            "글상자 앞 본문",
+            "결재 구분",
+            "1차 검토",
+            "2차 검토",
+            "검토자 서명",
+            "가람",
+            "나래",
+            "협조 의견란",
+            "결재 비고 사항",
+            "글상자 뒤 본문"
+          ]
+        },
+        {
+          "type": "order",
+          "values": [
+            "글상자 앞 본문",
+            "글상자 첫 문단 안내",
+            "결재 구분",
+            "글상자 끝 문단 안내",
+            "글상자 뒤 본문"
+          ]
+        },
+        {
+          "type": "table_merges",
+          "description": "Paired public HWPX reference has the same nested approval table."
+        }
+      ]
+    }
+  ]
+}

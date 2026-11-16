@@ -1,0 +1,83 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Apply Folio accessibility and sizing to imported shadcn primitives.
+ * Pattern: Shared component adaptation; Radix owns interaction and overlay behavior.
+ * Usage: Imported by the application stylesheet after its base component rules.
+ * Related: components/ui/, design/refract.tokens.json, frontend/components.sources.json. */
+.ui-button {
+  cursor: pointer;
+  font-family: var(--font-body);
+  border-radius: 8px;
+}
+.ui-button:focus-visible,
+.shadcn-menu [role="menuitem"]:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.ui-button:disabled {
+  cursor: not-allowed;
+}
+.shadcn-menu {
+  max-height: var(--radix-menu-content-available-height, calc(100dvh - 16px));
+  overflow-y: auto;
+  box-shadow: var(--shadow-dialog);
+}
+.shadcn-menu [role="menuitem"] {
+  min-height: 44px;
+  gap: 12px;
+  cursor: pointer;
+}
+.shadcn-menu [role="menuitem"] svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.shadcn-menu .danger-action {
+  color: var(--color-error);
+}
+[data-slot="calendar"] {
+  font-size: 14px;
+}
+[data-slot="calendar"] button {
+  min-height: 44px;
+  min-width: 44px;
+}
+@media (pointer: coarse) {
+  .ui-button,
+  .shadcn-menu [role="menuitem"] {
+    min-height: 48px;
+  }
+  [data-slot="calendar"] {
+    --cell-size: 3rem;
+  }
+  [data-slot="calendar"] button {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-button,
+  [role="dialog"],
+  [role="menu"],
+  [role="alertdialog"] {
+    transition: none;
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .ui-button,
+  .shadcn-menu,
+  [role="dialog"],
+  [role="alertdialog"],
+  [role="combobox"],
+  input {
+    border: 1px solid CanvasText;
+  }
+  .ui-button:focus-visible,
+  .shadcn-menu [role="menuitem"]:focus-visible {
+    outline: 2px solid Highlight;
+  }
+  [aria-selected="true"],
+  [data-selected-single="true"] {
+    outline: 2px solid Highlight;
+  }
+}

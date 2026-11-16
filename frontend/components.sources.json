@@ -1,0 +1,114 @@
+{
+  "source": "shadcn/ui official new-york registry (Radix)",
+  "retrieved_on": "2026-11-15",
+  "components": {
+    "button": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/button.json",
+      "sha256": "4d8f39c3bd25e630b5962667722e8707e7b18122ad6842a5c22acf8a3ff9f93a"
+    },
+    "input": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/input.json",
+      "sha256": "4d1a3b126cc62485b225e3da32d4a56df851c95c5a24035af1f1c80f33726cfa"
+    },
+    "label": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/label.json",
+      "sha256": "ea924e70d496cbd6986591ad75f2cbfeb9649f1ce2750cd6dbfb522833e4bcdb"
+    },
+    "select": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/select.json",
+      "sha256": "574c730b6dc8b37e5cfa8e19159e4a1d2ee54c17b927bd4003ff26c8b7a6edfb"
+    },
+    "dialog": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/dialog.json",
+      "sha256": "e240f8eaa9e9e626dffa1a340469c6bace9c631e78b7b10e7d0f178a32a1c71c"
+    },
+    "alert-dialog": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/alert-dialog.json",
+      "sha256": "7fac1627fbed45517acf027f83df785a7dd00b4954394bc2db837a1d0700f829"
+    },
+    "dropdown-menu": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/dropdown-menu.json",
+      "sha256": "dbd4c0a23be34f2709108597c992528659df65c39b7a0afd17e1701d3ea5c361"
+    },
+    "context-menu": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/context-menu.json",
+      "sha256": "705384f0defc41d83a0bb3611d686c5911fdfde25986454ee3f03bf5003868de"
+    },
+    "popover": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/popover.json",
+      "sha256": "112f3cc3836f6b37823c55b794d3484b160bb450dd40963858874fb9ae314fd1"
+    },
+    "calendar": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/calendar.json",
+      "sha256": "6d58710002f57bf65b62ee80087c4d653025e9ccfdd770a2c0155f7eb332004e"
+    },
+    "pagination": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/pagination.json",
+      "sha256": "1ddfee22ddd7c0a43f00528d3a7f877752edf2e902e72a2a46022abae00b989e"
+    },
+    "card": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/card.json",
+      "sha256": "e6b5055ff2e674007d65df1b1e13f7e18eaba86efda60641c02ee6abaec337ce"
+    },
+    "tabs": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/tabs.json",
+      "sha256": "b608b427c8d640165083e54369c25e738d72d8cf7a80984ffc8fc0c2ff134a2f"
+    },
+    "progress": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/progress.json",
+      "sha256": "5b99e42b997efaef90fa01f64f35046d5015ff4ecc63887163dd112df7f92fac"
+    },
+    "item": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/item.json",
+      "sha256": "5a4c1f2666a6713b2b51459b041cf974703006246cfbfebdeb9e128e0fa15f08"
+    },
+    "sonner": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/sonner.json",
+      "sha256": "785ce825462e7aef1deb35925e900561705a6d53e87260804e986ffc1aa72473"
+    },
+    "collapsible": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/collapsible.json",
+      "sha256": "9e935a82f4d846cce4fde8498c3adb298f794edfbb807bf166b5d6a2bb1c376c"
+    },
+    "textarea": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/textarea.json",
+      "sha256": "95a734124c9184947f6ec7c5f03a59f5dd246e305d54d91f46fefc339da2f105"
+    },
+    "table": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/table.json",
+      "sha256": "0cf28e873dde65e036d5805297dbcedaa0eb98bc33723b7f337293971ad1aa02"
+    },
+    "message": {
+      "url": "https://ui.shadcn.com/r/styles/new-york-v4/message.json",
+      "sha256": "0004ca776ddc0a5eddcb2e10dd9253856db96037962238b36ed6a71493edffd0",
+      "retrieved_on": "2026-11-17"
+    },
+    "bubble": {
+      "url": "https://ui.shadcn.com/r/styles/new-york-v4/bubble.json",
+      "sha256": "b1a9d96c03a81a98e1f3a789892210dfeeee9d7b65cbd1708bd0bbca41f84c76",
+      "retrieved_on": "2026-11-17"
+    },
+    "input-group": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/input-group.json",
+      "sha256": "3bae888339430238002654651bd3eedaf69570254bcd7dbaaf6628db219984d0",
+      "retrieved_on": "2026-11-17"
+    },
+    "message-scroller": {
+      "url": "https://ui.shadcn.com/r/styles/new-york-v4/message-scroller.json",
+      "sha256": "9fa06194196391e5bda4fbd890f06ee06c8f1d2016b5f8e8d6d05a0780bbf091",
+      "retrieved_on": "2026-11-17"
+    }
+  },
+  "adaptations": [
+    "Folio colors and light-only surfaces",
+    "44px controls, 48px coarse targets, immediate overlays",
+    "Korean labels and feature-owned mutation/close rules",
+    "Only consumed exports; semantic Card and button pagination",
+    "Stable module-level Calendar custom components for React Compiler",
+    "UTC DayPicker boundary with local calendar today; date-only strings remain canonical",
+    "Radix controlled dialogs and menus replace bespoke native behavior",
+    "Official Item source retains only consumed exports; notification list uses native li semantics",
+    "Sonner uses a light-only theme without next-themes; Collapsible owns work-panel disclosure",
+    "Chat consumes official Message/Bubble/Message Scroller/InputGroup; pinned @shadcn/react 0.3.1, existing Radix Slot/cn/controls, light-only tokens, Korean scroll labels, feature-owned transport and IME-safe submission"
+  ]
+}

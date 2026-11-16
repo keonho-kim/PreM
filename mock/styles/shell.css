@@ -1,0 +1,180 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: fixed top workspace navigation · signature: source-linked editing · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, keep task content central */
+/* Purpose: Own the compact sticky navigation and full-width workspace shell.
+ * Pattern: One navigation tree with native horizontal overflow and scoped content.
+ * Usage: Imported by mock/styles.css.
+ * Related: mock/index.html, mock/js/chrome.js, mock/tokens.css. */
+.app-frame {
+  max-inline-size: var(--container);
+  min-block-size: 100dvh;
+  margin-inline: auto;
+}
+.app-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--z-sticky);
+  background: var(--glass-chrome);
+  box-shadow: none;
+  border-block-end: 1px solid var(--color-rule);
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  min-block-size: 56px;
+  padding-inline: var(--space-xl);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-block-size: 44px;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.025em;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.project-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  max-inline-size: 300px;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  padding: 0 var(--space-sm);
+  color: var(--color-ink);
+  text-align: start;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  font-size: var(--text-label);
+}
+.project-switch strong {
+  min-inline-size: 0;
+  overflow: clip;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-inline-start: auto;
+}
+.app-main {
+  min-inline-size: 0;
+}
+.workspace {
+  min-inline-size: 0;
+  min-block-size: calc(100dvh - var(--app-header-height));
+  padding: var(--space-xl);
+}
+#main-title {
+  scroll-margin-block-start: calc(var(--app-header-height) + var(--space-md));
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-block-end: var(--space-xl);
+}
+.page-heading > div {
+  min-inline-size: 0;
+}
+.page-heading p {
+  margin-block-start: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-label);
+}
+.heading-actions,
+.actions,
+.row-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+.heading-actions > .button {
+  min-inline-size: 112px;
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-md);
+}
+.section-title a {
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  text-decoration: none;
+}
+.panel {
+  border-radius: var(--radius-card);
+  padding: var(--space-lg);
+  min-inline-size: 0;
+}
+.toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-block-end: var(--space-lg);
+}
+.meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-sm) 0;
+}
+.meta-strip div {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.meta-strip dt,
+.meta-strip dd {
+  margin: 0;
+  font-size: var(--text-label);
+}
+.meta-strip dt {
+  color: var(--color-muted);
+}
+.meta-strip dd {
+  font-weight: 500;
+}
+.task-notice {
+  margin-block-start: var(--space-lg);
+}
+@media (hover: hover) {
+  .project-switch:hover {
+    background: var(--color-paper-3);
+  }
+}
+@media (max-width: 40rem) {
+  .topbar {
+    gap: var(--space-xs);
+    padding-inline: var(--space-md);
+  }
+  .wordmark {
+    gap: var(--space-2xs);
+    font-size: 18px;
+  }
+  .project-switch {
+    flex: 1;
+    padding-inline: var(--space-2xs);
+  }
+  .topbar-right {
+    gap: 0;
+  }
+}

@@ -1,0 +1,75 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Bind short-lived Sonner notifications to the persistent work dock.
+ * Pattern: Shared paper tokens with library-owned focus, dismissal and announcement.
+ * Usage: App Feedback measures panel height and sets Toaster offsets.
+ * Related: feedback.tsx, components/ui/sonner.tsx. */
+[data-sonner-toast].feedback-toast {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border-color: var(--color-rule);
+  box-shadow: var(--shadow-slide);
+}
+.feedback-toast-description {
+  color: var(--color-muted);
+}
+[data-sonner-toast].feedback-toast[data-styled="true"] [data-close-button] {
+  position: static;
+  transform: none;
+  order: 3;
+  margin-inline-start: auto;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  background: transparent;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast] {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+@media (forced-colors: active) {
+  [data-sonner-toast].feedback-toast {
+    border: 1px solid CanvasText;
+  }
+}
+/* Fade in place so a toast never slides through the work-panel controls below it. */
+[data-sonner-toast].feedback-toast {
+  transition: opacity 160ms ease;
+}
+[data-sonner-toast].feedback-toast[data-mounted="false"] {
+  --y: translateY(0);
+  pointer-events: none;
+}
+
+/* Informational text does not intercept workspace commands beneath the toast. */
+[data-sonner-toast].feedback-toast {
+  pointer-events: none;
+  max-block-size: min(240px, 40dvh);
+  overflow-y: auto;
+}
+@media (pointer: coarse) {
+  [data-sonner-toast].feedback-toast[data-styled="true"] [data-close-button] {
+    min-inline-size: 48px;
+    min-block-size: 48px;
+  }
+}
+[data-sonner-toaster] {
+  pointer-events: none;
+}
+
+:root {
+  --work-dock-gap: max(16px, env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 40rem) {
+  :root {
+    --work-dock-gap: 0px;
+    scroll-padding-block-end: var(--work-panel-reserve, 0px);
+  }
+  body {
+    padding-block-end: var(--work-panel-reserve, 0px);
+  }
+}

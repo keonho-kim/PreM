@@ -1,0 +1,226 @@
+/* Hallmark · Folio: editorial search rows on neutral paper. */
+/* Purpose: Make shared-document discovery a readable full-page task.
+ * Pattern: One prominent query, ruled news rows, bounded original thumbnails.
+ * Usage: SearchPage and the compact global search entry.
+ * Related: search-page.tsx, search-box.tsx, design/refract.tokens.json. */
+.global-search,
+.library-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.search-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.global-search {
+  inline-size: 290px;
+}
+.global-search input {
+  min-inline-size: 0;
+}
+.search-page-heading {
+  max-inline-size: 850px;
+  margin-block-end: 28px;
+}
+.search-page-heading h1 {
+  font-size: 28px;
+  margin-block: 8px 24px;
+}
+.library-search {
+  margin-block-end: 16px;
+}
+.library-search input {
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 52px;
+}
+.library-search button {
+  min-block-size: 52px;
+}
+.search-workspace {
+  max-inline-size: 1120px;
+}
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+  padding-block: 24px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.search-filters > div {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 180px;
+}
+.search-count {
+  color: var(--color-muted);
+  margin-block: 24px 8px;
+}
+.search-result {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 24px;
+  padding-block: 24px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.search-result-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  inline-size: 160px;
+  block-size: 120px;
+  background: var(--color-paper-2);
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.search-result-thumb img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  background: var(--color-paper);
+}
+.search-result-thumb svg {
+  inline-size: 28px;
+  block-size: 28px;
+}
+.search-result-copy {
+  min-inline-size: 0;
+}
+.search-result-source {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.search-result h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin-block: 6px 10px;
+  overflow-wrap: anywhere;
+}
+.search-result h2 a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.search-result h2 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.search-result .match-text {
+  margin: 0;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.search-result footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-block-start: 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.search-filename {
+  overflow-wrap: anywhere;
+}
+.search-empty {
+  padding-block: 48px;
+}
+.search-empty h2 {
+  font-size: 20px;
+}
+.search-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-block: 28px;
+}
+@media (max-width: 850px) {
+  .app-header .container {
+    flex-wrap: wrap;
+  }
+  .global-search {
+    inline-size: 100%;
+    padding-block-end: 8px;
+  }
+}
+@media (max-width: 640px) {
+  .search-result {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .search-result-thumb {
+    inline-size: 88px;
+    block-size: 88px;
+  }
+  .search-result h2 {
+    font-size: 18px;
+  }
+  .search-filters > div {
+    min-inline-size: 0;
+    flex: 1 1 140px;
+  }
+  .search-page-heading h1 {
+    font-size: 24px;
+  }
+  .library-search button {
+    min-inline-size: 44px;
+    padding-inline: 12px;
+  }
+}
+@media (forced-colors: active) {
+  .search-result-thumb {
+    border: 1px solid CanvasText;
+  }
+}
+
+.global-search form,
+.library-search form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.search-options {
+  margin-block-start: 12px;
+}
+@media (max-width: 640px) {
+  .search-workspace {
+    padding-block-start: 28px;
+  }
+  .search-page-heading {
+    margin-block-end: 20px;
+  }
+}
+
+.space-search-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-block-end: 40px;
+}
+.space-search-heading h1 {
+  margin-block-start: 8px;
+  font-size: 28px;
+}
+.search-page-heading h2 {
+  font-size: 24px;
+  font-weight: 500;
+  margin-block-end: 20px;
+}
+.space-search-return {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  margin-block-end: 16px;
+}

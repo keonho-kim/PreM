@@ -1,0 +1,292 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Style the real shared asset library and upload queue with opaque Folio surfaces.
+ * Pattern: Task-focused tabs, factual file cards and measured file-level progress.
+ * Usage: Imported by SpaceDirectory only.
+ * Related: upload-panel.tsx, asset-card.tsx, design/refract.tokens.json. */
+.workspace.space-workspace {
+  padding-block: 40px 80px;
+}
+.space-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-block-end: 28px;
+}
+.space-heading h1 {
+  margin-block: 8px 12px;
+}
+.space-filters {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-block: 24px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.space-filters > div {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.space-filters > div:first-child {
+  flex: 0 1 220px;
+}
+.space-filters > div:nth-child(2) {
+  min-width: 140px;
+}
+.space-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: 24px;
+  gap: 16px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.space-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.space-asset {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--color-paper);
+  overflow-wrap: anywhere;
+  padding: 24px;
+  gap: 16px;
+}
+.space-asset > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.space-state {
+  margin-inline-start: auto;
+}
+.space-asset h2 {
+  font-size: 20px;
+  line-height: 1.4;
+}
+.space-filename {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.space-asset dl {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  margin: 0;
+}
+.space-asset dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.space-asset dt {
+  color: var(--color-muted);
+}
+.space-asset dd {
+  margin: 0;
+}
+.space-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+}
+.space-tags li {
+  background: var(--color-paper-3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 12px;
+}
+.space-asset footer {
+  margin-block-start: auto;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--color-rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.space-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.space-menu {
+  width: 220px;
+  max-width: calc(100vw - 16px);
+}
+.space-empty {
+  padding-block: 72px;
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+}
+.space-empty h2 {
+  font-size: 24px;
+}
+.space-empty > svg {
+  color: var(--color-muted);
+}
+.space-boundary {
+  font-size: 13px;
+  padding-block-start: 32px;
+}
+.space-pagination {
+  margin-block-start: 32px;
+}
+.space-pagination ul {
+  width: 100%;
+  justify-content: space-between;
+}
+.space-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border-radius: 12px;
+  padding: 28px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border-color: var(--color-rule);
+  box-shadow: var(--shadow-dialog);
+}
+.space-dialog h2 {
+  font-size: 22px;
+  padding-inline-end: 32px;
+  line-height: 1.3;
+}
+.space-dialog form {
+  display: grid;
+  gap: 12px;
+}
+.space-dialog form > label {
+  margin-block-start: 8px;
+}
+.space-error {
+  color: var(--color-error);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.space-dropzone {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 20px;
+  border: 1px dashed var(--color-control);
+  border-radius: 8px;
+}
+.space-dropzone > svg {
+  color: var(--color-muted);
+}
+.space-dropzone input {
+  max-width: 100%;
+  min-height: 48px;
+}
+.space-dropzone p,
+.space-dialog .muted {
+  font-size: 13px;
+}
+.space-selected-files {
+  list-style: none;
+  padding: 0;
+  max-height: 160px;
+  overflow: auto;
+}
+.space-selected-files li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+  padding-block: 6px;
+  overflow-wrap: anywhere;
+}
+.space-selected-files span {
+  flex-shrink: 0;
+  color: var(--color-muted);
+}
+.space-version-list {
+  list-style: none;
+  padding: 0;
+}
+.space-version-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 16px;
+  border-block-end: 1px solid var(--color-rule);
+  overflow-wrap: anywhere;
+}
+.space-version-list strong {
+  font-size: 14px;
+}
+@media (max-width: 70rem) {
+  .space-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 42rem) {
+  .space-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .space-gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .space-dialog {
+    padding: 20px;
+  }
+  .space-asset {
+    padding: 20px;
+  }
+}
+@media (forced-colors: active) {
+  .space-asset,
+  .space-dialog,
+  .space-dropzone,
+  .space-tags li {
+    border: 1px solid CanvasText;
+  }
+}
+
+.space-workspace [role="tablist"] {
+  height: auto;
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+.space-workspace [role="tab"] {
+  position: relative;
+  min-block-size: 44px;
+  flex-shrink: 0;
+}
+@media (pointer: coarse) {
+  .space-workspace [role="tab"] {
+    min-block-size: 48px;
+  }
+}
+.space-workspace [role="tab"][aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 12px 2px;
+  border-block-end: 2px solid currentColor;
+}
+
+.space-title-button {
+  padding: 0;
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+  text-align: start;
+  font: inherit;
+  justify-content: flex-start;
+}

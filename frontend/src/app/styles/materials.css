@@ -1,0 +1,29 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: product header · signature: live service connection · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, keep document content central */
+/* Purpose: Bind opaque paper surfaces and tangerine commands to shared Folio tokens.
+ * Pattern: Presentation adapter for the production scaffold.
+ * Usage: Imported by frontend/src/app/styles/index.css.
+ * Related: design/refract.tokens.json, design.md. */
+.app-header,
+.connection {
+  background: var(--glass-panel);
+  border: 0;
+  box-shadow: var(--glass-shadow);
+}
+.app-header {
+  background: var(--glass-chrome);
+  box-shadow: var(--glass-highlight);
+}
+.connection {
+  padding: var(--space-lg);
+  border-radius: var(--radius-card);
+}
+.brand {
+  color: var(--color-accent);
+}
+@media (forced-colors: active) {
+  .connection {
+    border: 1px solid CanvasText;
+  }
+}

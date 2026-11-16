@@ -1,0 +1,252 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 · weakest: V, keep the slide central */
+/* Purpose: Compose the slide list, canvas and inspector as one editing workbench.
+ * Pattern: Three task columns in DOM reading order with bounded native scrolling.
+ * Usage: Imported after shared search/editor styles.
+ * Related: mock/js/views/presentations.js, mock/js/studio.js, mock/js/dom.js. */
+.workspace[data-view="editor"] {
+  padding: var(--space-md) var(--space-lg);
+}
+.workspace[data-view="editor"] .studio-context {
+  margin-block-end: 0;
+}
+.workspace[data-view="editor"] .page-heading {
+  margin-block-end: var(--space-sm);
+}
+.workspace[data-view="editor"] .page-heading p {
+  margin-block-start: var(--space-2xs);
+}
+.editor-toolbar {
+  padding-block: var(--space-xs);
+  border-block-start: 0;
+  border-block-end: 1px solid var(--color-rule);
+  margin-block-end: var(--space-md);
+}
+.editor-toolbar .button {
+  background: transparent;
+  border-color: transparent;
+}
+.editor-grid {
+  --editor-pane-height: clamp(440px, calc(100dvh - 320px), 840px);
+  grid-template-columns: 176px minmax(0, 1fr) 320px;
+  gap: var(--space-md);
+  align-items: start;
+}
+.editor-grid .slide-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: var(--space-2xs) var(--space-sm) var(--space-2xs) var(--space-2xs);
+  max-block-size: var(--editor-pane-height);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y proximity;
+  scrollbar-gutter: stable;
+}
+.editor-grid .rail-title {
+  display: block;
+  flex: none;
+  padding: var(--space-xs);
+  font-size: var(--text-label);
+}
+.editor-grid .slide-thumb {
+  flex: none;
+  inline-size: 100%;
+  padding: var(--space-2xs);
+  border-radius: var(--radius-inner);
+}
+.editor-grid .slide-thumb[aria-pressed="true"] {
+  background: var(--color-paper);
+  border-color: var(--color-accent);
+}
+.editor-grid .slide-caption {
+  display: flex;
+  gap: var(--space-xs);
+  text-align: start;
+  font-size: var(--text-xs);
+}
+.slide-caption > span:last-child {
+  min-inline-size: 0;
+  overflow: clip;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.editor-stage {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-block-size: var(--editor-pane-height);
+  padding: var(--space-md);
+  border-radius: var(--radius-inner);
+}
+.editor-stage .preview-well {
+  inline-size: 100%;
+  align-self: center;
+}
+.editor-stage .canvas-label {
+  margin-block-end: var(--space-sm);
+}
+.editor-stage .editor-notes {
+  margin-block-start: var(--space-sm);
+}
+.editor-inspector {
+  padding-inline-start: var(--space-md);
+}
+.editor-inspector .inspector-tabs {
+  margin-block-end: var(--space-sm);
+}
+.editor-inspector [role="tabpanel"] {
+  max-block-size: calc(var(--editor-pane-height) - 64px);
+  padding-inline-end: var(--space-2xs);
+}
+.editor-inspector .chat-panel form[data-form="chat"] {
+  gap: var(--space-sm);
+}
+.editor-inspector .chat-panel form[data-form="chat"] textarea {
+  min-block-size: 128px;
+}
+.editor-inspector .editor-support {
+  gap: var(--space-sm);
+  padding-block: var(--space-sm);
+}
+.editor-inspector .revision-note {
+  border-inline-start: 1px solid var(--color-rule);
+}
+.workspace[data-view="editor"] .studio-next {
+  margin-block-start: var(--space-md);
+  padding-block-start: var(--space-sm);
+}
+.workspace[data-view="presentations"] .deck-list .deck-row,
+.workspace[data-view="presentations"] .deck-list .deck-row:first-child {
+  grid-template-columns: 240px minmax(0, 1fr) auto;
+  padding-block: var(--space-lg);
+  gap: var(--space-lg);
+}
+.workspace[data-view="presentations"] .deck-row h2 {
+  margin-block-end: var(--space-sm);
+}
+@media (hover: hover) {
+  .editor-toolbar .button:hover {
+    background: var(--color-paper-3);
+  }
+}
+@media (max-width: 70rem) {
+  .editor-grid {
+    grid-template-columns: 136px minmax(0, 1fr) 288px;
+    gap: var(--space-sm);
+  }
+  .editor-inspector {
+    padding-inline-start: var(--space-sm);
+  }
+}
+@media (max-width: 58rem) {
+  .editor-grid {
+    grid-template-columns: 128px minmax(0, 1fr);
+  }
+  .editor-inspector {
+    grid-column: 1 / -1;
+    padding: var(--space-md) 0 0;
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--color-rule);
+  }
+  .editor-inspector [role="tabpanel"] {
+    max-block-size: none;
+    overflow: visible;
+  }
+  .editor-stage {
+    min-block-size: 400px;
+  }
+  .editor-grid .slide-rail {
+    max-block-size: 400px;
+  }
+  .page-reference-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 40rem) {
+  .workspace[data-view="editor"] {
+    padding: var(--space-md);
+  }
+  .editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .editor-grid .slide-rail {
+    flex-direction: row;
+    max-block-size: unset;
+    padding: var(--space-2xs);
+    scroll-snap-type: x proximity;
+  }
+  .editor-grid .slide-thumb {
+    flex: 0 0 128px;
+  }
+  .editor-grid .rail-title {
+    display: none;
+  }
+  .editor-stage {
+    min-block-size: 0;
+    padding: var(--space-sm);
+  }
+  .page-reference-gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace[data-view="presentations"] .deck-list .deck-row,
+  .workspace[data-view="presentations"] .deck-list .deck-row:first-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .deck-list .deck-row > .actions {
+    grid-column: auto;
+  }
+}
+.editor-panel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-block-end: var(--space-sm);
+}
+.editor-panel-controls .button {
+  padding-inline: var(--space-xs);
+}
+.editor-grid[data-slides-collapsed="true"] {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+.editor-grid[data-inspector-collapsed="true"] {
+  grid-template-columns: 176px minmax(0, 1fr);
+}
+.editor-grid[data-slides-collapsed="true"][data-inspector-collapsed="true"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (max-width: 70rem) {
+  .editor-grid[data-slides-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr) 288px;
+  }
+  .editor-grid[data-inspector-collapsed="true"] {
+    grid-template-columns: 136px minmax(0, 1fr);
+  }
+  .editor-grid[data-slides-collapsed="true"][data-inspector-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 58rem) {
+  .editor-grid[data-slides-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .editor-grid[data-inspector-collapsed="true"] {
+    grid-template-columns: 128px minmax(0, 1fr);
+  }
+  .editor-grid[data-slides-collapsed="true"][data-inspector-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .editor-grid[data-slides-collapsed],
+  .editor-grid[data-inspector-collapsed] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.editor-grid[data-slides-collapsed="true"] .editor-stage .preview-well,
+.editor-grid[data-inspector-collapsed="true"] .editor-stage .preview-well {
+  max-inline-size: 960px;
+}

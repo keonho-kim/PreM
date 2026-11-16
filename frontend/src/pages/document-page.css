@@ -1,0 +1,26 @@
+/* Hallmark · Folio: an open document workspace instead of a search modal. */
+/* Purpose: Present a pinned result with normal page scrolling and a visible return path.
+ * Pattern: Reuse document feature surfaces without dialog size or scrolling constraints.
+ * Usage: DocumentPage only.
+ * Related: features/document-processing/processing.css, document-page.tsx. */
+.document-workspace {
+  max-inline-size: 1180px;
+}
+.document-workspace > .ui-button {
+  margin-block-end: 24px;
+}
+.document-workspace .asset-preview-heading {
+  margin-block-start: 20px;
+}
+.document-workspace .asset-preview-heading h1 {
+  font-size: 28px;
+  overflow-wrap: anywhere;
+}
+.document-workspace .asset-preview-body {
+  max-block-size: none;
+  overflow: visible;
+}
+
+.document-workspace h1 {
+  scroll-margin-block-start: 200px;
+}

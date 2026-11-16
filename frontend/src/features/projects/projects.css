@@ -1,0 +1,97 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Style the shadcn project edit and lifecycle dialogs.
+ * Pattern: Opaque paper, bounded scrolling and Radix modal behavior.
+ * Usage: Imported by the project feature.
+ * Related: project-directory.tsx, project-dialog.tsx, app/styles/theme.generated.css. */
+.project-dialog {
+  inline-size: min(480px, calc(100% - 32px));
+  max-block-size: calc(100dvh - 48px);
+  padding: 28px;
+  margin: 0;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-dialog);
+}
+.project-dialog form {
+  display: grid;
+  gap: 12px;
+}
+.project-dialog h2 {
+  font-size: 22px;
+}
+.project-dialog label {
+  margin-block-start: 16px;
+  font-weight: 500;
+}
+.project-dialog input {
+  min-block-size: 48px;
+  inline-size: 100%;
+  border: 1px solid var(--color-control);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+}
+.field-hint {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.form-message {
+  min-block-size: 48px;
+  font-size: 14px;
+}
+.form-message.error {
+  color: var(--color-error);
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-block-start: 12px;
+}
+@media (max-width: 40rem) {
+  .project-dialog {
+    padding: 20px;
+  }
+  .app-description {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .project-dialog,
+  .project-dialog input {
+    border-color: CanvasText;
+  }
+}
+
+.due-date-picker {
+  display: flex;
+  gap: 4px;
+  min-inline-size: 0;
+}
+.due-date-picker input {
+  min-inline-size: 100px;
+  flex: 1;
+}
+.due-date-picker > button {
+  flex-shrink: 0;
+}
+.due-date-calendar {
+  width: auto;
+  max-width: calc(100vw - 16px);
+  max-height: var(--radix-popover-content-available-height);
+  overflow: auto;
+  padding: 0;
+}
+.calendar-year {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 12px 0;
+}
+.calendar-year input {
+  width: 100px;
+}

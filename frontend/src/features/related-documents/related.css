@@ -1,0 +1,187 @@
+/* Hallmark · Folio: neutral paper and ruled reference rows. */
+/* Purpose: Present relationship results as readable thumbnail-and-excerpt rows.
+ * Pattern: Responsive flow, contained original previews and explicit source/selection controls.
+ * Usage: RelatedDocuments and ResultRow.
+ * Related: shared/ui/match-text.tsx, design/refract.tokens.json. */
+.related-workspace {
+  margin-block: 2rem;
+  display: grid;
+  gap: 1.25rem;
+}
+.related-search-form {
+  display: grid;
+  gap: 0.75rem;
+}
+.related-search-input {
+  display: flex;
+  gap: 0.75rem;
+}
+.related-search-input input {
+  min-inline-size: 0;
+  flex: 1;
+}
+.related-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding-block: 1rem;
+}
+.related-filters > div {
+  display: grid;
+  gap: 0.5rem;
+}
+.related-filters [role="combobox"] {
+  inline-size: 100%;
+}
+.related-progress {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  border-block: 1px solid var(--color-rule);
+  padding-block: 1rem;
+}
+.related-progress [role="progressbar"] {
+  inline-size: min(32rem, 100%);
+}
+.related-result {
+  display: grid;
+  grid-template-columns: 144px minmax(0, 1fr) 44px;
+  gap: 1.25rem;
+  padding-block: 1.5rem;
+  border-block-end: 1px solid var(--color-rule);
+  align-items: start;
+}
+.related-thumbnail {
+  position: relative;
+  inline-size: 144px;
+  block-size: 112px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  padding: 0.5rem;
+}
+.related-thumbnail img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+}
+.related-result-copy {
+  min-inline-size: 0;
+}
+.related-result-copy header {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.25rem;
+}
+.related-title {
+  white-space: normal;
+  text-align: start;
+  justify-content: start;
+  padding: 0;
+  font-size: 1.1rem;
+  min-block-size: 44px;
+  overflow-wrap: anywhere;
+}
+.related-source {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin-block: 0.25rem 0.75rem;
+}
+.related-source button {
+  font-size: 0.85rem;
+}
+.related-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.related-excerpt {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.related-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.related-origins {
+  max-block-size: 55dvh;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+}
+.related-origins li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.75rem;
+  border-block-end: 1px solid var(--color-rule);
+}
+.related-empty {
+  padding-block: 2rem;
+}
+@media (max-width: 640px) {
+  .related-search-input {
+    flex-wrap: wrap;
+  }
+  .related-search-input input {
+    flex-basis: 100%;
+  }
+  .related-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .related-result {
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  .related-thumbnail {
+    inline-size: 80px;
+    block-size: 80px;
+  }
+  .related-select {
+    grid-column: 2;
+    justify-self: end;
+  }
+  .related-origins li {
+    flex-wrap: wrap;
+  }
+}
+
+.evidence-tabs > [role="tablist"] {
+  display: flex;
+  justify-content: start;
+  gap: 16px;
+  block-size: auto;
+  padding: 0;
+  border-block-end: 1px solid var(--color-rule);
+  background: transparent;
+  border-radius: 0;
+}
+.evidence-tabs > [role="tablist"] > [role="tab"] {
+  position: relative;
+  min-block-size: 48px;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+.evidence-tabs > [role="tablist"] > [aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 12px;
+  inset-block-end: 0;
+  border-block-end: 2px solid var(--color-ink);
+}
+.evidence-search {
+  display: grid;
+  gap: 20px;
+  padding-block: 20px;
+}
+@media (forced-colors: active) {
+  .evidence-tabs > [role="tablist"] > [aria-selected="true"]::after {
+    border-color: Highlight;
+  }
+}

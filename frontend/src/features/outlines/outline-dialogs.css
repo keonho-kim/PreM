@@ -1,0 +1,62 @@
+/* Hallmark · Folio: on-demand outline editing and source selection. */
+/* Purpose: Bound editor and source-picker dialogs without changing workspace layout.
+ * Pattern: Existing Radix dialog semantics with scrollable content.
+ * Usage: Imported with outline workspace styles.
+ * Related: nodes.tsx, source-picker.tsx, outlines.css. */
+.outline-edit-dialog,
+.outline-picker-dialog {
+  inline-size: calc(100% - 32px);
+  max-inline-size: 880px;
+  max-block-size: calc(100dvh - 48px);
+  overflow: auto;
+  padding: 32px;
+}
+.outline-picker-results {
+  max-block-size: 50dvh;
+  overflow: auto;
+  padding-inline: 4px;
+}
+.outline-node-list {
+  list-style: none;
+  padding: 0;
+  margin-block: 20px;
+}
+.outline-node-list > li {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--color-rule);
+}
+.outline-child {
+  margin-inline-start: 28px;
+}
+.outline-node-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.outline-node-line input {
+  min-inline-size: 0;
+  flex: 1;
+}
+.outline-node-line button {
+  flex: none;
+}
+.outline-node-line button[aria-disabled="true"] {
+  opacity: 0.5;
+}
+.outline-node-details {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 16px;
+  padding-block-start: 12px;
+}
+.outline-node-details > div {
+  display: grid;
+  gap: 8px;
+}
+
+.outline-node-actions {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  margin-inline-start: auto;
+}

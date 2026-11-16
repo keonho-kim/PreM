@@ -1,0 +1,138 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Present an anchored work panel without competing with primary commands.
+ * Pattern: Responsive bottom dock, shadcn Collapsible and Item rows.
+ * Usage: Imported once by UploadWorkPanel.
+ * Related: app/feedback.css, upload-panel.tsx. */
+.work-dock {
+  position: fixed;
+  inset-inline-end: max(16px, env(safe-area-inset-right));
+  inset-block-end: max(16px, env(safe-area-inset-bottom));
+  inline-size: min(360px, calc(100vw - 32px));
+  z-index: 20;
+  display: flex;
+  justify-content: end;
+}
+.work-panel {
+  inline-size: 100%;
+  border: 1px solid var(--color-rule);
+  border-radius: 10px;
+  background: var(--color-paper);
+  box-shadow: var(--shadow-slide);
+}
+.work-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 8px 8px 16px;
+}
+.work-panel-heading > div {
+  flex: 1;
+  min-inline-size: 0;
+}
+.work-panel-heading h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.work-panel-heading p {
+  color: var(--color-muted);
+  font-size: 12px;
+  margin-block-start: 4px;
+}
+.work-panel-body {
+  max-block-size: min(360px, calc(50dvh - 64px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.work-panel-body[hidden] {
+  display: none;
+}
+.space-uploads > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 16px;
+}
+.space-uploads > header {
+  border-block-start: 1px solid var(--color-rule);
+}
+.upload-list-count {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.space-uploads > header button {
+  font-size: 12px;
+  padding-inline: 8px;
+}
+.space-uploads ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.space-uploads > p {
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+.space-upload-row {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  border-radius: 0;
+  border: 0;
+  border-block-start: 1px solid var(--color-rule);
+}
+.space-upload-row [data-slot="item-content"] {
+  min-width: 0;
+}
+.space-upload-row [data-slot="item-title"] {
+  overflow-wrap: anywhere;
+}
+.space-upload-row [data-slot="item-description"] {
+  font-size: 12px;
+  line-clamp: unset;
+  -webkit-line-clamp: unset;
+}
+.space-upload-row [role="progressbar"] {
+  margin-block-start: 6px;
+}
+.upload-status-icon {
+  color: var(--color-muted);
+  padding-block-start: 2px;
+}
+.upload-row-actions {
+  gap: 0;
+  flex-shrink: 0;
+}
+.upload-error {
+  color: var(--color-error);
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+@media (forced-colors: active) {
+  .work-panel {
+    border-color: CanvasText;
+  }
+}
+
+@media (max-width: 40rem) {
+  .work-dock {
+    inset-inline: 0;
+    inset-block-end: 0;
+    inline-size: auto;
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+    padding-block-end: max(8px, env(safe-area-inset-bottom, 0px));
+    background: var(--color-paper);
+    border-block-start: 1px solid var(--color-rule);
+    border-radius: 12px 12px 0 0;
+  }
+  .work-panel {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .work-launcher {
+    flex: 1;
+    margin: 8px 12px 0;
+  }
+}

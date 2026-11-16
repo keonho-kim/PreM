@@ -1,0 +1,40 @@
+{
+  "name": "puputyx",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=26.13.0 <27",
+    "pnpm": ">=12.16.1 <13"
+  },
+  "scripts": {
+    "runtime:install": "node scripts/install-document-runtime.mjs",
+    "dev": "node scripts/dev.mjs",
+    "dev:backend": "node scripts/dev.mjs --backend-only",
+    "dev:frontend": "pnpm --filter @puputyx/frontend dev",
+    "build": "./scripts/build.sh",
+    "check": "./scripts/quality-check.sh",
+    "lint": "biome lint frontend scripts --error-on-warnings",
+    "typecheck": "pnpm --filter @puputyx/frontend typecheck",
+    "test": "pnpm test:rust && pnpm --filter @puputyx/frontend test",
+    "smoke": "./scripts/smoke-test.sh",
+    "format": "biome format --write . && prettier --write \"**/*.{md,html,yml,yaml}\" && cargo fmt --all",
+    "format:check": "biome format . && prettier --check \"**/*.{md,html,yml,yaml}\" && cargo fmt --all -- --check",
+    "tokens": "node scripts/generate-design-tokens.mjs",
+    "tokens:check": "node scripts/generate-design-tokens.mjs --check",
+    "tools:install": "node scripts/rust-tools.mjs install",
+    "tools:check": "node scripts/rust-tools.mjs check",
+    "check:deps": "cargo machete && cargo deny --locked check --hide-inclusion-graph && pnpm audit",
+    "test:rust": "pnpm --filter @puputyx/frontend build && cargo nextest run --workspace --all-features --locked && cargo test --workspace --all-features --locked --doc",
+    "coverage": "pnpm coverage:frontend && pnpm coverage:rust",
+    "coverage:frontend": "pnpm --filter @puputyx/frontend coverage",
+    "coverage:rust": "pnpm --filter @puputyx/frontend build && node scripts/coverage.mjs",
+    "fixtures:parsing": "uv run tests/helpers/parsing-fixtures.py",
+    "audit:parsing": "node tests/helpers/parsing-audit.mjs",
+    "test:e2e": "node tests/e2e/projects.cjs && node tests/e2e/space.cjs && node tests/e2e/providers.cjs && node tests/e2e/decisions.cjs && node tests/e2e/document-processing.cjs && node tests/e2e/model-capacity.cjs && node tests/e2e/reference-materials.cjs && node tests/e2e/studio.cjs && node tests/e2e/mobile-work-panel.cjs && node tests/e2e/related-documents.cjs && node tests/e2e/related-exploration.cjs && node tests/e2e/vllm-sr.cjs && node tests/e2e/markdown.cjs && node tests/e2e/library-search.cjs && node tests/e2e/source-structure.cjs && node tests/e2e/outlines.cjs && node tests/e2e/presentations.cjs && node tests/e2e/admin-access.cjs && node tests/e2e/slide-chat.cjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "prettier": "3.10.1"
+  }
+}

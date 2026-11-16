@@ -1,0 +1,168 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation) */
+/* Purpose: Separate transient mock notifications from persistent simulated work progress.
+ * Pattern: Non-modal responsive bottom dock and independent toast stack above its measured height.
+ * Usage: Loaded by mock/styles.css; feedback.js owns lifetime and scope.
+ * Related: mock/js/feedback.js, mock/js/space.js. */
+.mock-work-dock {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(360px, calc(100vw - 32px));
+  z-index: 20;
+  display: flex;
+  justify-content: end;
+}
+.mock-work-panel {
+  width: 100%;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: 1px solid var(--color-rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow-slide);
+}
+.mock-work-panel > header {
+  display: flex;
+  align-items: center;
+  padding: 8px 8px 8px 16px;
+}
+.mock-work-panel header > div {
+  flex: 1;
+  min-width: 0;
+}
+.mock-work-panel h2 {
+  font-size: 14px;
+}
+.mock-work-panel header p {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-top: 4px;
+}
+#mock-task-body {
+  max-height: min(360px, calc(50dvh - 64px));
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.mock-task-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-inline: 16px;
+  border-top: 1px solid var(--color-rule);
+  font-size: 12px;
+}
+.mock-work-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mock-work-panel li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--color-rule);
+  padding: 12px 16px;
+}
+.mock-work-panel li > div:first-child {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.mock-work-panel strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.mock-task-actions {
+  display: flex;
+  align-items: center;
+}
+#mock-task-body > p {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+.mock-toasts {
+  --mock-task-height: 0px;
+  position: fixed;
+  inset: auto max(16px, env(safe-area-inset-right))
+    calc(max(16px, env(safe-area-inset-bottom)) + var(--mock-task-height)) auto;
+  width: min(360px, calc(100vw - 32px));
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  z-index: 30;
+  overflow: visible;
+}
+.mock-toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  box-shadow: var(--shadow-slide);
+}
+.mock-toast p {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+.mock-work-dock[hidden],
+.mock-work-panel[hidden],
+#mock-task-body[hidden],
+.mock-work-launcher[hidden],
+.mock-toasts[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .mock-work-panel,
+  .mock-toast {
+    border-color: CanvasText;
+  }
+}
+
+.mock-toast {
+  pointer-events: none;
+}
+.mock-toast button {
+  pointer-events: auto;
+}
+.mock-toasts {
+  pointer-events: none;
+}
+
+@media (max-width: 40rem) {
+  :root {
+    scroll-padding-block-end: var(--mock-work-reserve, 0px);
+  }
+  body {
+    padding-block-end: var(--mock-work-reserve, 0px);
+  }
+  .mock-work-dock {
+    inset-inline: 0;
+    bottom: 0;
+    width: auto;
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    background: var(--color-paper);
+    border-top: 1px solid var(--color-rule);
+    border-radius: 12px 12px 0 0;
+  }
+  .mock-work-panel {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .mock-work-launcher {
+    flex: 1;
+    margin: 8px 12px 0;
+  }
+}

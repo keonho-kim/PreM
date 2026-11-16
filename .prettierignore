@@ -1,0 +1,20 @@
+node_modules/
+target/
+frontend/dist/
+coverage/
+data/
+.hallmark/
+blueprint/
+pnpm-lock.yaml
+Cargo.lock
+runtime/
+release/
+mock/captures/
+mock/helpers/.artifacts/
+tests/.artifacts/
+
+# Code formatting belongs to Biome.
+**/*.{js,cjs,mjs,jsx,ts,tsx,json,jsonc,css}
+
+# Markdown parser input is byte-sensitive test data, not authored documentation.
+tests/fixtures/documents/reference.md

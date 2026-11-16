@@ -1,0 +1,177 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Furrow (Folio adaptation)
+ * nav: project workspace · signature: source-linked slides · redesign: restyle · axes: light/grotesk-sans/warm · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: V, keep document content central */
+/* Purpose: Provide shared opaque paper surfaces, ink, and command colors.
+ * Pattern: Generated design tokens; do not edit this output directly.
+ * Usage: Imported by the UI style composition root or token sheet.
+ * Related: design/refract.tokens.json, scripts/generate-design-tokens.mjs. */
+/* Source SHA-256: 828c5942f72cfc2627c1cdc6e0256dbd33c89443ca7e04c42f8bc93a052c3b24 */
+:root {
+  --color-brand: #f58254;
+  --color-brand-hi: #ee7446;
+  --color-brand-ink: #262824;
+  --color-brand-border: #bf542b;
+  --color-paper: #fffefa;
+  --color-paper-2: #fffefa;
+  --color-paper-3: #eeede8;
+  --color-workspace: #f6f5f2;
+  --color-header-shadow: #26282408;
+  --color-ink: #262824;
+  --color-ink-2: #51564f;
+  --color-muted: #60665d;
+  --color-rule: #dcded6;
+  --color-control: #7d8177;
+  --color-light: #ffffff;
+  --color-shade: #262824;
+  --color-accent: #9c3d1e;
+  --color-accent-ink: #ffffff;
+  --color-accent-hi: #813218;
+  --color-accent-deep: #723018;
+  --color-accent-soft: #fbe8de;
+  --color-focus: #9c3d1e;
+  --color-accent-2: #795020;
+  --color-warning-soft: #f7edda;
+  --color-error: #9e354d;
+  --color-error-soft: #fff0f3;
+  --color-success: #3c624b;
+  --color-well: #fffefa;
+  --color-well-2: #eaeae4;
+  --color-well-ink: #262824;
+  --color-well-muted: var(--color-muted);
+  --color-well-rule: #dcded6;
+  --color-card: #fffefa;
+  --color-slide-paper: #ffffff;
+  --color-slide-ink: #19343e;
+  --color-slide-muted: #526a74;
+  --color-overlay: #2628244d;
+  --color-selection: #f9d7c5;
+  --color-briefing: #edf6f7;
+  --color-editorial: #fcf2ee;
+  --color-editorial-ink: #704650;
+  --color-day-ink: var(--color-ink);
+  --color-day-muted: var(--color-muted);
+  --color-fog: var(--color-paper-3);
+  --glass-panel-fallback: #fffefa;
+  --glass-chrome-fallback: #fffefa;
+  --glass-inset-fallback: #eeede8;
+  --glass-control-fallback: #fffefa;
+  --glass-dialog-fallback: #fffefa;
+  --glass-panel: var(--glass-panel-fallback);
+  --glass-chrome: var(--glass-chrome-fallback);
+  --glass-inset: var(--glass-inset-fallback);
+  --glass-control: var(--glass-control-fallback);
+  --glass-dialog: var(--glass-dialog-fallback);
+  --glass-edge: var(--color-rule);
+  --glass-header: var(--glass-chrome-fallback);
+  --glass-filter: none;
+  --glass-dialog-filter: none;
+  --glass-highlight: none;
+  --glass-shadow: none;
+  --shadow-control: 0 1px 2px #2628240a;
+  --shadow-control-pressed: none;
+  --shadow-card: none;
+  --shadow-slide: 0 4px 16px #26282414, 0 1px 2px #26282412;
+  --shadow-dialog: 0 24px 80px #26282433;
+  --glass: var(--glass-panel);
+  --glass-hi: var(--glass-highlight);
+  --radius-card: 12px;
+  --radius-inner: 8px;
+  --radius-control: 8px;
+  --radius-pill: 4px;
+  --color-water: #eaeae4;
+  --color-tile-base: #f6f5f2;
+  --color-tile-edge: #dcded6;
+  --radius-paper: 2px;
+  --color-slide-accent: #006c86;
+  --color-slide-soft: #f1f6f7;
+}
+@supports (background-color: rgb(255 255 255 / 0.8)) {
+  :root {
+    --glass-panel: var(--glass-panel-fallback);
+    --glass-chrome: var(--glass-chrome-fallback);
+    --glass-inset: var(--glass-inset-fallback);
+    --glass-control: var(--glass-control-fallback);
+    --glass-dialog: var(--glass-dialog-fallback);
+    --glass-filter: none;
+    --glass-dialog-filter: none;
+    --glass-edge: var(--color-rule);
+    --glass-header: var(--glass-chrome-fallback);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-panel: var(--glass-panel-fallback);
+    --glass-chrome: var(--glass-chrome-fallback);
+    --glass-inset: var(--glass-inset-fallback);
+    --glass-control: var(--glass-control-fallback);
+    --glass-dialog: var(--glass-dialog-fallback);
+    --glass-filter: none;
+    --glass-dialog-filter: none;
+    --glass-edge: var(--color-rule);
+    --glass-shadow: none;
+    --shadow-control: none;
+    --shadow-control-pressed: none;
+    --glass-header: var(--glass-chrome-fallback);
+  }
+}
+@media (forced-colors: active) {
+  :root {
+    --glass-filter: none;
+    --glass-dialog-filter: none;
+    --glass-shadow: none;
+    --glass-highlight: none;
+    --shadow-card: none;
+    --shadow-slide: none;
+    --shadow-dialog: none;
+    --shadow-control: none;
+    --shadow-control-pressed: none;
+    --glass-panel: Canvas;
+    --glass-chrome: Canvas;
+    --glass-inset: Canvas;
+    --glass-control: Canvas;
+    --glass-dialog: Canvas;
+    --glass-header: Canvas;
+    --glass-edge: CanvasText;
+    --color-brand: ButtonFace;
+    --color-brand-hi: ButtonFace;
+    --color-brand-ink: ButtonText;
+    --color-brand-border: ButtonText;
+    --color-paper: Canvas;
+    --color-paper-2: Canvas;
+    --color-paper-3: Canvas;
+    --color-workspace: Canvas;
+    --color-ink: CanvasText;
+    --color-ink-2: CanvasText;
+    --color-muted: CanvasText;
+    --color-rule: CanvasText;
+    --color-control: ButtonText;
+    --color-accent: LinkText;
+    --color-accent-ink: Canvas;
+    --color-accent-hi: LinkText;
+    --color-accent-soft: Canvas;
+    --color-focus: Highlight;
+    --color-selection: Highlight;
+    --color-accent-2: CanvasText;
+    --color-warning-soft: Canvas;
+    --color-error: CanvasText;
+    --color-error-soft: Canvas;
+    --color-success: CanvasText;
+    --color-well: Canvas;
+    --color-well-2: Canvas;
+    --color-well-ink: CanvasText;
+    --color-well-muted: CanvasText;
+    --color-well-rule: CanvasText;
+    --color-slide-paper: Canvas;
+    --color-slide-ink: CanvasText;
+    --color-slide-muted: CanvasText;
+    --color-card: Canvas;
+    --color-briefing: Canvas;
+    --color-editorial: Canvas;
+    --color-editorial-ink: CanvasText;
+    --color-water: Canvas;
+    --color-tile-base: Canvas;
+    --color-tile-edge: CanvasText;
+    --color-slide-accent: LinkText;
+    --color-slide-soft: Canvas;
+  }
+}
