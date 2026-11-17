@@ -2,6 +2,7 @@
 // Pattern: Raw fetch proves unauthorized boundaries; only server.unlock enters valid test credentials.
 // Usage: After pnpm build; captures contain no tokens and app storage is isolated.
 // Related: server.cjs, backend/tests/admin_access.rs, features/admin-access/.
+const { setViewport } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { createServer } = require('./server.cjs');
@@ -20,7 +21,7 @@ const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
     assert.equal((await fetch(server.base + '/api/v1/models/authoring')).status, 200);
     assert.equal((await fetch(server.base + '/api/v1/projects')).status, 200);
     const url = server.base + '/home/admin?section=processing';
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.goto(url, { waitUntil: 'networkidle0' });
     await a.waitForSelector('#admin-token');
     assert.equal(await a.$('.admin-layout'), null);
@@ -76,7 +77,7 @@ const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
     await a.reload({ waitUntil: 'networkidle0' });
     await a.waitForSelector('#admin-token');
     assert.equal(await a.evaluate(() => localStorage.length + sessionStorage.length), 0);
-    await a.setViewport({ width: 320, height: 844 });
+    await setViewport(a, { width: 320, height: 844 });
     assert.ok(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-token-phone.png'),

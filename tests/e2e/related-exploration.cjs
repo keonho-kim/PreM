@@ -2,6 +2,7 @@
 // Pattern: Real product server, synthetic local models, isolated storage and independent browsers.
 // Usage: Run after pnpm build; screenshots belong to tests/.artifacts/captures/folio.
 // Related: related-fixture.cjs, backend/tests/related_exploration.rs.
+const { setViewport } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const path = require('node:path');
@@ -62,7 +63,7 @@ async function click(page, name, role = 'button') {
     a.on('request', (r) => {
       if (r.url().endsWith('/evidence')) evidenceCalls++;
     });
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.goto(server.base + '/home/admin?section=related', { waitUntil: 'networkidle0' });
     await server.unlock(a);
     await a.waitForSelector('#processing-model');
@@ -130,10 +131,10 @@ async function click(page, name, role = 'button') {
     assert.ok(evidenceCalls >= 1);
     const paneHeight = () => a.$eval('.evidence-reader', (n) => n.getBoundingClientRect().height);
     const tallPane = await paneHeight();
-    await a.setViewport({ width: 1440, height: 760 });
+    await setViewport(a, { width: 1440, height: 760 });
     await a.waitForFunction(() => document.querySelector('.evidence-reader').clientHeight < 700);
     assert.ok(tallPane - (await paneHeight()) > 200, 'Reading panes follow viewport height');
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.$eval('.evidence-workbench', (n) =>
       window.scrollTo(
         0,
@@ -168,13 +169,13 @@ async function click(page, name, role = 'button') {
     await a.keyboard.press('Escape');
     await a.waitForSelector('.processing-dialog', { hidden: true });
     for (const width of [390, 320]) {
-      await a.setViewport({ width, height: 844 });
+      await setViewport(a, { width, height: 844 });
       assert.equal(
         await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         true,
       );
     }
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     await a.waitForSelector('.evidence-back', { visible: true });
     assert.equal(
       await a.$eval('.evidence-workbench .related-results', (n) => getComputedStyle(n).display),

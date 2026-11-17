@@ -2,6 +2,7 @@
 // Pattern: Two isolated browser contexts and restartable server with owned test data.
 // Usage: pnpm test:e2e after pnpm build; screenshots stay under tests/.artifacts/captures/folio.
 // Related: tests/helpers/browser.cjs, backend/tests/projects.rs, dev-docs/07-quality-readiness.md.
+const { setViewport } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -39,7 +40,7 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
       errors = [];
     for (const p of [a, b]) {
       p.on('pageerror', (e) => errors.push(e.message));
-      await p.setViewport({ width: 1440, height: 1000 });
+      await setViewport(p, { width: 1440, height: 1000 });
       await p.goto(base + '/home', { waitUntil: 'networkidle0' });
     }
     await a.waitForSelector('.projects-empty');
@@ -76,7 +77,7 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
     await a.click('.project-filters button[aria-label="검색 조건 초기화"]');
     await a.waitForFunction(() => !location.search);
     await a.waitForNetworkIdle({ idleTime: 250 });
-    await a.setViewport({ width: 390, height: 900 });
+    await setViewport(a, { width: 390, height: 900 });
     await a.click(dueInput);
     await a.waitForSelector('.due-date-calendar');
     assert.equal(
@@ -88,7 +89,7 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
     );
     await a.screenshot({ path: path.join(captures, 'home-due-filter-phone.png'), fullPage: true });
     await a.keyboard.press('Escape');
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.screenshot({
       path: path.join(captures, 'projects-empty-production.png'),
       fullPage: true,
@@ -173,7 +174,7 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
       fullPage: true,
     });
     for (const width of [1024, 768, 390, 320]) {
-      await a.setViewport({ width, height: 900 });
+      await setViewport(a, { width, height: 900 });
       assert.ok(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       if (width === 390)
         await a.screenshot({

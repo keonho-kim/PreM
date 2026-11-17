@@ -2,6 +2,7 @@
 // Pattern: Isolated database, synthetic local model endpoints, independent browsers and restart.
 // Usage: Run after pnpm build; credentials and uploads never reach real application storage.
 // Related: admin-navigation.cjs, server.cjs, frontend/features/providers/.
+const { setViewport, clickRole } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const http = require('node:http');
@@ -20,12 +21,7 @@ async function click(page, name, role = 'button') {
     return;
   }
 
-  const target = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
-    visible: true,
-  });
-  // A partially visible control may be covered by the sticky mobile navigation.
-  await target.evaluate((node) => node.scrollIntoView({ block: 'center', inline: 'nearest' }));
-  await target.click();
+  await clickRole(page, name, role);
   if (role === 'tab')
     await page.waitForFunction(
       (name) =>
@@ -137,7 +133,7 @@ async function openOptions(page) {
     const errors = [];
     for (const p of [a, b]) {
       p.on('pageerror', (e) => errors.push(e.message));
-      await p.setViewport({ width: 1440, height: 1000 });
+      await setViewport(p, { width: 1440, height: 1000 });
     }
     await a.goto(server.base + '/home/admin', { waitUntil: 'networkidle0' });
     await server.unlock(a);
@@ -224,7 +220,7 @@ async function openOptions(page) {
       ),
       fullPage: true,
     });
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-providers-phone.png'),
       fullPage: true,
@@ -286,7 +282,7 @@ async function openOptions(page) {
       (await list()).find((p) => p.provider_type === 'lm_studio_decision').model_identifier,
       'd3-flash-artemis',
     );
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-decision-settings.png'),
       fullPage: true,

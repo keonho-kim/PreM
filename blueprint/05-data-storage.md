@@ -301,7 +301,7 @@ V18의 relation_workspaces, relation_reads, relation_workspace_peers, relation_r
 
 ### V19 구현의 발표자료 저장 경계
 
-현재 근거 확정·디자인·생성 작업·슬라이드 Spec/근거·출력 리비전은 presentation 계열 테이블로 구현되어 있다. 원문과 모델 설정은 기존 canonical ID를 참조하고 파일 바이트는 공통 Blob으로 유지한다. 상세 실제 컬럼·CAS·lease·멱등 계약은 [V19 데이터/API](../dev-docs/04-data-api.md#v19-발표자료-준비생성)가 소유한다. 앱 내 객체 편집과 변경 슬라이드 버전 재사용은 아직 구현하지 않았다.
+현재 근거 확정·디자인·생성 작업·슬라이드 Spec/근거·출력 리비전은 presentation 계열 테이블로 구현되어 있다. 원문과 모델 설정은 기존 canonical ID를 참조하고 파일 바이트는 공통 Blob으로 유지한다. 상세 실제 컬럼·CAS·lease·멱등 계약은 [V19 데이터/API](../dev-docs/04-data-api.md#v19-발표자료-준비생성)가 소유한다. 앱 내 객체 편집과 변경 장표 리비전·렌더 재사용도 구현되어 있으며 지원 범위는 [편집기 구현](../dev-docs/03-editor.md)을 따른다.
 
 ## 장표별 렌더링 파생 데이터
 

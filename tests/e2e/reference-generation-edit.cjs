@@ -2,6 +2,7 @@
 // Pattern: Actual compiled server/UI, source extraction and PPTX rendering with a local model fixture.
 // Usage: After pnpm build; captures are Folio and all uploaded inputs are synthetic QA fixtures.
 // Related: presentation_references.rs, outline-fixture.cjs, material-insertion.tsx.
+const { setViewport } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -130,7 +131,7 @@ async function capture(page, name) {
     const b = await (await browser.browser.createBrowserContext()).newPage();
     const errors = [];
     a.on('pageerror', (e) => errors.push(e.message));
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     const route = base + `/home/studio/${p}?step=generation`;
     await a.goto(route, { waitUntil: 'networkidle0' });
     await a.waitForSelector('#presentation-title', { visible: true });
@@ -248,7 +249,7 @@ async function capture(page, name) {
     assert.equal(after[1].id, slides[1].id);
     assert(after[0].spec.objects.some((o) => o.content.kind === 'reference'));
     await a.waitForSelector('.presentation-output', { visible: true });
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     await a.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     assert(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await capture(a, 'reference-editor-phone.png');

@@ -2,6 +2,7 @@
 // Pattern: Isolated product server, synthetic local model and independent browser contexts.
 // Usage: After pnpm build; captures under tests/.artifacts/captures/folio and no real data mutations.
 // Related: outline-fixture.cjs, backend/tests/presentations.rs.
+const { setViewport, clickRole } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const path = require('node:path');
@@ -12,11 +13,7 @@ const { model, json } = require('./outline-fixture.cjs');
 const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { notifications } = require('./space-checks.cjs');
 async function click(page, name, role = 'button') {
-  const target = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
-    visible: true,
-  });
-  await target.evaluate((n) => n.scrollIntoView({ block: 'center' }));
-  await target.click();
+  await clickRole(page, name, role);
 }
 (async () => {
   const server = await createServer('presentations-browser-'),
@@ -70,7 +67,7 @@ async function click(page, name, role = 'button') {
       b = await (await session.browser.createBrowserContext()).newPage();
     const errors = [];
     for (const page of [a, b]) page.on('pageerror', (e) => errors.push(e.message));
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     const route = `${server.base}/home/studio/${project.id}`;
     await a.goto(route, { waitUntil: 'networkidle0' });
     await click(a, '문서 추가');
@@ -238,7 +235,7 @@ async function click(page, name, role = 'button') {
     await b.goto(route + '?step=generation', { waitUntil: 'networkidle0' });
     await b.waitForSelector('.presentation-output');
     for (const width of [390, 320]) {
-      await b.setViewport({ width, height: 844 });
+      await setViewport(b, { width, height: 844 });
       if (!(await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth)))
         await b.screenshot({
           path: path.join(
@@ -267,7 +264,7 @@ async function click(page, name, role = 'button') {
         ),
       );
     }
-    await b.setViewport({ width: 390, height: 844 });
+    await setViewport(b, { width: 390, height: 844 });
     await b.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await b.screenshot({
       path: path.join(

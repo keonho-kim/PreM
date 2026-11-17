@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createRequire } = require('node:module');
+const { captureBrowser } = require('./browser-diagnostics.cjs');
 
 const projectRoot = path.resolve(__dirname, '../..');
 const artifacts = path.join(projectRoot, 'tests/.artifacts');
@@ -20,8 +21,10 @@ async function openBrowser(name) {
       'Set PREM_BROWSER_TOOLS to a development tools directory containing puppeteer-core.',
     );
   }
+  const pinned = path.join(tools, 'chrome-path.txt');
   const chrome = [
     process.env.CHROME_PATH,
+    fs.existsSync(pinned) ? fs.readFileSync(pinned, 'utf8').trim() : undefined,
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/usr/bin/google-chrome',
     '/usr/bin/chromium',
@@ -36,9 +39,14 @@ async function openBrowser(name) {
     userDataDir: profile,
     env: { ...process.env, TMPDIR: temporary },
   });
+  console.log('Browser:', await browser.version());
   const close = async () => {
     try {
-      await browser.close();
+      try {
+        if (process.env.CI) await captureBrowser(browser, name, artifacts);
+      } finally {
+        await browser.close();
+      }
     } finally {
       // Chrome crash reporting/updater descendants can inherit these pipes after Chrome exits.
       // Release our readers so a finished QA journey does not retain the Node event loop.

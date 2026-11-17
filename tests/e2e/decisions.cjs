@@ -2,6 +2,7 @@
 // Pattern: Local deterministic API, isolated storage, independent browser contexts and restart.
 // Usage: Run after pnpm build; captures use tests/.artifacts/captures/folio and all QA data is disposable.
 // Related: server.cjs, frontend/features/providers/, backend/tests/decisions.rs.
+const { setViewport, clickRole } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const path = require('node:path');
@@ -18,7 +19,7 @@ async function click(page, name, role = 'button') {
     return;
   }
 
-  await (await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`)).click();
+  await clickRole(page, name, role);
   if (role === 'tab')
     await page.waitForFunction(
       (name) =>
@@ -80,7 +81,7 @@ async function field(page, name, value) {
     const a = await (await session.browser.createBrowserContext()).newPage();
     const b = await (await session.browser.createBrowserContext()).newPage();
     await a.bringToFront();
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     const errors = [];
     a.on('pageerror', (e) => errors.push(e.message));
     await a.goto(server.base + '/home/admin', { waitUntil: 'networkidle0' });
@@ -151,7 +152,7 @@ async function field(page, name, value) {
       ),
       fullPage: true,
     });
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     assert.equal(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await a.evaluate(async () => {
       window.scrollTo(0, 0);

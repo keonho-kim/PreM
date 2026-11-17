@@ -2,6 +2,7 @@
 // Pattern: UI mutations, persisted HTTP assertions and narrow viewport captures.
 // Usage: Called by projects.cjs with its isolated server and browser ownership.
 // Related: frontend/src/features/projects/, tests/helpers/browser.cjs.
+const { setViewport } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
@@ -32,7 +33,7 @@ async function submit(page) {
   await page.waitForSelector('.project-dialog', { hidden: true });
 }
 async function homeChecks(page, base, captures) {
-  await page.setViewport({ width: 1440, height: 1000 });
+  await setViewport(page, { width: 1440, height: 1000 });
   await page.goto(base + '/home', { waitUntil: 'networkidle0' });
   for (let i = 1; i <= 6; i++) {
     const response = await fetch(base + '/api/v1/projects', {
@@ -54,11 +55,11 @@ async function homeChecks(page, base, captures) {
   assert.equal(await page.$('.project-create-fab'), null);
   assert.ok(await page.$eval('#project-create-button', (n) => !!n.closest('.projects-heading')));
 
-  await page.setViewport({ width: 1440, height: 1000 });
+  await setViewport(page, { width: 1440, height: 1000 });
   await page.screenshot({ path: path.join(captures, 'home-production.png'), fullPage: false });
-  await page.setViewport({ width: 390, height: 844 });
+  await setViewport(page, { width: 390, height: 844 });
   await page.screenshot({ path: path.join(captures, 'home-production-phone.png') });
-  await page.setViewport({ width: 1440, height: 1000 });
+  await setViewport(page, { width: 1440, height: 1000 });
   await page.$$eval('.projects-pagination button', (nodes) =>
     nodes.find((n) => n.textContent.includes('다음')).click(),
   );
@@ -170,7 +171,7 @@ async function homeChecks(page, base, captures) {
     [390, 1],
     [320, 1],
   ]) {
-    await page.setViewport({ width, height: 900 });
+    await setViewport(page, { width, height: 900 });
     assert.equal(
       await page.$eval(
         '.project-gallery',

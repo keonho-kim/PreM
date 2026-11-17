@@ -2,6 +2,7 @@
 // Pattern: Compiled React/Rust with isolated storage and a synthetic local System One server.
 // Usage: Run after pnpm build; real provider credentials and application storage are untouched.
 // Related: backend/tests/vllm_sr.rs, server.cjs, frontend/features/providers/.
+const { setViewport, clickRole } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const http = require('node:http');
@@ -19,11 +20,7 @@ async function click(page, name, role = 'button') {
     return;
   }
 
-  const target = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
-    visible: true,
-  });
-  await target.evaluate((node) => node.scrollIntoView({ block: 'center', inline: 'nearest' }));
-  await target.click();
+  await clickRole(page, name, role);
   if (role === 'tab')
     await page.waitForFunction(
       (name) =>
@@ -96,7 +93,7 @@ async function fill(page, name, value) {
     const b = await (await session.browser.createBrowserContext()).newPage();
     const errors = [];
     for (const page of [a, b]) page.on('pageerror', (error) => errors.push(error.message));
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.goto(server.base + '/home/admin', { waitUntil: 'networkidle0' });
     await server.unlock(a);
     await click(a, 'Decision Model 연결', 'link');
@@ -168,7 +165,7 @@ async function fill(page, name, value) {
     await b.waitForSelector('[name="max_parallel"]');
     assert.equal(await b.$eval('[name="max_parallel"]', (node) => node.value), '2');
     assert.equal(await b.$eval('[name="queue_capacity"]', (node) => node.value), '12');
-    await b.setViewport({ width: 390, height: 844 });
+    await setViewport(b, { width: 390, height: 844 });
     assert.equal(await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await click(b, '판정 테스트', 'tab');
     await click(b, '판정 실행');

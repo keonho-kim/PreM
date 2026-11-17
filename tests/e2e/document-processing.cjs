@@ -2,6 +2,7 @@
 // Pattern: Compiled app, actual bundled tools, local LLM fixture and two isolated browser contexts.
 // Usage: pnpm test:e2e after runtime preparation and pnpm build; never seeds production storage.
 // Related: server.cjs, space-checks.cjs, backend/tests/document_processing.rs.
+const { setViewport, clickRole } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const http = require('node:http');
@@ -12,7 +13,7 @@ const { createServer } = require('./server.cjs');
 const { upload, notifications } = require('./space-checks.cjs');
 const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function click(page, name, role = 'button') {
-  await (await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`)).click();
+  await clickRole(page, name, role);
   if (role === 'tab')
     await page.waitForFunction(
       (name) =>
@@ -99,7 +100,7 @@ async function capture(page, name) {
     const a = await (await session.browser.createBrowserContext()).newPage();
     const b = await (await session.browser.createBrowserContext()).newPage();
     await a.bringToFront();
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     const errors = [];
     a.on('pageerror', (e) => errors.push(e.message));
     await a.goto(server.base + '/home/space/library', { waitUntil: 'networkidle0' });
@@ -136,10 +137,10 @@ async function capture(page, name) {
     assert.equal(extractedAfter.job.extraction_id, extractedBefore.job.extraction_id);
     assert.equal(extractedAfter.job.extraction_id, null);
     await capture(a, 'document-engine-panel.png');
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     assert(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await capture(a, 'document-engine-panel-phone.png');
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await notifications(a, false);
     await click(a, '프로젝트 가이드 미리보기');
     await stage(a, '자료 준비가 잠시 대기 중입니다');
@@ -197,12 +198,12 @@ async function capture(page, name) {
       true,
     );
     await capture(a, 'space-document-pages.png');
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     assert.equal(await a.$eval('.processing-dialog', (e) => e.scrollWidth <= e.clientWidth), true);
     await capture(a, 'space-document-pages-phone.png');
     await a.keyboard.press('Escape');
     await a.waitForSelector('.processing-dialog', { hidden: true });
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     const prior = calls;
     await click(a, '템플릿', 'tab');
     await upload(a, [fixture('native-template.pptx')], '회사 소개 템플릿');
@@ -230,10 +231,10 @@ async function capture(page, name) {
     assert.equal(await a.$('.processing-blocks'), null);
     assert.equal(calls, prior);
     await capture(a, 'space-template-analysis.png');
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     assert.equal(await a.$eval('.processing-dialog', (e) => e.scrollWidth <= e.clientWidth), true);
     await capture(a, 'space-template-preview-phone.png');
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.keyboard.press('Escape');
     await a.waitForSelector('.processing-dialog', { hidden: true });
     await click(a, '레퍼런스', 'tab');

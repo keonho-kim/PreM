@@ -95,6 +95,14 @@ jobs:
       - name: Rust dependency and license policies
         if: matrix.platform == 'linux-amd64'
         run: node scripts/rust-policy.mjs install
+      - name: Free completed build intermediates
+        run: |
+          mkdir -p tests/.artifacts/release-binary
+          mv target/release/PreM tests/.artifacts/release-binary/PreM
+          cargo clean
+          mkdir -p target/release
+          mv tests/.artifacts/release-binary/PreM target/release/PreM
+          df -h .
       - name: Package and verify relocated bundle
         env:
           TAG: ${{ needs.prepare.outputs.tag }}
@@ -142,8 +150,18 @@ jobs:
           pnpm build
           mkdir -p tests/.artifacts/browser-tools
           npm install --prefix tests/.artifacts/browser-tools --no-audit --no-fund puppeteer-core@${{ steps.versions.outputs.puppeteer }}
+          node scripts/install-test-browser.mjs
       - name: Run all real-server journeys
         run: pnpm test:e2e
+      - name: Preserve failed browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-failure-diagnostics
+          path: |
+            tests/.artifacts/e2e/
+            tests/.artifacts/captures/ci/
+          retention-days: 7
   verify-assets:
     needs: [prepare, build, browser]
     if: needs.prepare.outputs.build == 'true'

@@ -2,6 +2,7 @@
 // Pattern: Isolated app/storage; synthetic initial deck, with opt-in live Ornith editing only.
 // Usage: PREM_EDIT_MODEL=ornith node tests/e2e/slide-chat.cjs after pnpm build.
 // Related: outline-fixture.cjs, backend/tests/slide_edits.rs, tests/.artifacts/captures/folio/.
+const { setViewport } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs/promises');
@@ -130,7 +131,7 @@ async function click(page, name, role = 'button') {
     const page = await browser.browser.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.setViewport({ width: 1440, height: 1000, hasTouch: true });
+    await setViewport(page, { width: 1440, height: 1000, hasTouch: true });
     await page.goto(base + `/home/studio/${p.id}?step=generation`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.presentation-output');
     assert.equal(await page.$('.slide-chat [role="combobox"]'), null);
@@ -211,7 +212,7 @@ async function click(page, name, role = 'button') {
         `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}slide-edited.png`,
       ),
     });
-    await page.setViewport({ width: 390, height: 844, hasTouch: true });
+    await setViewport(page, { width: 390, height: 844, hasTouch: true });
     await touchCompare(page, 'current');
     await page.$eval('.slide-chat', (n) => n.scrollIntoView({ block: 'start' }));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -221,7 +222,7 @@ async function click(page, name, role = 'button') {
         `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}slide-chat-phone.png`,
       ),
     });
-    await page.setViewport({ width: 1440, height: 1000, hasTouch: true });
+    await setViewport(page, { width: 1440, height: 1000, hasTouch: true });
     await page.waitForSelector('button[aria-label="이전 상태로 되돌리기"]:not(:disabled)');
     await click(page, '이전 상태로 되돌리기');
     const restored = await poll(

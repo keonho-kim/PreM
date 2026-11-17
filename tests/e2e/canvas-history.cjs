@@ -2,6 +2,7 @@
 // Pattern: Real browser input and preloaded native previews; every release returns to current output.
 // Usage: slide-chat.cjs invokes before and after committing its proposal.
 // Related: comparison-button.tsx, canvas-toolbar.tsx, tests/.artifacts/captures/folio/.
+const { settleLayout } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { projectRoot } = require('../helpers/browser.cjs');
@@ -21,6 +22,7 @@ async function compare(page, kind, capture) {
     { visible: true },
   );
   await b.evaluate((n) => n.scrollIntoView({ block: 'center' }));
+  await settleLayout(page);
   const rect = await b.boundingBox();
   const undo = await page.$eval(
     'button[aria-label="이전 상태로 되돌리기"]',
@@ -65,6 +67,7 @@ async function touchCompare(page, kind) {
     { visible: true },
   );
   await b.evaluate((n) => n.scrollIntoView({ block: 'center' }));
+  await settleLayout(page);
   const r = await b.boundingBox();
   const client = await page.createCDPSession();
   const point = { x: r.x + r.width / 2, y: r.y + r.height / 2 };

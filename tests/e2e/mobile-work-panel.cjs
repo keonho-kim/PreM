@@ -2,6 +2,7 @@
 // Pattern: Real upload UI and isolated server; viewport captures reflect the visible phone screen.
 // Usage: Run after pnpm build; PANEL_BEFORE=1 records the previous geometry without assertions.
 // Related: app/feedback.tsx, features/space/upload-work-panel.css, studio.cjs.
+const { setViewport, settleLayout } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
@@ -22,7 +23,7 @@ const { configureDocuments } = require('./configure-documents.cjs');
     const project = await created.json();
     session = await openBrowser('mobile-work-panel');
     const page = await session.browser.newPage();
-    await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+    await setViewport(page, { width: 390, height: 844, isMobile: true, hasTouch: true });
     await page.goto(`${server.base}/home/studio/${project.id}`, { waitUntil: 'networkidle0' });
     await page.click('.studio-section-heading button');
     await (await page.waitForSelector('.space-dialog input[type=file]')).uploadFile(
@@ -66,10 +67,11 @@ const { configureDocuments } = require('./configure-documents.cjs');
       return;
     }
     for (const width of [390, 320]) {
-      await page.setViewport({ width, height: 844, isMobile: true, hasTouch: true });
+      await setViewport(page, { width, height: 844, isMobile: true, hasTouch: true });
       for (const state of ['expanded', 'collapsed', 'hidden']) {
         if (state === 'collapsed') await page.click('[aria-label="작업 패널 접기"]');
         if (state === 'hidden') await page.click('[aria-label="작업 패널 닫기"]');
+        await settleLayout(page);
         await page.$eval('.studio-review button', (n) => n.scrollIntoView({ block: 'end' }));
         await page.waitForFunction(() => {
           const panel = document.querySelector('.work-dock').getBoundingClientRect();
@@ -94,10 +96,10 @@ const { configureDocuments } = require('./configure-documents.cjs');
       }
       await page.click('.work-launcher');
     }
-    await page.setViewport({ width: 390, height: 430, isMobile: true, hasTouch: true });
+    await setViewport(page, { width: 390, height: 430, isMobile: true, hasTouch: true });
     const compact = await geometry();
     assert.ok(compact.top >= 100 && compact.bottom <= compact.h + 1);
-    await page.setViewport({ width: 1440, height: 1000, isMobile: true, hasTouch: true });
+    await setViewport(page, { width: 1440, height: 1000, isMobile: true, hasTouch: true });
     const desktop = await geometry();
     assert.ok(
       Math.abs(desktop.right - (desktop.w - 16)) <= 1 && desktop.right - desktop.left <= 360,
