@@ -85,7 +85,7 @@ async fn deadline_rename_preserves_values_revisions_and_retries() {
     assert_eq!(
         db.pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        32
+        33
     );
     let mut columns = db
         .prepare("SELECT name FROM pragma_table_info('projects')")

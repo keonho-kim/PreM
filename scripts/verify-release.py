@@ -59,6 +59,7 @@ with tempfile.TemporaryDirectory(prefix='relocated bundle ', dir=scratch) as tem
         if result.returncode:
             raise RuntimeError(result.stderr[-5000:] + result.stdout[-5000:])
         return result.stdout
+    print('Archive integrity verified; probing bundled native tools.', flush=True)
     probe = work / 'native-probe.mjs'
     probe.write_text('''import {createRequire} from 'node:module';
 import path from 'node:path';
@@ -85,6 +86,16 @@ await sharp(Buffer.from('<svg width="200" height="60"><text x="5" y="35" font-fa
     run([node, '--permission', '--allow-addons', '--allow-worker', f'--allow-fs-read={bundle}',
          f'--allow-fs-read={work}', f'--allow-fs-write={work}', str(runtime / 'template-previews.mjs'), str(runtime), str(output)])
     assert json.loads((output / 'previews.json').read_text()), 'PPT preview missing'
+    print('Native OCR models and PPT rendering verified; checking document formats.', flush=True)
+    for name in ['text.pdf', 'scan.pdf', 'office.docx', 'sheet.xlsx', 'korean.hwpx', 'nested.hwp']:
+        sample = work / name
+        sample.write_bytes((ROOT / 'tests/fixtures/documents' / name).read_bytes())
+        extracted = work / ('extract-' + name)
+        extracted.mkdir()
+        run([node, '--permission', '--allow-addons', '--allow-worker',
+             f'--allow-fs-read={bundle}', f'--allow-fs-read={work}', f'--allow-fs-write={work}',
+             str(runtime / 'document-extract.mjs'), str(sample), str(extracted)])
+        assert (extracted / 'result.json').is_file(), 'Document extraction failed: ' + name
     with socket.socket() as socket_:
         socket_.bind(('127.0.0.1', 0))
         port = socket_.getsockname()[1]
@@ -116,4 +127,4 @@ await sharp(Buffer.from('<svg width="200" height="60"><text x="5" y="35" font-fa
                 process.kill()
                 process.communicate()
     assert (data / 'db/app.sqlite').is_file()
-    print('PASS: relocated archive hashes, bundled Node/Python/Sharp/ONNX OCR models, Korean fonts, native PPTX/PNG and HTTP restart with no development tools in PATH.')
+    print('PASS: relocated archive hashes, bundled Node/Python/Sharp/ONNX OCR models, Korean fonts, scanned PDF/Office/HWP extraction, native PPTX/PNG and HTTP restart with no development tools in PATH.')

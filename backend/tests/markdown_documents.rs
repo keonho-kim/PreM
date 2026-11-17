@@ -1,5 +1,5 @@
 // Purpose: Verify Markdown upload, immutable extraction, original downloads and format-specific reuse.
-// Pattern: Real product HTTP/SQLite with no model connection; all storage is isolated.
+// Pattern: Real product HTTP/SQLite with a synthetic local model connection; all storage is isolated.
 // Usage: cargo nextest run --test markdown_documents.
 // Related: adapters/markdown/, V16__registered_text_formats.sql, tests/fixtures/documents/reference.md.
 mod common;
@@ -36,13 +36,15 @@ async fn blocks(app: &Application, detail: &Value) -> Vec<Value> {
 async fn markdown_is_shared_searchable_structured_and_survives_replacement_and_restart() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     let bytes = fixture("reference.md");
     let item = upload(&app, "references", "보고서.MD", &bytes).await;
     assert_eq!(item["format"], "md");
     assert_eq!(item["mime"], "text/markdown");
     let id = item["id"].as_str().unwrap();
-    let detail = wait(&app, "references", id, "waiting_configuration").await;
+    let detail = wait(&app, "references", id, "succeeded").await;
     let data = blocks(&app, &detail).await;
     assert_eq!(detail["page_mode"], "unpaginated");
     assert!(
@@ -173,7 +175,7 @@ async fn markdown_is_shared_searchable_structured_and_survives_replacement_and_r
                 None,
             )
             .await;
-            if d["job"]["status"] == "waiting_configuration" {
+            if d["job"]["status"] == "succeeded" {
                 break d;
             }
             tokio::time::sleep(std::time::Duration::from_millis(50)).await;
@@ -196,7 +198,7 @@ async fn markdown_is_shared_searchable_structured_and_survives_replacement_and_r
     )
     .await;
     assert_eq!(status, 201);
-    let next = wait(&app, "references", id, "waiting_configuration").await;
+    let next = wait(&app, "references", id, "succeeded").await;
     assert_ne!(next["job"]["extraction_id"], detail["job"]["extraction_id"]);
     let old_job = detail["job"]["id"].as_str().unwrap().to_owned();
     let id = id.to_owned();
@@ -230,6 +232,8 @@ async fn markdown_is_shared_searchable_structured_and_survives_replacement_and_r
 async fn identical_html_and_markdown_bytes_share_storage_but_keep_distinct_interpretations() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     for order in [["same.html", "same.md"], ["other.md", "other.html"]] {
         let text = format!("<h1>{}</h1>\n<script>privateLiteral()</script>", order[0]);
@@ -252,7 +256,7 @@ async fn identical_html_and_markdown_bytes_share_storage_but_keep_distinct_inter
                 &app,
                 "references",
                 item["id"].as_str().unwrap(),
-                "waiting_configuration",
+                "succeeded",
             )
             .await;
             let data = blocks(&app, &d).await;

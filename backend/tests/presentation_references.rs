@@ -48,7 +48,7 @@ async fn native_slides_charts_and_images_insert_without_copying_source_blobs_and
         &app,
         "references",
         asset["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     let job = detail["job"]["id"].as_str().unwrap();

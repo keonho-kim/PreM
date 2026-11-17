@@ -80,6 +80,8 @@ async fn review(app: &Application, p: &str) -> Value {
 async fn sources_are_scoped_deduplicated_versioned_and_explicitly_confirmed() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     let a = project(&app, "A").await;
     let b = project(&app, "B").await;
@@ -117,7 +119,7 @@ async fn sources_are_scoped_deduplicated_versioned_and_explicitly_confirmed() {
     let (_, space) = request(&app.router(), "GET", "/api/v1/space/all", None, None).await;
     assert_eq!(space["total"], 0);
     let kind = format!("project-{a}");
-    let d = document_support::wait(&app, &kind, id, "waiting_configuration").await;
+    let d = document_support::wait(&app, &kind, id, "succeeded").await;
     let state = review(&app, &a).await;
     assert_eq!(state["ready"], true);
     assert_eq!(state["confirmed"], false);
@@ -149,7 +151,7 @@ async fn sources_are_scoped_deduplicated_versioned_and_explicitly_confirmed() {
         &app,
         "references",
         reference["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     assert_eq!(d["job"]["extraction_id"], r["job"]["extraction_id"]);
@@ -195,7 +197,7 @@ async fn sources_are_scoped_deduplicated_versioned_and_explicitly_confirmed() {
     .await;
     assert_eq!(s, 200);
     assert_eq!(old, bytes);
-    document_support::wait(&app, &kind, id, "waiting_configuration").await;
+    document_support::wait(&app, &kind, id, "succeeded").await;
     let guide_path = format!("/api/v1/projects/{a}/guide");
     let before_jobs = r["job"]["id"].clone();
     let (s, g) = request(
@@ -225,7 +227,7 @@ async fn sources_are_scoped_deduplicated_versioned_and_explicitly_confirmed() {
             &app,
             "references",
             reference["id"].as_str().unwrap(),
-            "waiting_configuration"
+            "succeeded"
         )
         .await["job"]["id"],
         before_jobs

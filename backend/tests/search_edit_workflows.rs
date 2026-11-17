@@ -25,8 +25,8 @@ async fn search_publication_retry_does_not_repeat_pinned_assessments() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
-    let p = setup(&app, 2).await;
     register(&app, &f).await;
+    let p = setup(&app, 2).await;
     let db = rusqlite::Connection::open(root.path().join("db/app.sqlite")).unwrap();
     db.execute_batch("CREATE TRIGGER qa_search_publish BEFORE UPDATE OF status ON relation_runs WHEN new.status='succeeded' BEGIN SELECT RAISE(ABORT,'synthetic publication failure'); END;").unwrap();
     let run = start(&app, &p, "efficiency").await;

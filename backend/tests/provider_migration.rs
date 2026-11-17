@@ -114,7 +114,7 @@ async fn verify_migration(version: i32) {
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |r| r.get::<_, i32>(0))
             .unwrap(),
-        32
+        33
     );
     assert_eq!(
         db.query_row(

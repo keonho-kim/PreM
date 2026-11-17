@@ -45,6 +45,8 @@ async fn bundle(app: &Application, job: &str, hash: &str) -> Vec<u8> {
 async fn concurrent_library_roles_share_one_import_and_survive_restart() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     let bytes = fixture("reference-materials.pptx");
     let reference = upload(&app, "references", "reference.pptx", &bytes).await;
     let template = upload(&app, "templates", "template.pptx", &bytes).await;
@@ -53,7 +55,7 @@ async fn concurrent_library_roles_share_one_import_and_survive_restart() {
         &app,
         "references",
         reference["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     let t = wait(

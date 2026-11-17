@@ -37,6 +37,7 @@ jobs:
             gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "PreM $TAG" --notes-file scripts/release-notes.md
           fi
           test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true
+          gh release edit "$TAG" --target "$GITHUB_SHA"
   build:
     needs: prepare
     strategy:

@@ -1,5 +1,5 @@
 // Purpose: Verify unified Space discovery, canonical excerpts and exclusion of project originals.
-// Pattern: Real uploaded documents and SQLite/HTTP; no model configuration or live provider calls.
+// Pattern: Real uploaded documents and SQLite/HTTP; synthetic local model configuration, without live provider calls.
 // Usage: cargo nextest run --test library_search.
 // Related: modules/search/, adapters/sqlite/search.rs, document_support/.
 mod common;
@@ -31,6 +31,8 @@ async fn search(app: &Application, q: &str, extra: &str) -> Value {
 async fn space_search_combines_names_and_content_but_never_includes_project_originals() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     let reference = upload(
         &app,
@@ -41,7 +43,7 @@ async fn space_search_combines_names_and_content_but_never_includes_project_orig
     )
     .await;
     let id = reference["id"].as_str().unwrap();
-    let detail = wait(&app, "references", id, "waiting_configuration").await;
+    let detail = wait(&app, "references", id, "succeeded").await;
     let template = upload(
         &app,
         "templates",
@@ -58,6 +60,9 @@ async fn space_search_combines_names_and_content_but_never_includes_project_orig
     .await;
     // Same extracted bytes also belong to a project; only the Space registration is searchable.
     let db = rusqlite::Connection::open(root.path().join("db/app.sqlite")).unwrap();
+    let model_requests: i64 = db
+        .query_row("SELECT count(*) FROM llm_requests", [], |r| r.get(0))
+        .unwrap();
     let project = Uuid::new_v4().to_string();
     let source = Uuid::new_v4().to_string();
     let version = Uuid::new_v4().to_string();
@@ -128,7 +133,7 @@ async fn space_search_combines_names_and_content_but_never_includes_project_orig
         db.query_row("SELECT count(*) FROM llm_requests", [], |r| r
             .get::<_, i64>(0))
             .unwrap(),
-        0
+        model_requests
     );
     drop(db);
     app.shutdown().await.unwrap();
@@ -137,6 +142,8 @@ async fn space_search_combines_names_and_content_but_never_includes_project_orig
 async fn shared_search_paginates_and_uses_only_the_current_file_version() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     for i in 0..13 {
         upload(
@@ -153,7 +160,7 @@ async fn shared_search_paginates_and_uses_only_the_current_file_version() {
     assert_eq!(first["items"].as_array().unwrap().len(), 12);
     assert_eq!(second["items"].as_array().unwrap().len(), 1);
     let id = first["items"][0]["id"].as_str().unwrap();
-    wait(&app, "references", id, "waiting_configuration").await;
+    wait(&app, "references", id, "succeeded").await;
     let (status, _) = space_support::upload(
         &app.router(),
         &format!("/api/v1/space/references/{id}/versions"),
@@ -165,7 +172,7 @@ async fn shared_search_paginates_and_uses_only_the_current_file_version() {
     )
     .await;
     assert_eq!(status, 201);
-    wait(&app, "references", id, "waiting_configuration").await;
+    wait(&app, "references", id, "succeeded").await;
     let result = search(&app, "new_unique_phrase", "").await;
     assert_eq!(result["total"], 1);
     assert_eq!(result["items"][0]["file_version"], 2);

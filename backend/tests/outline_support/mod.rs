@@ -51,6 +51,17 @@ async fn complete(
     State(m): State<Arc<Model>>,
     Json(body): Json<Value>,
 ) -> axum::response::Response {
+    let input: Value =
+        serde_json::from_str(body["messages"][1]["content"].as_str().unwrap()).unwrap();
+    if input["state"].get("regions").is_some() {
+        let answers = input["questions"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(|id| (id.clone(), json!({"type":"choice","choice":"0"})))
+            .collect::<serde_json::Map<_, _>>();
+        return Json(json!({"choices":[{"finish_reason":"stop","message":{"content":json!({"answers":answers}).to_string()}}]})).into_response();
+    }
     m.budgets
         .lock()
         .unwrap()
@@ -126,6 +137,26 @@ pub async fn setup(app: &Application, f: &Fixture) -> (String, String, Value) {
     let source = (0..22)
         .map(|i| format!("업무 내용 {i}: 현황과 개선 계획을 설명합니다.\n\n"))
         .collect::<String>();
+    let connection = Uuid::new_v4().to_string();
+    let(s,model)=crate::common::request(&crate::common::router(app),"PUT",&format!("/api/v1/admin/llm/providers/{connection}"),Some(json!({"expected_version":0,"name":"작성 AI","provider_type":"openai_compatible","base_url":f.base,"model_identifier":"fixture","timeout_seconds":30,"enabled":true})),None).await;
+    assert_eq!(s, 200, "{model}");
+    let (_, default) = crate::common::request(
+        &crate::common::router(app),
+        "GET",
+        "/api/v1/admin/document-processing/settings",
+        None,
+        None,
+    )
+    .await;
+    let (status, settings) = crate::common::request(
+        &crate::common::router(app),
+        "PUT",
+        "/api/v1/admin/document-processing/settings",
+        Some(json!({"expected_version":default["version"],"connection_id":connection})),
+        None,
+    )
+    .await;
+    assert_eq!(status, 200, "{settings}");
     source_upload(app, &p, &source).await;
     let review = tokio::time::timeout(std::time::Duration::from_secs(10), async {
         loop {
@@ -158,9 +189,6 @@ pub async fn setup(app: &Application, f: &Fixture) -> (String, String, Value) {
         200
     );
     assert_eq!(crate::common::request(&crate::common::router(app),"PUT",&format!("/api/v1/projects/{p}/guide"),Some(json!({"expected_version":0,"do_text":"실행 계획을 강조","dont_text":"근거 없는 수치 제외"})),None).await.0,200);
-    let connection = Uuid::new_v4().to_string();
-    let(s,model)=crate::common::request(&crate::common::router(app),"PUT",&format!("/api/v1/admin/llm/providers/{connection}"),Some(json!({"expected_version":0,"name":"작성 AI","provider_type":"openai_compatible","base_url":f.base,"model_identifier":"fixture","timeout_seconds":30,"enabled":true})),None).await;
-    assert_eq!(s, 200, "{model}");
     (p, connection, model)
 }
 pub async fn source_upload(app: &Application, p: &str, text: &str) {

@@ -37,6 +37,8 @@ fn zip_file(bytes: &[u8], name: &str) -> Vec<u8> {
 async fn reference_parts_preserve_native_media_and_resolve_multiple_slides_in_order() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     let bytes = fixture("reference-materials.pptx");
     let item = upload(&app, "references", "reference-materials.pptx", &bytes).await;
@@ -44,7 +46,7 @@ async fn reference_parts_preserve_native_media_and_resolve_multiple_slides_in_or
         &app,
         "references",
         item["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     assert_eq!(detail["reuse_ready"], true);
@@ -157,7 +159,7 @@ async fn reference_parts_preserve_native_media_and_resolve_multiple_slides_in_or
         &app,
         "references",
         other["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     let other_job = other_detail["job"]["id"].as_str().unwrap();
@@ -200,7 +202,7 @@ async fn reference_parts_preserve_native_media_and_resolve_multiple_slides_in_or
         Some(&Uuid::new_v4().to_string()),
     )
     .await;
-    assert_eq!(cancelled, 200);
+    assert_eq!(cancelled, 409, "completed preparation remains terminal");
     let (status, new_job) = request(
         &app.router(),
         "POST",
@@ -217,7 +219,7 @@ async fn reference_parts_preserve_native_media_and_resolve_multiple_slides_in_or
         &app,
         "references",
         item["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     assert_eq!(after["job"]["id"], new_job["id"]);
@@ -232,6 +234,8 @@ async fn reference_parts_preserve_native_media_and_resolve_multiple_slides_in_or
 async fn migration_preserves_old_extractions_until_explicit_material_preparation() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    let fixture_model = document_support::Fixture::start().await;
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     let item = upload(
         &app,
@@ -244,7 +248,7 @@ async fn migration_preserves_old_extractions_until_explicit_material_preparation
         &app,
         "references",
         item["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     let job = detail["job"]["id"].as_str().unwrap();
@@ -261,6 +265,7 @@ async fn migration_preserves_old_extractions_until_explicit_material_preparation
         .unwrap();
     drop(db);
     let mut app = Application::open(root.path()).unwrap();
+    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     let old = catalog(&app, job, "").await;
     assert_eq!(old["ready"], false);
@@ -281,7 +286,7 @@ async fn migration_preserves_old_extractions_until_explicit_material_preparation
         &app,
         "references",
         item["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
     assert_eq!(prepared["job"]["id"], new["id"]);

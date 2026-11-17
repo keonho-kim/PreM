@@ -27,7 +27,7 @@
     "tools:install": "node scripts/rust-tools.mjs install",
     "tools:check": "node scripts/rust-tools.mjs check",
     "check:deps": "cargo machete && cargo deny --locked check --hide-inclusion-graph && pnpm audit",
-    "test:rust": "pnpm --filter @prem/frontend build && cargo nextest run --workspace --all-features --locked && cargo test --workspace --all-features --locked --doc",
+    "test:rust": "pnpm --filter @prem/frontend build && cargo nextest run --workspace --all-features --locked --no-fail-fast && cargo test --workspace --all-features --locked --doc",
     "coverage": "pnpm coverage:frontend && pnpm coverage:rust",
     "coverage:frontend": "pnpm --filter @prem/frontend coverage",
     "coverage:rust": "pnpm --filter @prem/frontend build && node scripts/coverage.mjs",

@@ -180,9 +180,11 @@ async fn templates_and_reference_native_materials_keep_separate_owners() {
     app.shutdown().await.unwrap();
 }
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn supported_documents_extract_offline_and_wait_for_an_explicit_model() {
+async fn supported_documents_extract_offline_with_an_explicit_model() {
+    let f = Fixture::start().await;
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
+    configure(&app, &f).await;
     app.start_processing();
     for name in [
         "text.pdf",
@@ -197,7 +199,7 @@ async fn supported_documents_extract_offline_and_wait_for_an_explicit_model() {
             &app,
             "references",
             item["id"].as_str().unwrap(),
-            "waiting_configuration",
+            "succeeded",
         )
         .await;
         assert!(
