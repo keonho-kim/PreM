@@ -1,12 +1,13 @@
 // Purpose: Verify real reference parts and ordered visual review without fabricating PPT generation.
 // Pattern: Compiled app, bundled PPT Master/Kordoc, isolated storage and independent browsers.
-// Usage: Run after pnpm build; screenshots go to mock/captures/folio and test storage is disposable.
+// Usage: Run after pnpm build; screenshots go to tests/.artifacts/captures/folio and test storage is disposable.
 // Related: server.cjs, space-checks.cjs, backend/tests/reference_materials.rs.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { createServer } = require('./server.cjs');
+const { configureDocuments } = require('./configure-documents.cjs');
 const { upload, notifications } = require('./space-checks.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function click(page, name, role = 'button') {
   await (
     await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, { visible: true })
@@ -31,15 +32,16 @@ async function capture(page, name) {
     await document.fonts.ready;
   });
   await page.screenshot({
-    path: path.join(projectRoot, 'mock/captures/folio', name),
+    path: path.join(projectRoot, 'tests/.artifacts/captures/folio', name),
     fullPage: true,
   });
 }
 (async () => {
   const server = await createServer('reference-materials-browser-');
-  let session;
+  let session, fixture;
   try {
     await server.start();
+    fixture = await configureDocuments(server.base);
     session = await openBrowser('reference-materials');
     const a = await (await session.browser.createBrowserContext()).newPage();
     const b = await (await session.browser.createBrowserContext()).newPage();
@@ -140,6 +142,7 @@ async function capture(page, name) {
   } finally {
     if (session) await session.close();
     await server.close();
+    if (fixture) await fixture.close();
   }
 })().catch((e) => {
   console.error(e);

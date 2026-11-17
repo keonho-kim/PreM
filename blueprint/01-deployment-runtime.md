@@ -177,3 +177,5 @@ Admin 일반 설정의 토큰 변경은 현재 서버 실행에만 적용한다.
 태그는 `vYYYYMMDD`다. Release workflow는 macOS arm64, Ubuntu 24.04 arm64/amd64 네이티브 runner에서 번들 런타임을 설치하고 빌드한다. `package-release.py`가 실행 파일·Node·Python·Kordoc·PPT Master·한국어 OCR 모델·한국어 폰트와 라이선스·파일별 해시를 묶는다. 개발 의존성과 앱 데이터는 배포하지 않는다.
 
 `verify-release.py`는 다른 경로에 풀고 PATH에서 개발 도구를 제거한 환경에서 OCR 모델·Sharp·Python 패키지 로딩, 스캔 PDF/Office/HWP 추출, PPTX 생성·PNG 렌더링, HTTP 시작과 재시작을 검증한다. Linux는 libstdc++·libgcc·libatomic과 시스템 인증서가 없을 때 사용할 공개 CA 인증서를 포함하며 `verify-release-linux.sh`로 추가 패키지가 없는 Ubuntu 24.04를 네트워크 없이 검사한다. 세 archive와 SHA-256 파일이 draft에 모두 도착한 뒤 릴리스를 게시한다. Linux OS 요구사항은 glibc 2.39 이상, macOS는 14 이상이다. libc/OS 프레임워크와 외부 LLM 추론 서비스는 호스트 책임이다. 파일 이름은 `PreM-vYYYYMMDD-{linux-arm64,linux-amd64,macos-arm64}.tar.gz`다.
+
+PDF 해석에 필요한 Kordoc 내장 WASM과 제3자 고지도 문서 런타임의 일부다. manifest는 WASM 파일을 포함해 검증하며, OCR 모델은 설치 번들을 읽어 앱 전용의 쓰기 가능한 캐시에 준비한다. 패키지 검증에서도 설치 경로에 쓰는 대신 독립 OCR 캐시를 사용한다.

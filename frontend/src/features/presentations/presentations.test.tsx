@@ -2,12 +2,13 @@
 // Pattern: Real feature controls with transport fixtures; Rust/browser tests own renderer quality.
 // Usage: Vitest; no live models, credentials or persistent browser storage.
 // Related: evidence-confirmation.tsx, generation.tsx, api.ts.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
 import { EvidenceConfirmation } from './evidence-confirmation';
 import { Generation } from './generation';
 import { confirmEvidence, createRun, listRuns, type Preparation, type Run } from './api';
@@ -75,13 +76,13 @@ beforeEach(() => {
     });
 });
 const clients: QueryClient[] = [];
-function mount(view: React.ReactNode) {
+async function mount(view: React.ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   clients.push(client);
-  render(
-    <MemoryRouter>
+  await render(
+    <RouterTestHarness>
       <QueryClientProvider client={client}>{view}</QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
 }
 afterEach(() => {
@@ -100,7 +101,7 @@ afterEach(() => {
 it('does not confirm empty additional evidence until the user explicitly continues', async () => {
   const next = vi.fn();
   vi.mocked(confirmEvidence).mockResolvedValue(state);
-  mount(<EvidenceConfirmation project="p" state={state} editable onContinue={next} />);
+  await mount(<EvidenceConfirmation project="p" state={state} editable onContinue={next} />);
   expect(screen.getByText('현재 프로젝트 원본으로 작성')).toBeVisible();
   expect(confirmEvidence).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole('button', { name: '근거 확인하고 계속' }));
@@ -109,7 +110,7 @@ it('does not confirm empty additional evidence until the user explicitly continu
 });
 it('retains one generation receipt when a sent request has an uncertain response', async () => {
   vi.mocked(createRun).mockRejectedValue(new Error('temporary failure'));
-  mount(<Generation project="p" name="보고서" state={state} editable active />);
+  await mount(<Generation project="p" name="보고서" state={state} editable active />);
   expect(screen.queryByRole('combobox', { name: '작성에 사용할 AI' })).not.toBeInTheDocument();
   await userEvent.type(screen.getByLabelText('이번 발표자료에 추가할 요청 (선택)'), '간결한 구성');
   expect(screen.queryByRole('button', { name: 'PPT 생성 설정' })).not.toBeInTheDocument();
@@ -139,7 +140,7 @@ it('keeps the current editor ahead of inline creation and opens version authorin
     created_at: 1,
   };
   vi.mocked(listRuns).mockResolvedValue([run]);
-  mount(<Generation project="p" name="보고서" state={state} editable active />);
+  await mount(<Generation project="p" name="보고서" state={state} editable active />);
   const editor = await screen.findByRole('region', { name: '슬라이드 편집기' });
   const composer = screen.getByRole('region', { name: '발표자료 만들기' });
   expect(editor.compareDocumentPosition(composer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

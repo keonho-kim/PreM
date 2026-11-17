@@ -10,7 +10,7 @@ const net = require('node:net');
 const { spawn } = require('node:child_process');
 const { once } = require('node:events');
 const { setTimeout: delay } = require('node:timers/promises');
-const { projectRoot } = require('../../mock/helpers/browser.cjs');
+const { projectRoot } = require('../helpers/browser.cjs');
 async function createServer(prefix) {
   const root = path.join(projectRoot, 'tests/.artifacts');
   fs.mkdirSync(root, { recursive: true });

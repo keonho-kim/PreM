@@ -206,7 +206,7 @@ impl Presentations {
             | CanvasOperation::MoveSlide { .. } => {}
         }
         spec.schema_version = spec.schema_version.max(2);
-        model::validate_spec(&spec)?;
+        authoring::validate_spec(&spec)?;
         let media = spec
             .objects
             .iter()

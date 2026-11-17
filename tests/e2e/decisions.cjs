@@ -1,12 +1,12 @@
 // Purpose: Verify System One setup and decision testing through compiled React and Rust.
 // Pattern: Local deterministic API, isolated storage, independent browser contexts and restart.
-// Usage: Run after pnpm build; captures use mock/captures/folio and all QA data is disposable.
+// Usage: Run after pnpm build; captures use tests/.artifacts/captures/folio and all QA data is disposable.
 // Related: server.cjs, frontend/features/providers/, backend/tests/decisions.rs.
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const path = require('node:path');
 const { once } = require('node:events');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 async function click(page, name, role = 'button') {
   if (name === '모델 목록 조회' && (await page.$('.provider-form:not([hidden]) .model-picker'))) {
@@ -102,7 +102,7 @@ async function field(page, name, value) {
     await click(a, 'decision-fixture · Decision', 'option');
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
-    assert.match(await a.$eval('.provider-summary', (e) => e.textContent), /System One/);
+    assert.match(await a.$eval('.provider-summary', (e) => e.textContent), /QA · 로컬 판정 서버/);
     const url = a.url();
     await click(a, '판정 테스트', 'tab');
     await click(a, '판정 실행');
@@ -145,7 +145,10 @@ async function field(page, name, value) {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     });
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-decisions-production.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/admin-decisions-production.png',
+      ),
       fullPage: true,
     });
     await a.setViewport({ width: 390, height: 844 });
@@ -156,7 +159,7 @@ async function field(page, name, value) {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     });
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-decisions-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-decisions-phone.png'),
       fullPage: true,
     });
     await b.goto(url, { waitUntil: 'networkidle0' });

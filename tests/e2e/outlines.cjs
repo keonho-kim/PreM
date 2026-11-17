@@ -1,6 +1,6 @@
 // Purpose: Verify paired Studio outline generation, editing, mapping and confirmation through real UI.
 // Pattern: Isolated Rust server and synthetic LLM; two browser contexts, exact revisions and restart.
-// Usage: Run after pnpm build; captures use mock/captures/folio and storage uses tests/.artifacts.
+// Usage: Run after pnpm build; captures use tests/.artifacts/captures/folio and storage uses tests/.artifacts.
 // Related: outline-fixture.cjs, backend/tests/outlines.rs, frontend/features/outlines/.
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
@@ -9,7 +9,7 @@ const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { notifications } = require('./space-checks.cjs');
 async function click(page, name, role = 'button') {
   const target = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
@@ -42,7 +42,8 @@ async function poll(check) {
       due_date: '2030-01-01',
     });
     const p = project.id;
-    await json(server.base, `/api/v1/admin/llm/providers/${randomUUID()}`, 'PUT', {
+    const author = randomUUID();
+    await json(server.base, `/api/v1/admin/llm/providers/${author}`, 'PUT', {
       expected_version: 0,
       name: '목차 작성 AI',
       provider_type: 'openai_compatible',
@@ -50,6 +51,10 @@ async function poll(check) {
       model_identifier: 'outline-fixture',
       timeout_seconds: 30,
       enabled: true,
+    });
+    await json(server.base, '/api/v1/admin/document-processing/settings', 'PUT', {
+      expected_version: 0,
+      connection_id: author,
     });
     const read = () => json(server.base, `/api/v1/projects/${p}/outline`);
     const route = `${server.base}/home/studio/${p}`;
@@ -73,7 +78,7 @@ async function poll(check) {
     await a.type('#guide-do', '실행 계획을 먼저 보여주세요.');
     assert.equal(await a.$eval('button[aria-label="목차·내용"]', (n) => n.disabled), true);
     await click(a, '저장하고 목차로');
-    await a.waitForSelector('#outline-model', { visible: true });
+    assert.equal(await a.$('#outline-model'), null);
     await click(a, '목차 만들기');
     await poll(async () => (await read()).version === 1);
     await a.waitForFunction(
@@ -140,7 +145,7 @@ async function poll(check) {
     await a.waitForSelector('.work-dock', { hidden: true });
     await a.evaluate(() => window.scrollTo(0, 0));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/studio-outline-authoring.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/studio-outline-authoring.png'),
       fullPage: true,
     });
     const beforeEvidence = fixture.calls();
@@ -177,12 +182,12 @@ async function poll(check) {
     assert.equal(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await a.evaluate(() => window.scrollTo(0, 0));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/studio-outline-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/studio-outline-phone.png'),
     });
     await click(a, '목차 편집');
     assert.equal(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/studio-outline-edit-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/studio-outline-edit-phone.png'),
     });
     await a.keyboard.press('Escape');
     await a.waitForFunction(
@@ -191,7 +196,10 @@ async function poll(check) {
     await click(a, '내용 담기');
     assert.equal(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/studio-outline-picker-phone.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/studio-outline-picker-phone.png',
+      ),
     });
     await a.keyboard.press('Escape');
     await a.waitForFunction(() => document.activeElement.textContent.trim() === '내용 담기');
@@ -205,7 +213,10 @@ async function poll(check) {
       ),
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/studio-outline-phone-content.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/studio-outline-phone-content.png',
+      ),
     });
     const calls = fixture.calls();
     await b.bringToFront();

@@ -39,14 +39,11 @@ pub(in crate::adapters::sqlite::presentations) fn context(
     let sources =
         super::super::citations::read(db, e.project_id, e.base_revision_id, e.source_slide_id)?
             .into_iter()
-            .map(|c| {
-                let end = c.text.floor_char_boundary(c.text.len().min(300));
-                json!({"id":c.block_id,"text":&c.text[..end]})
-            })
+            .map(|c| json!({"id":c.block_id,"text":c.text}))
             .collect::<Vec<_>>();
     let history=db.prepare("SELECT e.prompt,e.message FROM presentation_edits e JOIN presentation_slide_versions s ON s.id=e.source_slide_id WHERE e.project_id=?1 AND e.presentation_id=?2 AND s.slide_key=(SELECT s2.slide_key FROM presentation_edits e2 JOIN presentation_slide_versions s2 ON s2.id=e2.source_slide_id WHERE e2.id=?3) AND e.status='applied' ORDER BY e.created_at DESC,e.id DESC LIMIT 3").map_err(failure)?.query_map(params![e.project_id.to_string(),e.presentation_id.to_string(),e.id.to_string()],|r|Ok(json!({"user":r.get::<_,String>(0)?,"assistant":r.get::<_,Option<String>>(1)?}))).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
     Ok(
-        json!({"source_excerpts":sources,"available_references":e.references.iter().map(|m|json!({"reference_id":m.id,"title":m.title,"kind":m.kind,"text":m.text.as_deref().unwrap_or("").chars().take(500).collect::<String>()})).collect::<Vec<_>>(),"previous_applied_requests":history.into_iter().rev().collect::<Vec<_>>()}),
+        json!({"source_excerpts":sources,"available_references":e.references.iter().map(|m|json!({"reference_id":m.id,"title":m.title,"kind":m.kind,"text":m.text.as_deref().unwrap_or("")})).collect::<Vec<_>>(),"previous_applied_requests":history.into_iter().rev().collect::<Vec<_>>()}),
     )
 }
 pub(in crate::adapters::sqlite::presentations) fn fail(

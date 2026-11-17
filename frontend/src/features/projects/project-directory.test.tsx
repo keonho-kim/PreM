@@ -2,13 +2,14 @@
 // Pattern: Real feature UI with an isolated Query client and controlled HTTP responses.
 // Usage: pnpm --filter @prem/frontend test.
 // Related: project-dialog.tsx, api.ts, pages/projects-page.tsx.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, waitFor } from '@testing-library/react';
 import { screen, within } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
 import { defaultFilters } from './api';
 import { ProjectDirectory } from './project-directory';
 import type { InternalAxiosRequestConfig } from 'axios';
@@ -27,9 +28,9 @@ const response = (data: unknown, status = 200) => ({ data, status });
 const client = new QueryClient({
   defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
 });
-function mount() {
-  return render(
-    <MemoryRouter>
+async function mount() {
+  return await render(
+    <RouterTestHarness>
       <QueryClientProvider client={client}>
         <ProjectDirectory
           filters={defaultFilters}
@@ -38,7 +39,7 @@ function mount() {
           onPage={() => {}}
         />
       </QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
 }
 afterEach(() => {
@@ -78,7 +79,7 @@ it('retains the same creation key after an uncertain network failure', async () 
     });
   });
   const user = userEvent.setup();
-  mount();
+  await mount();
   await user.click(screen.getByRole('button', { name: '프로젝트 만들기' }));
   const dialog = within(screen.getByRole('dialog'));
   await user.type(dialog.getByRole('textbox', { name: '프로젝트 이름' }), base.name);
@@ -109,7 +110,7 @@ it('requires explicit latest-revision review while preserving a rename draft', a
     return response({ items: [base], total: 1, offset: 0, limit: 20 });
   });
   const user = userEvent.setup();
-  mount();
+  await mount();
   await user.click(await screen.findByRole('button', { name: '공유 프로젝트 메뉴' }));
   await user.click(await screen.findByRole('menuitem', { name: '이름 바꾸기' }));
   const dialog = within(screen.getByRole('dialog'));
@@ -137,7 +138,7 @@ it('keeps the draft and dialog open while a save is unresolved', async () => {
     return response({ items: [], total: 0, offset: 0, limit: 6 });
   });
   const user = userEvent.setup();
-  mount();
+  await mount();
   await user.click(screen.getByRole('button', { name: '프로젝트 만들기' }));
   const dialog = within(screen.getByRole('dialog', { name: '새 프로젝트' }));
   await user.type(dialog.getByLabelText('프로젝트 이름'), base.name);

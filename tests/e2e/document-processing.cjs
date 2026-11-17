@@ -10,7 +10,7 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { createServer } = require('./server.cjs');
 const { upload, notifications } = require('./space-checks.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function click(page, name, role = 'button') {
   await (await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`)).click();
   if (role === 'tab')
@@ -39,7 +39,7 @@ async function capture(page, name) {
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   });
   await page.screenshot({
-    path: path.join(projectRoot, 'mock/captures/folio', name),
+    path: path.join(projectRoot, 'tests/.artifacts/captures/folio', name),
     fullPage: true,
   });
 }

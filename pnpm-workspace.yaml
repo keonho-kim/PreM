@@ -1,6 +1,9 @@
 packages:
   - frontend
 
+minimumReleaseAgeExclude:
+  - dependency-cruiser@18.8.0
+
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild

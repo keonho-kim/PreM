@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 const { htmlChecks } = require('./html-checks.cjs');
 const { fixtures, button, action, upload, rename, notifications } = require('./space-checks.cjs');
@@ -14,7 +14,7 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
   const { base } = server;
   const fixtureRoot = fs.mkdtempSync(path.join(projectRoot, 'tests/.artifacts/space-fixtures-'));
   const file = fixtures(fixtureRoot);
-  const captures = path.join(projectRoot, 'mock/captures/folio');
+  const captures = path.join(projectRoot, 'tests/.artifacts/captures/folio');
   let session;
   try {
     await server.start();
@@ -77,7 +77,7 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
     await a.click('button[aria-label="작업 패널 닫기"]');
     await a.waitForSelector('.work-launcher');
     await notifications(a);
-    await a.click('.app-navigation a[href="/home"]');
+    await a.click('.app-navigation a[href="/home/"]');
     await a.waitForSelector('.projects-empty');
     await notifications(a);
     assert.match(await a.$eval('.space-uploads', (n) => n.textContent), /팀 운영.docx/);

@@ -2,11 +2,12 @@
 // Pattern: Real shadcn controls with mocked canonical transport and stable input identities.
 // Usage: Vitest; browser tests cover persisted source/model workflows and reorder focus.
 // Related: editor.tsx, mapping.tsx, draft.ts, backend/tests/outlines.rs.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OutlineEditor } from './editor';
 import { ContentMapping } from './mapping';
@@ -47,9 +48,9 @@ function wrap(view: React.ReactNode) {
   });
   clients.push(client);
   return (
-    <MemoryRouter>
+    <RouterTestHarness>
       <QueryClientProvider client={client}>{view}</QueryClientProvider>
-    </MemoryRouter>
+    </RouterTestHarness>
   );
 }
 afterEach(() => {
@@ -62,13 +63,13 @@ it('retains local text when another user saves a newer revision', async () => {
   const c = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   clients.push(c);
   const view = (server: OutlineState) => (
-    <MemoryRouter>
+    <RouterTestHarness>
       <QueryClientProvider client={c}>
         <OutlineEditor project={node} server={server} editable historical={false} />
       </QueryClientProvider>
-    </MemoryRouter>
+    </RouterTestHarness>
   );
-  const rendered = render(view(state));
+  const rendered = await render(view(state));
   expect(screen.queryByRole('textbox', { name: '1번 목차 제목' })).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: '목차 편집' }));
   const input = screen.getByRole('textbox', { name: '1번 목차 제목' });
@@ -95,7 +96,7 @@ it('retains local text when another user saves a newer revision', async () => {
 it('only confirms a saved revision after the explicit confirmation command', async () => {
   vi.mocked(getBlocks).mockResolvedValue({ items: [], total: 0, offset: 0 });
   vi.mocked(confirmOutline).mockResolvedValue({ ...state, confirmed: true });
-  render(wrap(<OutlineEditor project={node} server={state} editable historical={false} />));
+  await render(wrap(<OutlineEditor project={node} server={state} editable historical={false} />));
   expect(confirmOutline).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole('button', { name: '목차·내용 확정' }));
   await waitFor(() => expect(confirmOutline).toHaveBeenCalledWith(node, 1));
@@ -121,7 +122,7 @@ it('can assign one canonical block to another section without copying its text',
     offset: 0,
   });
   const change = vi.fn();
-  render(
+  await render(
     wrap(
       <ContentMapping
         project={node}
@@ -148,7 +149,7 @@ it('can assign one canonical block to another section without copying its text',
     ]),
   );
 });
-it('moves a root and its children together while preserving stable IDs', () => {
+it('moves a root and its children together while preserving stable IDs', async () => {
   const child = { id: block, parent_id: node, title: '하위', description: '' };
   const second = { id: other, parent_id: null, title: '다음', description: '' };
   const draft = {

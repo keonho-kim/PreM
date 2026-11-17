@@ -7,7 +7,7 @@ import path from 'node:path';
 export async function prepareKordocFilter(runtime) {
   const folder = path.join(runtime, 'kordoc/node_modules/kordoc');
   const pkg = JSON.parse(await fs.readFile(path.join(folder, 'package.json'), 'utf8'));
-  if (pkg.version !== '4.24.80')
+  if (pkg.version !== '4.24.83')
     throw new Error('Review Kordoc image-filter adapter before upgrading');
   const source = await fs.readFile(path.join(folder, 'dist/index.js'), 'utf8');
   const imports = [...source.matchAll(/import\s*\{([^}]+)\}\s*from\s*"(\.\/[^"\n]+)"/g)].filter(

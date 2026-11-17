@@ -6,7 +6,7 @@ PreM 통합 제품·기술 설계서 v2.0의 **9장**과 현재 디자인 계약
 
 사용자가 전체 디자인을 맡긴 요청에 따라 **Hallmark Furrow를 문서 작업에 맞게 적용한 Folio**를 사용한다. 종이·잉크·주석을 중심으로 장시간 문서 검토에 적합한 작업 공간을 만든다. 이전 Refract, Bellwater Lido, 타일, 글래스 표현을 대체한다. 라이트 전용이며 다크 테마와 전환 기능은 없다.
 
-현재 구현은 [HTML·CSS·JS 목업](../mock/README.md)이다. React는 기본 실행 스캐폴드이며 OCR·LLM·PPTX 기능은 실제 구현과 구분한다. [design.md](../design.md)가 화면 간 디자인 기준을 고정하고 [본개발 소스 아키텍처](02-system-architecture.md)이 기능 소유권을 정한다.
+현재 UI 구현은 [React 프론트엔드](../frontend/src/)이며 실제 기능과 검증 범위는 [개발 문서](../dev-docs/README.md)를 따른다. [design.md](../design.md)가 화면 간 디자인 기준을 고정하고 [본개발 소스 아키텍처](02-system-architecture.md)이 기능 소유권을 정한다.
 
 | 역할 | 기준 |
 | --- | --- |
@@ -19,7 +19,7 @@ PreM 통합 제품·기술 설계서 v2.0의 **9장**과 현재 디자인 계약
 | 재질 | 타일·유리·블러·그레인 없음. 문서 종이와 다이얼로그에만 작은 중립 그림자 |
 | 모서리 | 명령 8px, 작업 면 12px, 종이 2px |
 
-사진, 가상 실적, 후기, 장식 차트를 추가하지 않는다. 실제 목업의 원문 페이지와 슬라이드가 화면의 시각적 중심이다.
+사진, 가상 실적, 후기, 장식 차트를 추가하지 않는다. 실제 원문 페이지와 슬라이드가 화면의 시각적 중심이다.
 
 ## 원본 토큰과 생성 출력
 
@@ -30,7 +30,6 @@ design/refract.tokens.json
              │
              ▼
 scripts/generate-design-tokens.mjs
-             ├── mock/theme.generated.css
              └── frontend/src/app/styles/theme.generated.css
 ```
 
@@ -52,7 +51,7 @@ scripts/generate-design-tokens.mjs
 - PPT 편집: 중립 작업대의 슬라이드, 아래 가로 필름스트립과 수정 폼. 기존 리비전·비교·적용 동작 보존.
 - Studio: 프로젝트 전환, 확인 상태를 관리하는 6단계 스테퍼와 각 단계의 기존 작업 화면.
 - Space: 공용 템플릿·레퍼런스 업로드와 자산별 처리 진행 바. 프로젝트 원본과 별도 관리.
-- Admin: 시작 시 CLI 토큰을 입력한 접속자에게 팀 공용 모델·운영 설정을 제공한다. 독립 목업에만 역할 미리보기를 둔다.
+- Admin: 시작 시 CLI 토큰을 입력한 접속자에게 팀 공용 모델·운영 설정을 제공한다.
 
 ### 서체와 상호작용
 
@@ -70,8 +69,8 @@ scripts/generate-design-tokens.mjs
 - 최소 크기 Grid 트랙과 명시적 종이 종횡비, 읽기 순서에 맞는 DOM을 유지한다.
 - 모션은 조작 피드백에 한정하며 reduced-motion을 따른다.
 - 갤러리 observer와 폴백 이벤트는 재렌더·화면 이탈·페이지 종료 시 정리한다.
-- 현재 캡처는 `mock/captures/folio/`, 이전 Refract 이미지는 역사 자료다.
-- 개발 도구는 `mock/helpers/`, 임시 파일·보고서는 `.artifacts/`; `data/`에는 앱 데이터만 저장한다.
+- 현재 캡처는 `tests/.artifacts/captures/folio/`, 이전 Refract 이미지는 역사 자료다.
+- 개발 도구는 `tests/helpers/`, 임시 파일·보고서는 `.artifacts/`; `data/`에는 앱 데이터만 저장한다.
 
 ## 9.1 전체 메뉴 구조
 
@@ -87,7 +86,7 @@ Studio                      프로젝트별 PPT 제작
 Space                       프로젝트와 독립적인 공용 자산
  ├─ 레퍼런스                등록·추출·색인 진행 상태
  └─ 템플릿                  등록·레이아웃 추출·검증 진행 상태
-Admin (제품 공용 / 목업 관리자 미리보기)
+Admin (CLI 토큰으로 접근하는 팀 공용 설정)
  ├─ AI 연결
  ├─ 모델 라우팅
  ├─ 작업 현황
@@ -98,9 +97,9 @@ Studio의 프로젝트 개요·작업 이력은 프로젝트 문맥 링크로 �
 
 스테퍼는 네모 카드 대신 원형 마커를 선으로 잇는 타임라인이다. 단계명·상태는 마커 아래에 표시하고, 현재 단계는 링과 밑줄, 완료 단계는 체크로 구분한다. 연결선은 양옆 단계가 모두 완료된 구간만 진하게 표시한다. 스테퍼는 현재 위치와 완료 상태를 구분한다. 방문만으로 완료되지 않으며, ‘확인하고 다음’은 저장된 문서 목록·가이드 리비전·목차 리비전·선택 자산을 확인한다. 입력이 바뀌면 해당 단계는 ‘변경됨’으로 표시한다. 저장하지 않은 가이드가 있으면 먼저 저장하도록 안내하며, 새 결과물을 자동 재생성하지 않는다.
 
-Space는 자산별 및 전체 처리 진행 바를 사용한다. 목업의 업로드는 파일명·크기만 저장하고 3단계 처리 흐름을 시뮬레이션한다. 일시 정지·이어가기·취소·다시 시작을 제공하며 실제 OCR·템플릿 추출 완료로 설명하지 않는다. 알 수 없는 실제 진행률은 확정 백분율 대신 불확정 상태로 표시해야 한다.
+Space는 자산별 및 전체 처리 진행 바를 사용한다. 알 수 없는 실제 진행률은 확정 백분율 대신 불확정 상태로 표시해야 한다.
 
-목업의 Admin 미리보기는 기본 관리자 역할로 시작하고 일반 사용자로 전환할 수 있다. 일반 사용자에게는 Admin 메뉴를 숨기고 직접 해시 진입도 Home으로 돌린다. 제품은 사용자 계정·역할 계층 없이 Admin만 CLI 토큰으로 보호하며 회사 네트워크에서도 접근을 제한한다. 기존 Admin 라이브러리 해시 경로는 Space로 연결해 이전 링크를 유지한다.
+제품은 사용자 계정·역할 계층 없이 Admin만 CLI 토큰으로 보호하며 회사 네트워크에서도 접근을 제한한다.
 
 ## 9.2 프로젝트 목록
 
@@ -147,7 +146,6 @@ Space는 자산별 및 전체 처리 진행 바를 사용한다. 목업의 업�
 
 원본 문서는 페이지 갤러리로 탐색한다. 종이 비율을 먼저 확보하고, viewport에 가까운 페이지만 미리보기를 준비한다. 문서 변경·재렌더·경로 이탈 시 observer와 대체 이벤트를 정리한다. IntersectionObserver 미지원 환경에서도 가까운 페이지를 확인하는 작은 대체 경로와 즉시 열 수 있는 페이지 버튼을 유지한다.
 
-현재 목업은 기존 샘플 블록을 지연 표시한다. 실제 PDF 파일 읽기·변환·이미지 다운로드를 구현한 것으로 설명하지 않는다. 실제 PDF 렌더링과 전송 지연은 문서 파이프라인 연결 시 구현한다.
 
 
 페이지 이동, 확대·축소, 텍스트 선택, 목차 연결 확인, 원본과 추출 결과 비교, OCR 재실행, 오류 페이지 표시를 제공한다.
@@ -223,7 +221,7 @@ AI 탭은 메시지 이력과 하단 입력창으로 구성한다. 캔버스의 
 
 전송 시 선택 요소 키, 슬라이드 및 리비전을 고정한다. 대화 안에서 수정 전후를 검토하고 적용·취소하며, 선택 변경이 기존 수정안의 대상을 바꾸지 않는다. 적용은 새 불변 리비전을 만들고, 다른 변경이 발생한 수정안은 재요청을 안내한다. 선택하지 않은 요소와 다른 슬라이드는 유지한다.
 
-메시지와 작성 중 문구는 프로젝트·프레젠테이션·슬라이드별로 분리한다. Enter로 전송, Shift+Enter로 줄바꿈하며 한글 조합 확정 Enter는 전송하지 않는다. 목업은 인메모리 규칙 기반 응답이며 실제 LLM 연결은 미구현이다. 다중 선택은 채팅 수정 범위를 지정하며 그룹 이동·그룹화·일괄 도구 조작은 후속 구현이다. 실제 PPTX 다운로드는 제품 계약이고 목업은 JSON만 내보낸다.
+메시지와 작성 중 문구는 프로젝트·프레젠테이션·슬라이드별로 분리한다. Enter로 전송, Shift+Enter로 줄바꿈하며 한글 조합 확정 Enter는 전송하지 않는다. 다중 선택은 채팅 수정 범위를 지정하며 그룹 이동·그룹화·일괄 도구 조작은 후속 구현이다. 실제 PPTX 다운로드는 제품 계약이다.
 
 ## 9.10 Admin 화면
 
@@ -242,14 +240,14 @@ AI 탭은 메시지 이력과 하단 입력창으로 구성한다. 캔버스의 
 
 Provider 설정 저장과 연결·Vision·Tool Calling·Structured Output 테스트를 구분한다. API Key를 다시 노출하지 않는다. 설정 버전과 새 요청 반영 상태를 보여준다.
 
-제품 Admin은 별도 사용자 계정 없이 CLI 토큰으로 접근하며 설정 자체는 팀 공용이다. 역할에 따른 Admin 미리보기는 독립 목업에만 해당한다. [운영 네트워크 보호](09-operations-delivery.md)는 여전히 필요하다. 공용 자료·템플릿 관리는 Space로 분리한다.
+제품 Admin은 별도 사용자 계정 없이 CLI 토큰으로 접근하며 설정 자체는 팀 공용이다. [운영 네트워크 보호](09-operations-delivery.md)는 여전히 필요하다. 공용 자료·템플릿 관리는 Space로 분리한다.
 
 ## 구현 후 디자인 검증
 
 - 각 화면의 로딩·비어 있음·오류·정상 상태, 키보드 조작, 포커스, 대비, 좁은 화면 패널 전환을 검증한다.
 - 실제 CSS의 첫 비어 있지 않은 줄에는 Hallmark stamp, 다음에는 critique, 이후 필요한 waiver를 기록한다. 토큰은 단일 기준 파일에서 관리한다.
 - 프론트엔드가 구현되면 `sloplint <구현 파일 또는 폴더> --scope app --genre modern-minimal --render --url <실행 URL>`로 검사한다. Floor 실패를 해결하고 Reflex 발견은 수정 또는 근거를 기록한다.
-- 목업의 실제 렌더링과 샘플 상호작용을 검증하되, 실제 OCR·LLM·PPTX 처리 검증과 구분한다. 현재 캡처 위치는 mock/captures/folio/이며 제품 기능 검증은 해당 기능 구현 시 수행한다.
+- 실제 제품 화면의 렌더링·상호작용과 OCR·LLM·PPTX 처리 결과를 함께 검증한다. 현재 캡처 위치는 tests/.artifacts/captures/folio/이며 제품 기능 검증은 해당 기능 구현 시 수행한다.
 
 ## 최신 작성 방향·검색 UX
 
@@ -257,7 +255,6 @@ Provider 설정 저장과 연결·Vision·Tool Calling·Structured Output 테스
 
 근거와 템플릿은 목록 대신 시각적 검색 갤러리로 보여준다. 검색창 아래 파일/문단/이미지/차트/장표 전체 필터를 제공한다. 썸네일은 크게 보기 버튼, 선택은 별도의 명시적 컨트롤로 구성한다. 파일명만 보여주지 말고 원본 내용·위치·버전을 함께 보여준다. 선택 바구니에는 생성에 사용할 자료와 삽입 방식이 표시된다. 템플릿은 대표 장표와 검색에 일치한 내부 레이아웃을 보여준다.
 
-현재 목업 검색은 고정된 샘플 색인에 한정된다. Space에서 파일명·크기만 등록한 파일의 내용을 검색하거나 실제 이미지를 추출한 것처럼 표현하지 않는다. 실파일 기반 PDF/PPT 썸네일과 객체 삽입은 엔진 연결 시 구현한다.
 
 ## Search and editor inspector update
 
@@ -277,7 +274,6 @@ The left slide list and right AI/Reference inspector each have an independent co
 
 Secondary actions use Lucide icons with names and tooltips. Slide addition moves to the left list header; duplicate/delete/reorder actions live in a context menu with keyboard access. Empty/gap targets show insertion lines, and drag handles provide pointer ordering with Escape cancellation and menu/keyboard alternatives. The list header stays outside the scrolling thumbnails to avoid hiding drag handles.
 
-The mock supports plain-text fields/text boxes, local raster images, rectangular shapes, move/resize/delete, object-level typography/color/alignment, front/back order, zoom/fit and undo/redo. These operations create immutable revisions and preserve source lineage. Real PowerPoint/Keynote parity requires native PPTX round-trip, selection/grouping, richer text, tables/charts, media editing and animation; do not equate the mock command surface with those engine capabilities.
 
 ## 프로젝트 카드 갤러리와 마감일
 
@@ -287,7 +283,7 @@ Home 상단에는 프로젝트 제목·설명과 생성 버튼을 배치한다. 
 
 ## 제품 컴포넌트 적용 기준
 
-일반 UI는 공식 shadcn/ui 컴포넌트를 우선하고 AI 대화·도구·근거 UI는 공식 AI Elements 패턴을 우선한다. Dialog·Alert Dialog·Context Menu·Dropdown Menu·Calendar/Date Picker·입력·탭의 접근성 및 상호작용은 선택한 primitive가 담당한다. 별도의 수동 focus trap·메뉴 키보드 처리를 중복 적용하지 않는다. 이 기준이 제품의 native 컨트롤 우선 권고보다 우선한다. 정적 HTML 목업은 기존 native 구현을 유지할 수 있다.
+일반 UI는 공식 shadcn/ui 컴포넌트를 우선하고 AI 대화·도구·근거 UI는 공식 AI Elements 패턴을 우선한다. Dialog·Alert Dialog·Context Menu·Dropdown Menu·Calendar/Date Picker·입력·탭의 접근성 및 상호작용은 선택한 primitive가 담당한다. 별도의 수동 focus trap·메뉴 키보드 처리를 중복 적용하지 않는다. 이 기준이 제품의 native 컨트롤 우선 권고보다 우선한다.
 
 AI 대화는 Chat/Message/Message Scroller와 Prompt Input으로 구성하고 Reference의 근거는 Sources/Inline Citation으로 연결한다. Tool/Plan/Task/Confirmation은 실제 서버 이벤트와 확인이 존재할 때만 보여준다. 모델 내부 추론 대신 공개 가능한 진행 요약을 표시하며 임의 진행률을 만들지 않는다. 구성 요소 ID·프로젝트/deck/slide·리비전 고정과 변경 미리보기·적용 계약은 그대로 유지한다. 현재 실제 화면의 전환 완료 여부는 [디자인 구현 문서](../dev-docs/05-design-accessibility.md), 도입 근거와 의존성은 [의존성 명세](../dev-docs/08-dependencies.md)를 따른다.
 
@@ -305,7 +301,6 @@ Space 상단은 **전체 | 레퍼런스 | 템플릿**으로 구성하고 전체�
 
 템플릿은 PPT Master 템플릿 추출과 미리보기 생성을 수행한다. 레퍼런스는 PPTX 여부로 템플릿 추출 가능성을 확인한 뒤 내용을 추출하며 템플릿으로 자동 등록하지 않는다. 대표 미리보기는 즉시 로드하고 썸네일은 지연 로드한다. 원본 장표 색상·비율을 유지하고 키보드로 선택·이동·닫기가 가능해야 한다.
 
-프레임워크 없는 목업에서도 같은 미리보기·썸네일 탐색을 제공한다. 샘플 디자인에는 간결한 샘플 표시를 유지하고, 업로드 파일 내용을 읽지 않는 목업에서는 실제 추출 성공을 주장하지 않는다. Space와 Studio의 템플릿 미리보기는 같은 UI 책임을 공유한다.
 
 ## 일반 사무직을 위한 사용자 경험 계약
 
@@ -338,7 +333,6 @@ Space 상단은 **전체 | 레퍼런스 | 템플릿**으로 구성하고 전체�
 
 연결 주소, 사용할 AI 이름, 인증 키처럼 설정에 필요한 외부 서비스 입력은 Admin의 명확한 상세 항목으로 제공한다. 내부 DB·Blob·worker·lease·스키마·LLM 판정 과정을 일반 관리자 안내로 옮겨서 노출하지 않는다. 상세 기술 진단은 운영 문서와 서버 로그가 담당한다.
 
-목업은 상단의 샘플 체험 표시와 해당 행동의 짧은 안내로 실제 결과와 구분한다. 업로드 파일은 읽거나 전송하지 않고, AI 대화와 생성은 샘플이라는 사실을 유지한다. 미구현 엔진·아키텍처 설명을 화면마다 반복하지 않는다. 발표 파일을 만들지 않는 저장 기능을 PPTX 다운로드로 표시해서는 안 된다.
 
 ### 화면별 수용 기준
 
@@ -405,7 +399,7 @@ Admin은 초기 CLI 토큰 또는 현재 실행 중 변경한 토큰을 요구�
 
 ### Studio 진행 표시와 작업 패널
 
-Stepper는 생성·편집을 포함한 모든 Studio 단계에서 항상 보이며 전역 메뉴 아래에 고정한다. 진행 표시를 disclosure에 넣어 숨기지 않는다. 모바일에도 여섯 단계를 표시한다. 장표 화면은 목업처럼 좌측 목록·중앙 캔버스·우측 작업 패널로 구성하며 양쪽 패널을 독립적으로 접고 펼칠 수 있다. 접기 버튼은 숨겨지는 영역 밖에 남고, 접어도 선택·탭·작성 초안을 유지한다. 본구현의 우측 패널은 실제 제공되는 내용·메모 및 참고 자료를 표시한다.
+Stepper는 생성·편집을 포함한 모든 Studio 단계에서 항상 보이며 전역 메뉴 아래에 고정한다. 진행 표시를 disclosure에 넣어 숨기지 않는다. 모바일에도 여섯 단계를 표시한다. 장표 화면은 좌측 목록·중앙 캔버스·우측 작업 패널로 구성하며 양쪽 패널을 독립적으로 접고 펼칠 수 있다. 접기 버튼은 숨겨지는 영역 밖에 남고, 접어도 선택·탭·작성 초안을 유지한다. 본구현의 우측 패널은 실제 제공되는 내용·메모 및 참고 자료를 표시한다.
 
 
 ### 간결한 모델 연결 편집

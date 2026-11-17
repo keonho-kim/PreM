@@ -1,0 +1,6 @@
+{
+  "python": "3.13.18",
+  "uv": "0.13.6",
+  "pptMaster": "3af3e8ef774c4d67ee57e1306d9256d08c9ee1bf",
+  "puppeteer": "25.17.0"
+}

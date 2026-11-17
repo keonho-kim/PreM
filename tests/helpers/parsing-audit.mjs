@@ -1,4 +1,4 @@
-// Purpose: Audit real parsing quality against the public/synthetic corpus without a model connection.
+// Purpose: Audit real parsing quality against the public/synthetic corpus with deterministic local classification.
 // Pattern: Disposable real server, sequential uploads, canonical API projections and explicit findings.
 // Usage: pnpm audit:parsing after pnpm build; exits 1 for quality findings and 2 for harness failure.
 // Related: parsing-checks.mjs, parsing-fixtures.py, tests/e2e/server.cjs.
@@ -11,6 +11,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { checkExtraction } from './parsing-checks.mjs';
 const require = createRequire(import.meta.url);
 const { createServer } = require('../e2e/server.cjs');
+const { configureDocuments } = require('../e2e/configure-documents.cjs');
+const { authorizedFetch: fetch } = require('../e2e/admin-client.cjs');
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const corpus = resolve(root, 'tests/fixtures/parsing-quality');
 const output = resolve(root, 'tests/.artifacts/parsing-quality');
@@ -29,8 +31,7 @@ async function ready(base, id) {
   const deadline = Date.now() + 210000;
   while (Date.now() < deadline) {
     const detail = await json(base, `/api/v1/space/references/${id}/processing`);
-    if (['waiting_configuration', 'succeeded', 'failed', 'cancelled'].includes(detail.job.status))
-      return detail;
+    if (['succeeded', 'failed', 'cancelled'].includes(detail.job.status)) return detail;
     await delay(150, undefined, { signal: cancel.signal });
   }
   throw new Error('Extraction exceeded audit wait limit');
@@ -47,7 +48,7 @@ async function run() {
   const report = {
     schema_version: 1,
     generated_at: new Date().toISOString(),
-    model_calls: 0,
+    classification: 'local synthetic fixture; not live-model acceptance',
     cases: [],
   };
   const runtime = JSON.parse(
@@ -63,8 +64,10 @@ async function run() {
   const stop = () => cancel.abort();
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
+  let fixture;
   try {
     await server.start();
+    fixture = await configureDocuments(server.base);
     for (const entry of expectations.cases) {
       cancel.signal.throwIfAborted();
       const bytes = await readFile(resolve(corpus, entry.file));
@@ -100,7 +103,7 @@ async function run() {
           throw new Error('Corpus material list needs pagination');
       }
       const checks = entry.checks.map((check) => checkExtraction(check, detail, blocks, materials));
-      const extracted = !!detail.job.extraction_id && detail.job.status === 'waiting_configuration';
+      const extracted = !!detail.job.extraction_id && detail.job.status === 'succeeded';
       const result = {
         id: entry.id,
         file: entry.file,
@@ -125,7 +128,8 @@ async function run() {
       );
     }
     const providers = await json(server.base, '/api/v1/admin/llm/providers');
-    if (providers.length) throw new Error('Parsing audit must have no configured models');
+    if (providers.length !== 1 || fixture.calls() !== 0)
+      throw new Error('Audit must use only its classification fixture');
     report.summary = {
       documents: report.cases.length,
       passed: report.cases.filter((c) => c.pass).length,
@@ -143,11 +147,12 @@ async function run() {
     );
     await writeFile(
       resolve(output, 'report.md'),
-      `# Parsing quality audit\n\n${report.summary.passed}/${report.summary.documents} documents meet all authored checks. ${report.summary.findings}/${report.summary.checks} checks need attention. No model was configured.\n\n| Document | Check | Observation |\n| --- | --- | --- |\n${rows.join('\n')}\n\nSee report.json and per-document projections for source hashes, runtime identity and detailed evidence.\n`,
+      `# Parsing quality audit\n\n${report.summary.passed}/${report.summary.documents} documents meet all authored checks. ${report.summary.findings}/${report.summary.checks} checks need attention. Classification used a local deterministic fixture.\n\n| Document | Check | Observation |\n| --- | --- | --- |\n${rows.join('\n')}\n\nSee report.json and per-document projections for source hashes, runtime identity and detailed evidence.\n`,
     );
     process.exitCode = report.cases.every((c) => c.pass) ? 0 : 1;
   } finally {
     await server.close();
+    if (fixture) await fixture.close();
     process.removeListener('SIGINT', stop);
     process.removeListener('SIGTERM', stop);
   }

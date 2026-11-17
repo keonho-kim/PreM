@@ -4,7 +4,8 @@
 // Related: search-form.tsx, results.tsx, settings.tsx.
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from '@tanstack/react-router';
+import { useUrlSearch } from '@/shared/routing/search';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { WorkflowStages } from '@/shared/ui/workflow-stages';
@@ -23,7 +24,7 @@ export function RelatedDocuments({
   ready: boolean;
   editable: boolean;
 }) {
-  const [params, setParams] = useSearchParams(),
+  const [params, setParams] = useUrlSearch(),
     cache = useQueryClient();
   const [tab, setTab] = useState('file');
   const receipt = useRef<{ stamp: string; key: string; input: SearchInput } | null>(null),
@@ -196,7 +197,9 @@ export function RelatedDocuments({
                   </p>
                 )}
                 {run.status === 'waiting_configuration' && (
-                  <Link to="/admin?section=decision">Admin에서 사용할 AI 선택</Link>
+                  <Link to="/admin" search={{ section: 'decision' }}>
+                    Admin에서 사용할 AI 선택
+                  </Link>
                 )}
                 {run.stale && (
                   <p role="status">

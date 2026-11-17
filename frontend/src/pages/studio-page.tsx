@@ -2,11 +2,11 @@
 // Pattern: Route identity scopes component drafts and server caches.
 // Usage: App mounts this page under /studio and /studio/:projectId.
 // Related: features/studio/index.ts, app/app.tsx.
-import { Link, useParams } from 'react-router';
+import { Link, useParams } from '@tanstack/react-router';
 import { StudioWorkspace } from '@/features/studio';
 import { Button } from '@/components/ui/button';
 export function StudioPage() {
-  const { projectId } = useParams();
+  const { projectId } = useParams({ strict: false });
   return projectId ? (
     <StudioWorkspace key={projectId} projectId={projectId} />
   ) : (

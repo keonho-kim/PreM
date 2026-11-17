@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { errorMessage } from '@/shared/api/http';
 import { getProviderCatalog, listProviders, providerKeys, type Provider } from './api';
-import { ProviderForm } from './provider-form';
+import { ProviderForm } from './connection-form';
 import { ProviderPanels, type ProviderTab } from './provider-panels';
 import './providers.css';
 export function ProviderDirectory({

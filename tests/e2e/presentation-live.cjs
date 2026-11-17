@@ -12,7 +12,7 @@ const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const { createServer } = require('./server.cjs');
 const { json } = require('./outline-fixture.cjs');
 const { upload } = require('./related-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function poll(read, done, label) {
   const end = Date.now() + 900000;
   while (Date.now() < end) {
@@ -230,7 +230,10 @@ async function poll(read, done, label) {
         );
         assert(preview.ok && preview.headers.get('content-type')?.startsWith('image/png'));
         await fs.writeFile(
-          path.join(projectRoot, `mock/captures/folio/ornith-public-${label}-${index + 1}.png`),
+          path.join(
+            projectRoot,
+            `tests/.artifacts/captures/folio/ornith-public-${label}-${index + 1}.png`,
+          ),
           Buffer.from(await preview.arrayBuffer()),
         );
       }
@@ -257,7 +260,7 @@ async function poll(read, done, label) {
     await page.waitForSelector('.presentation-output', { visible: true, timeout: 60000 });
     await page.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/ornith-public-template.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/ornith-public-template.png'),
     });
     await page
       .locator('#slide-edit-prompt')
@@ -303,7 +306,7 @@ async function poll(read, done, label) {
     await shared.waitForSelector('.presentation-output', { visible: true });
     await shared.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await shared.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/ornith-public-edited.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/ornith-public-edited.png'),
     });
     assert.deepEqual(errors, []);
     await server.stop();

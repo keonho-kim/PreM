@@ -1,7 +1,7 @@
 // Purpose: Resume presentation writing checkpoints and publish validated editable output.
 // Pattern: One bounded worker with heartbeat, cancellation and immutable per-slide specs.
 // Usage: Application starts and joins the worker; the renderer owns tool subprocesses.
-// Related: model.rs, adapters/sqlite/presentations/, adapters/processes/presentations.rs.
+// Related: authoring/request.rs, adapters/sqlite/presentations/, adapters/processes/presentations.rs.
 use super::*;
 use std::time::Duration;
 impl Presentations {
@@ -27,10 +27,7 @@ impl Presentations {
                     break;
                 }
                 engine
-                    .tick(
-                        super::edit_execution::EditDriver(this.clone()),
-                        stop.clone(),
-                    )
+                    .tick(super::editing::EditDriver(this.clone()), stop.clone())
                     .await;
                 if stop.is_cancelled() {
                     break;
@@ -76,12 +73,12 @@ impl Presentations {
                     .filter(|m| !["slide", "page"].contains(&m.kind.as_str()))
                     .collect();
             }
-            template_authoring::prepare(&mut plan)?;
+            authoring::template::prepare(&mut plan)?;
             let response = self
                 .inference
                 .pinned_json(
                     r.config_id.ok_or(Error::NotReady)?,
-                    model::input(&plan)?,
+                    authoring::input(&plan)?,
                     cancel.clone(),
                 )
                 .await
@@ -89,7 +86,7 @@ impl Presentations {
                     crate::modules::inference::Error::Cancelled => Error::Cancelled,
                     e => Error::Processing(e.code()),
                 })?;
-            let spec = model::validate(&plan, &response.text)?;
+            let spec = authoring::validate(&plan, &response.text)?;
             let blob = self
                 .assets
                 .publish(

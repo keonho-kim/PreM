@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import re
 import socket
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -49,8 +50,10 @@ with tempfile.TemporaryDirectory(prefix='relocated bundle ', dir=scratch) as tem
             assert digest(file) == expected['sha256'], name
     runtime = bundle / 'runtime'
     tools = json.loads((runtime / 'document-manifest.json').read_text())
+    model_cache = work / 'ocr-models'
+    shutil.copytree(runtime / 'kordoc/models', model_cache)
     env = {**os.environ, 'PATH': '/nonexistent', 'HOME': str(work),
-           'KORDOC_OFFLINE': '1', 'KORDOC_MODEL_CACHE': str(runtime / 'kordoc/models'),
+           'KORDOC_OFFLINE': '1', 'KORDOC_MODEL_CACHE': str(model_cache),
            'PYTHONDONTWRITEBYTECODE': '1', 'FONTCONFIG_FILE': str(runtime / 'fonts.conf'),
            'XDG_CACHE_HOME': str(work / 'cache'), 'LD_LIBRARY_PATH': str(runtime / 'lib')}
     env.pop('APP_DOCUMENT_RUNTIME_PATH', None)
@@ -129,5 +132,11 @@ await sharp(Buffer.from('<svg width="200" height="60"><text x="5" y="35" font-fa
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.communicate()
+    archive = work / 'backup.tar.gz'
+    restored = work / 'restored-data'
+    run([str(bundle / 'PreM-maintenance'), 'backup', '--data-storage-path', str(data), '--output', str(archive)])
+    run([str(bundle / 'PreM-maintenance'), 'restore', '--archive', str(archive), '--data-storage-path', str(restored)])
+    assert (restored / 'config/secret.key').read_bytes() == (data / 'config/secret.key').read_bytes()
+    assert (restored / 'db/app.sqlite').is_file()
     assert (data / 'db/app.sqlite').is_file()
-    print('PASS: relocated archive hashes, bundled Node/Python/Sharp/ONNX OCR models, Korean fonts, scanned PDF/Office/HWP extraction, native PPTX/PNG and HTTP restart with no development tools in PATH.')
+    print('PASS: relocated archive hashes, bundled Node/Python/Sharp/ONNX OCR models, Korean fonts, scanned PDF/Office/HWP extraction, native PPTX/PNG and HTTP restart and offline backup/restore with no development tools in PATH.')

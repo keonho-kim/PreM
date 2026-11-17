@@ -14,9 +14,13 @@ await fs.mkdir(path.join(root, 'tests/.artifacts'), { recursive: true });
 const scratch = await fs.mkdtemp(path.join(root, 'tests/.artifacts/runtime-build-'));
 const run = (command, args, env = {}) =>
   execFileSync(command, args, { cwd: root, stdio: 'inherit', env: { ...process.env, ...env } });
-const nodeVersion = '26.13.0',
-  pythonVersion = '3.13.18',
-  revision = '3af3e8ef774c4d67ee57e1306d9256d08c9ee1bf';
+const versions = JSON.parse(
+  await fs.readFile(path.join(root, 'scripts/runtime-versions.json'), 'utf8'),
+);
+const nodeVersion = (await fs.readFile(path.join(root, '.node-version'), 'utf8')).trim();
+const pythonVersion = versions.python,
+  revision = versions.pptMaster;
+
 try {
   if (!['darwin', 'linux'].includes(process.platform) || !['arm64', 'x64'].includes(process.arch))
     throw new Error('Build this bundle on a supported target OS/CPU');
@@ -48,7 +52,13 @@ try {
     (n) => n.startsWith(`cpython-${pythonVersion}-`) && !n.startsWith('.'),
   );
   if (!pythonRoot) throw new Error('Bundled Python missing');
-  const python = path.join(runtime, 'python', pythonRoot, 'bin', 'python3.13');
+  const python = path.join(
+    runtime,
+    'python',
+    pythonRoot,
+    'bin',
+    `python${pythonVersion.split('.').slice(0, 2).join('.')}`,
+  );
   run('npm', [
     'ci',
     '--prefix',

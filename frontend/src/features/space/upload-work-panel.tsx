@@ -1,5 +1,5 @@
 // Purpose: Show this tab's durable upload outcomes in a collapsible bottom-right work panel.
-// Pattern: Uppy owns tasks; Zustand shares panel presentation with the notification host.
+// Pattern: Uppy owns tasks; Redux shares panel presentation with the notification host.
 // Usage: App Feedback mounts once across routes; closing never cancels an upload.
 // Related: upload-panel.tsx, use-upload-engine.ts, shared/notifications.ts, app/feedback.css.
 import { useEffect, useRef } from 'react';
@@ -9,7 +9,7 @@ import { ChevronDown, ChevronUp, ListTodo, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { notify } from '@/shared/notifications';
-import { useWorkPanelState } from '@/shared/work-panel-state';
+import { useWorkPanel } from '@/shared/work-panel-state';
 import { useUploadEngine } from './use-upload-engine';
 import { UploadPanel } from './upload-panel';
 import type { UploadFile } from './upload-engine';
@@ -17,9 +17,7 @@ import './upload-work-panel.css';
 export function UploadWorkPanel() {
   const engine = useUploadEngine();
   const files = useUppyState(engine.uppy, (state) => Object.values(state.files));
-  const view = useWorkPanelState((state) => state.view);
-  const setView = useWorkPanelState((state) => state.setView);
-  const onHeightChange = useWorkPanelState((state) => state.setHeight);
+  const { view, setView, setHeight: onHeightChange } = useWorkPanel();
   const region = useRef<HTMLElement>(null),
     toggle = useRef<HTMLButtonElement>(null),
     focusRequested = useRef(false);

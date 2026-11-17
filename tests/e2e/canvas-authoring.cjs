@@ -1,6 +1,6 @@
 // Purpose: Verify template blank start, actual artwork drag/resize, scoped writes and model-assisted edits.
 // Pattern: Real compiled Rust/React, synthetic templates and isolated browser/storage contexts.
-// Usage: After pnpm build; captures stay in mock/captures/folio and no business data is used.
+// Usage: After pnpm build; captures stay in tests/.artifacts/captures/folio and no business data is used.
 // Related: canvas_authoring.rs, canvas-api.ts, object-selection.tsx, outline-fixture.cjs.
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -9,7 +9,7 @@ const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { poll, click, fill, capture } = require('./canvas-browser-helpers.cjs');
 (async () => {
   const server = await createServer('canvas-authoring-'),

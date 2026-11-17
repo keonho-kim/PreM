@@ -9,8 +9,6 @@ pnpm-lock.yaml
 Cargo.lock
 runtime/
 release/
-mock/captures/
-mock/helpers/.artifacts/
 tests/.artifacts/
 
 # Code formatting belongs to Biome.

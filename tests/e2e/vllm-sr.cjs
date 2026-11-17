@@ -7,7 +7,7 @@ const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const http = require('node:http');
 const path = require('node:path');
 const { once } = require('node:events');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 async function click(page, name, role = 'button') {
   if (name === '모델 목록 조회' && (await page.$('.provider-form:not([hidden]) .model-picker'))) {
@@ -111,11 +111,12 @@ async function fill(page, name, value) {
     await click(a, '사용할 모델 · 필수', 'combobox');
     assert.equal(await a.$('::-p-aria(vllm-sr/norn-1[role="option"])'), null);
     assert.equal(await a.$('::-p-aria(span-only[role="option"])'), null);
-    await click(a, 'vllm-sr/d3-flash', 'option');
+    await click(a, 'vllm-sr/d3-flash · Decision', 'option');
     assert.deepEqual(await (await fetch(server.base + '/api/v1/admin/llm/providers')).json(), []);
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
     const settingsUrl = a.url();
+    await click(a, '연결 주소·인증 변경');
     assert.equal(await a.$eval('input[name="api_key"]', (node) => node.value), '');
     assert.equal(await a.$eval('input[name="base_url"]', (node) => node.value), '');
     const saved = (await (await fetch(server.base + '/api/v1/admin/llm/providers')).json())[0];
@@ -136,28 +137,19 @@ async function fill(page, name, value) {
     assert.equal(evaluations, 1);
     await a.evaluate(() => window.scrollTo(0, 0));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-vllm-sr.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-vllm-sr.png'),
       fullPage: true,
     });
-    for (const [section, label] of [
-      ['processing', '레퍼런스 판정 모델'],
-      ['related', '자료 비교에 사용할 AI'],
-    ]) {
-      await a.goto(`${server.base}/home/admin?section=${section}`, { waitUntil: 'networkidle0' });
-      await server.unlock(a);
-      await click(a, label, 'combobox');
-      await click(
-        a,
-        `${saved.name} · ${section === 'processing' ? 'System One' : 'Decision'}`,
-        'option',
-      );
-      await click(a, '설정 저장');
-      await a.waitForFunction(() =>
-        document
-          .querySelector('.processing-settings [role="status"]')
-          ?.textContent.includes('저장했습니다'),
-      );
-    }
+    await a.goto(`${server.base}/home/admin?section=decision`, { waitUntil: 'networkidle0' });
+    await server.unlock(a);
+    await click(a, '사용할 판정 연결', 'combobox');
+    await click(a, `${saved.name} · System One`, 'option');
+    await click(a, '판정 연결 적용');
+    await a.waitForFunction(() =>
+      document
+        .querySelector('.processing-settings [role="status"]')
+        ?.textContent.includes('저장했습니다'),
+    );
     assert.equal(evaluations, 1, 'settings changes must not trigger inference');
     await b.goto(settingsUrl, { waitUntil: 'networkidle0' });
     await server.unlock(b);
@@ -182,7 +174,7 @@ async function fill(page, name, value) {
     await click(b, '판정 실행');
     await b.waitForSelector('[data-state="active"] .provider-result');
     assert.equal(evaluations, 2);
-    assert.equal(discoveries, 1);
+    assert.equal(discoveries, 2);
     assert.deepEqual(errors, []);
     console.log(
       'PASS: vLLM-SR native model discovery, filtered options, encrypted saved connection, choice evaluation, capacity, processing/relation selectors, shared UI, mobile and restart.',

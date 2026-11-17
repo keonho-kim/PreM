@@ -1,6 +1,6 @@
 {
   "name": "prem",
-  "version": "2026.11.17",
+  "version": "2026.11.18",
   "private": true,
   "packageManager": "pnpm@12.16.1",
   "engines": {
@@ -26,7 +26,7 @@
     "tokens:check": "node scripts/generate-design-tokens.mjs --check",
     "tools:install": "node scripts/rust-tools.mjs install",
     "tools:check": "node scripts/rust-tools.mjs check",
-    "check:deps": "cargo machete && cargo deny --locked check --hide-inclusion-graph && pnpm audit",
+    "check:deps": "node scripts/rust-policy.mjs check && pnpm audit && npm audit --prefix runtime/kordoc --omit=dev",
     "test:rust": "pnpm --filter @prem/frontend build && cargo nextest run --workspace --all-features --locked --no-fail-fast && cargo test --workspace --all-features --locked --doc",
     "coverage": "pnpm coverage:frontend && pnpm coverage:rust",
     "coverage:frontend": "pnpm --filter @prem/frontend coverage",
@@ -35,7 +35,12 @@
     "fixtures:presentation": "node tests/helpers/presentation-public.mjs",
     "test:presentation:live": "node tests/e2e/presentation-live.cjs",
     "audit:parsing": "node tests/helpers/parsing-audit.mjs",
-    "test:e2e": "node tests/e2e/admin-connections.cjs && node tests/e2e/projects.cjs && node tests/e2e/space.cjs && node tests/e2e/providers.cjs && node tests/e2e/decisions.cjs && node tests/e2e/document-processing.cjs && node tests/e2e/document-engine-recovery.cjs && node tests/e2e/model-capacity.cjs && node tests/e2e/reference-materials.cjs && node tests/e2e/studio.cjs && node tests/e2e/mobile-work-panel.cjs && node tests/e2e/related-documents.cjs && node tests/e2e/related-exploration.cjs && node tests/e2e/vllm-sr.cjs && node tests/e2e/markdown.cjs && node tests/e2e/library-search.cjs && node tests/e2e/source-structure.cjs && node tests/e2e/outlines.cjs && node tests/e2e/outline-engine-recovery.cjs && node tests/e2e/presentations.cjs && node tests/e2e/presentation-scope.cjs && node tests/e2e/canvas-authoring.cjs && node tests/e2e/reference-generation-edit.cjs && node tests/e2e/admin-access.cjs && node tests/e2e/slide-chat.cjs && node tests/e2e/presentation-objects.cjs"
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "check:structure": "node scripts/check-source-size.mjs && pnpm --filter @prem/frontend check:architecture",
+    "check:core": "bash scripts/check-core.sh",
+    "check:versions": "node scripts/check-versions.mjs",
+    "backup": "python3 scripts/storage-backup.py backup",
+    "restore": "python3 scripts/storage-backup.py restore"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",

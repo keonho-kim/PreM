@@ -1,6 +1,6 @@
 // Purpose: Verify news-style unified Space search and normal-page document navigation.
-// Pattern: Real server, synthetic shared references/templates, two browsers and no model connection.
-// Usage: Run after pnpm build; isolated data under tests/.artifacts, captures under mock/captures.
+// Pattern: Real server, synthetic shared references/templates, two browsers and a synthetic classification model.
+// Usage: Run after pnpm build; isolated data under tests/.artifacts, captures under tests/.artifacts/captures.
 // Related: server.cjs, backend/tests/library_search.rs, features/search/.
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
@@ -9,7 +9,8 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { model, json } = require('./outline-fixture.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function upload(base, kind, name, title, bytes) {
   const form = new FormData();
   form.set('file', new Blob([bytes]), name);
@@ -27,7 +28,7 @@ async function upload(base, kind, name, title, bytes) {
 async function ready(base, item) {
   for (let attempt = 0; attempt < 600; attempt++) {
     const d = await (await fetch(`${base}/api/v1/space/${item.kind}/${item.id}/processing`)).json();
-    if (['waiting_configuration', 'succeeded'].includes(d.job?.status)) return;
+    if (d.job?.status === 'succeeded') return;
     assert.notEqual(d.job?.status, 'failed', JSON.stringify(d));
     await delay(100);
   }
@@ -40,9 +41,24 @@ async function click(page, name, role = 'button') {
 }
 (async () => {
   const server = await createServer('library-search-');
+  const fixture = await model();
   let session;
   try {
     await server.start();
+    const provider = randomUUID();
+    await json(server.base, `/api/v1/admin/llm/providers/${provider}`, 'PUT', {
+      expected_version: 0,
+      name: '검색 준비 판정',
+      provider_type: 'openai_compatible',
+      base_url: fixture.base,
+      model_identifier: 'outline-fixture',
+      timeout_seconds: 30,
+      enabled: true,
+    });
+    await json(server.base, '/api/v1/admin/document-processing/settings', 'PUT', {
+      expected_version: 0,
+      connection_id: provider,
+    });
     const fixtures = path.join(projectRoot, 'tests/fixtures/documents');
     const text = Buffer.from(
       '# 실행 보고\n\n운영 절차를 개선해 검토 시간을 줄였습니다.\n\n<img src="https://search-fixture.invalid/tracker" onerror="window.searchExecuted=true">',
@@ -65,6 +81,7 @@ async function click(page, name, role = 'button') {
       ),
     ];
     for (const item of refs) await ready(server.base, item);
+    const expectedProviders = await json(server.base, '/api/v1/admin/llm/providers');
     session = await openBrowser('library-search');
     const a = await (await session.browser.createBrowserContext()).newPage();
     const b = await (await session.browser.createBrowserContext()).newPage();
@@ -82,7 +99,7 @@ async function click(page, name, role = 'button') {
     await a.waitForSelector('#library-search');
     assert.equal(await a.$('#global-search'), null);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/space-search-home.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/space-search-home.png'),
     });
     await click(a, '자료 관리', 'link');
     await a.waitForSelector('.space-gallery');
@@ -102,7 +119,7 @@ async function click(page, name, role = 'button') {
       'Space',
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/space-search-desktop.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/space-search-desktop.png'),
       fullPage: true,
     });
     await click(a, '검색 조건');
@@ -138,7 +155,7 @@ async function click(page, name, role = 'button') {
     assert.equal(await a.evaluate(() => document.activeElement.tagName), 'H1');
     assert.equal(await a.evaluate(() => window.searchExecuted), undefined);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/space-search-document.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/space-search-document.png'),
       fullPage: true,
     });
     await click(a, '검색 결과로', 'link');
@@ -155,7 +172,7 @@ async function click(page, name, role = 'button') {
     await a.setViewport({ width: 390, height: 844 });
     assert.equal(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/space-search-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/space-search-phone.png'),
     });
     for (let i = 0; i < 10; i++)
       await upload(server.base, 'references', `추가-${i}.md`, `운영 추가 ${i}`, text);
@@ -170,7 +187,8 @@ async function click(page, name, role = 'button') {
     await server.start();
     await b.reload({ waitUntil: 'networkidle0' });
     await b.waitForSelector('.search-result');
-    assert.deepEqual(await (await fetch(server.base + '/api/v1/admin/llm/providers')).json(), []);
+    assert.deepEqual(await json(server.base, '/api/v1/admin/llm/providers'), expectedProviders);
+    assert.equal(fixture.calls(), 0);
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     console.log(
@@ -179,6 +197,7 @@ async function click(page, name, role = 'button') {
   } finally {
     if (session) await session.close();
     await server.close();
+    await fixture.close();
   }
 })().catch((e) => {
   console.error(e);

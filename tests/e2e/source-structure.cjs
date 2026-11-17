@@ -1,6 +1,6 @@
 // Purpose: Verify real extracted images and merged table cells in the product viewer.
 // Pattern: Synthetic DOCX through the real upload/worker/storage path and a passive browser view.
-// Usage: Run after pnpm build; all data is isolated and screenshots remain in mock/captures.
+// Usage: Run after pnpm build; all data is isolated and screenshots remain in tests/.artifacts/captures.
 // Related: parsing-quality/merged-report.docx, document-structure.mjs, extracted-table.tsx.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -8,12 +8,14 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { configureDocuments } = require('./configure-documents.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 (async () => {
   const server = await createServer('structure-browser-');
-  let session;
+  let session, fixture;
   try {
     await server.start();
+    fixture = await configureDocuments(server.base);
     const form = new FormData();
     form.set(
       'file',
@@ -38,7 +40,7 @@ const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
       const d = await (
         await fetch(`${server.base}/api/v1/space/references/${item.id}/processing`)
       ).json();
-      if (d.job?.status === 'waiting_configuration') {
+      if (d.job?.status === 'succeeded') {
         ready = true;
         break;
       }
@@ -62,7 +64,7 @@ const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
       ),
     );
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/extracted-table-images.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/extracted-table-images.png'),
       fullPage: true,
     });
     await page.setViewport({ width: 390, height: 844 });
@@ -82,6 +84,7 @@ const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
   } finally {
     if (session) await session.close();
     await server.close();
+    if (fixture) await fixture.close();
   }
 })().catch((e) => {
   console.error(e);

@@ -10,7 +10,7 @@ const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
 const { upload, ready } = require('./related-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function poll(read, done, limit = 180000) {
   const end = Date.now() + limit;
   while (Date.now() < end) {
@@ -50,6 +50,10 @@ async function click(page, name, role = 'button') {
       model_identifier: 'outline-fixture',
       timeout_seconds: 30,
       enabled: true,
+    });
+    await json(base, '/api/v1/admin/document-processing/settings', 'PUT', {
+      expected_version: 0,
+      connection_id: author,
     });
     const source = await upload(
       base,
@@ -167,7 +171,7 @@ async function click(page, name, role = 'button') {
     await page.screenshot({
       path: path.join(
         projectRoot,
-        `mock/captures/folio/${live ? 'ornith-' : ''}object-proposal.png`,
+        `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}object-proposal.png`,
       ),
     });
     await click(page, '수정안 적용');
@@ -198,7 +202,10 @@ async function click(page, name, role = 'button') {
       ),
     );
     await page.screenshot({
-      path: path.join(projectRoot, `mock/captures/folio/${live ? 'ornith-' : ''}object-edited.png`),
+      path: path.join(
+        projectRoot,
+        `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}object-edited.png`,
+      ),
     });
     await click(page, '객체', 'tab');
     await page.waitForSelector('.slide-object-list button');
@@ -234,7 +241,10 @@ async function click(page, name, role = 'button') {
     await page.$eval('.slide-chat', (n) => n.scrollIntoView({ block: 'start' }));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({
-      path: path.join(projectRoot, `mock/captures/folio/${live ? 'ornith-' : ''}object-phone.png`),
+      path: path.join(
+        projectRoot,
+        `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}object-phone.png`,
+      ),
     });
     const shared = await browser.browser.createBrowserContext();
     try {

@@ -2,6 +2,8 @@
 // Pattern: Common lifecycle, scenario definitions and I/O ports have separate owners.
 // Usage: Application composes the facade; HTTP and later processing consumers call it.
 // Related: execution.rs, diagnostics.rs, types.rs, ports.rs.
+mod context;
+pub(crate) use context::bounded_context;
 mod diagnostics;
 mod execution;
 mod ports;

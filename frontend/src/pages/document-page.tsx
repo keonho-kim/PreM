@@ -3,7 +3,8 @@
 // Usage: /home/space/documents/:kind/:id?job=...&page=...&back=...; no modal or search form.
 // Related: features/search/, features/document-processing/, features/space/.
 import { useEffect, useRef } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useParams } from '@tanstack/react-router';
+import { useUrlSearch } from '@/shared/routing/search';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { ArrowLeft } from 'lucide-react';
@@ -13,8 +14,8 @@ import { getAsset } from '@/features/space';
 import { errorMessage } from '@/shared/api/http';
 import './document-page.css';
 export function DocumentPage() {
-  const { kind, id } = useParams(),
-    [params] = useSearchParams();
+  const { kind, id } = useParams({ strict: false }),
+    [params] = useUrlSearch();
   const job = params.get('job') ?? undefined,
     page = params.get('page') ?? undefined;
   const valid =
@@ -40,7 +41,10 @@ export function DocumentPage() {
     <main ref={main} className="container workspace document-workspace">
       <title>{resource.data?.title ?? '자료'} | PreM</title>
       <Button variant="ghost" asChild>
-        <Link to={destination}>
+        <Link
+          to="/space"
+          search={Object.fromEntries(new URLSearchParams(destination.split('?')[1] ?? ''))}
+        >
           <ArrowLeft aria-hidden="true" />
           검색 결과로
         </Link>

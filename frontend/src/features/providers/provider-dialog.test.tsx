@@ -8,7 +8,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { catalogFixture } from './test-fixtures';
-import { ProviderForm } from './provider-form';
+import { ProviderForm } from './connection-form';
 import { discoverModels, saveProvider, getProvider, type Provider } from './api';
 import { ApiError } from '@/shared/api/http';
 vi.mock('./api', () => ({ saveProvider: vi.fn(), getProvider: vi.fn(), discoverModels: vi.fn() }));

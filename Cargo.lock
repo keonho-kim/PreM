@@ -1914,7 +1914,7 @@ dependencies = [
 
 [[package]]
 name = "prem-backend"
-version = "2026.11.17"
+version = "2026.11.18"
 dependencies = [
  "anyhow",
  "async-sqlite",

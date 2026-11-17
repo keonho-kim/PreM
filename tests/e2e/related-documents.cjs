@@ -4,7 +4,7 @@
 // Related: related-fixture.cjs, backend/tests/related_documents.rs.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 const { model, json, seed, upload, ready } = require('./related-fixture.cjs');
 async function click(page, name, role = 'button') {
@@ -14,7 +14,7 @@ async function click(page, name, role = 'button') {
 }
 async function capture(page, name) {
   await page.screenshot({
-    path: path.join(projectRoot, 'mock/captures/folio', name),
+    path: path.join(projectRoot, 'tests/.artifacts/captures/folio', name),
     fullPage: (page.viewport()?.width ?? 1440) > 640,
   });
 }
@@ -40,22 +40,17 @@ async function capture(page, name) {
       await a.$eval('button[aria-label="근거"]', (n) => n.getAttribute('aria-current')),
       'step',
     );
+    await a.$eval('#related-query', (node) => {
+      node.focus();
+      node.select();
+    });
+    await a.keyboard.press('Backspace');
     await a.type('#related-query', 'efficiency');
     assert.equal(fixture.state.calls, 0);
     await click(a, '관련 자료 찾기');
-    await a.waitForFunction(() =>
-      document.querySelector('.related-progress')?.textContent.includes('아직 선택되지'),
-    );
+    await a.waitForFunction(() => new URL(location.href).searchParams.has('search'));
     const first = new URL(a.url()).searchParams.get('search');
     assert.ok(first);
-    await click(a, 'Admin에서 사용할 AI 선택', 'link');
-    await click(a, '자료 비교에 사용할 AI', 'combobox');
-    await click(a, '자료 비교 AI · Decision', 'option');
-    await click(a, '설정 저장');
-    await a.waitForFunction(() =>
-      document.querySelector('.processing-settings')?.textContent.includes('설정을 저장했습니다'),
-    );
-    await a.goto(`${route}&search=${first}`, { waitUntil: 'networkidle0' });
     await a.waitForFunction(
       () =>
         document.querySelector('.related-progress')?.textContent.includes('개 후보를 확인했습니다'),
@@ -96,6 +91,11 @@ async function capture(page, name) {
       1,
     );
     const calls = fixture.state.calls;
+    await a.$eval('#related-query', (node) => {
+      node.focus();
+      node.select();
+    });
+    await a.keyboard.press('Backspace');
     await a.type('#related-query', 'efficiency');
     await click(a, '관련 자료 찾기');
     await a.waitForFunction(

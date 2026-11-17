@@ -3,7 +3,7 @@
 // Usage: Directory scopes the group by connection ID; diagnostics pin the immutable config.
 // Related: provider-directory.tsx, provider-checks.tsx, provider-history.tsx.
 import { ProviderCapacity } from './provider-capacity';
-import { ProviderForm } from './provider-form';
+import { ProviderForm } from './connection-form';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import type { ProviderOption } from './provider-types';
 import type { Provider } from './api';

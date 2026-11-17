@@ -11,6 +11,10 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const runtime = path.join(root, 'runtime');
+const versions = JSON.parse(
+  await fs.readFile(path.join(root, 'scripts/runtime-versions.json'), 'utf8'),
+);
+const pythonMinor = versions.python.split('.').slice(0, 2).join('.');
 for (const name of [
   'document-extract.mjs',
   'document-structure.mjs',
@@ -36,10 +40,10 @@ for (const name of [
   await fs.copyFile(path.join(root, 'backend/tools', name), path.join(runtime, name));
 const node = path.join(runtime, 'node/bin/node');
 const pythonFolder = (await fs.readdir(path.join(runtime, 'python'))).find((name) =>
-  name.startsWith('cpython-3.13.18-'),
+  name.startsWith(`cpython-${versions.python}-`),
 );
 if (!pythonFolder) throw new Error('Run pnpm runtime:install first');
-const python = path.join(runtime, 'python', pythonFolder, 'bin/python3.13');
+const python = path.join(runtime, 'python', pythonFolder, `bin/python${pythonMinor}`);
 execFileSync(
   python,
   [
@@ -53,6 +57,10 @@ const modelPaths = ['det.onnx', 'rec_korean.onnx', 'rec_korean.yml'].map(
   (n) => `kordoc/models/ppocr/${n}`,
 );
 const filterFiles = await prepareKordocFilter(runtime);
+const kordocPackage = JSON.parse(
+  await fs.readFile(path.join(runtime, 'kordoc/node_modules/kordoc/package.json'), 'utf8'),
+);
+const kordocAssets = ['kordoc/node_modules/kordoc/dist/hayro-pdf.wasm'];
 const entries = {};
 for (const name of [
   'document-extract.mjs',
@@ -65,6 +73,7 @@ for (const name of [
   'kordoc/package-lock.json',
   'ppt-master/REVISION',
   ...modelPaths,
+  ...kordocAssets,
   ...filterFiles,
 ])
   entries[name] = createHash('sha256')
@@ -78,7 +87,7 @@ const manifest = {
   python: path.relative(runtime, python),
   node_version: execFileSync(node, ['--version'], { encoding: 'utf8' }).trim(),
   python_version: execFileSync(python, ['--version'], { encoding: 'utf8' }).trim(),
-  kordoc: '4.24.80',
+  kordoc: kordocPackage.version,
   ppt_master: (await fs.readFile(path.join(runtime, 'ppt-master/REVISION'), 'utf8')).trim(),
   files: entries,
 };

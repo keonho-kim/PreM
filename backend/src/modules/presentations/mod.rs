@@ -1,33 +1,28 @@
 // Purpose: Own presentation preparation, generation and immutable output access.
 // Pattern: Consumer-owned persistence and renderer ports; model execution stays in inference.
 // Usage: App composes one service/worker and HTTP exposes explicit commands.
-// Related: types.rs, worker.rs, model.rs, adapters/sqlite/presentations/.
+// Related: types.rs, worker.rs, authoring/request.rs, adapters/sqlite/presentations/.
 mod canvas;
 mod layers;
 pub(crate) use canvas::*;
 pub(crate) use layers::*;
-mod edit_execution;
 mod execution;
 mod references;
 pub(crate) use references::*;
 mod history;
 pub(crate) use history::*;
 mod media;
-mod preview;
 mod quality;
 pub(crate) use media::*;
 pub(crate) use quality::*;
 mod object_schema;
 mod objects;
 pub(crate) use objects::*;
-mod edit_model;
-mod edit_types;
-mod edits;
-mod model;
+mod authoring;
+mod editing;
+pub(crate) use editing::*;
 mod selection;
 pub(crate) use selection::{GenerationScope, GenerationSection, resolve_scope};
-mod template_authoring;
-pub(crate) use edit_types::*;
 mod types;
 mod worker;
 use crate::modules::assets::{AssetService, DerivedBlob, FileReader};

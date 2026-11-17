@@ -1,17 +1,17 @@
 // Purpose: Verify the real compiled shared-project UI against a persistent backend.
 // Pattern: Two isolated browser contexts and restartable server with owned test data.
-// Usage: pnpm test:e2e after pnpm build; screenshots stay under mock/captures/folio.
-// Related: mock/helpers/browser.cjs, backend/tests/projects.rs, dev-docs/07-quality-readiness.md.
+// Usage: pnpm test:e2e after pnpm build; screenshots stay under tests/.artifacts/captures/folio.
+// Related: tests/helpers/browser.cjs, backend/tests/projects.rs, dev-docs/07-quality-readiness.md.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
 (async () => {
   const server = await createServer('shared-projects-');
   const { base } = server;
-  const captures = path.join(projectRoot, 'mock/captures/folio');
+  const captures = path.join(projectRoot, 'tests/.artifacts/captures/folio');
   fs.mkdirSync(captures, { recursive: true });
   let session;
   try {

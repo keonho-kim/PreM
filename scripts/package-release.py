@@ -39,7 +39,14 @@ expected = ('darwin' if OS == 'macos' else 'linux', 'x64' if ARCH == 'amd64' els
 if (manifest['platform'], manifest['arch']) != expected:
     raise SystemExit('Runtime target does not match package target')
 (DEST / 'bin').mkdir()
-shutil.copy2(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / 'target/release/PreM', DEST / 'bin/PreM')
+binary = Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else ROOT / 'target/release/PreM'
+expected_version = f'PreM {TAG[1:5]}.{TAG[5:7]}.{TAG[7:9]}'
+if subprocess.check_output([str(binary), '--version'], text=True).strip() != expected_version:
+    raise SystemExit('Compiled binary version does not match release tag')
+source_dirty = bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip())
+if os.environ.get('CI') and source_dirty:
+    raise SystemExit('CI release packaging requires a clean source checkout')
+shutil.copy2(binary, DEST / 'bin/PreM')
 runtime = DEST / 'runtime'
 runtime.mkdir()
 for name in ['kordoc', 'python-packages', 'ppt-master', 'fonts']:
@@ -100,6 +107,22 @@ done
 exec "$PREM_ROOT/bin/PreM" "$@"
 ''')
 (DEST / 'PreM').chmod(0o755)
+(DEST / 'tools').mkdir()
+shutil.copy2(ROOT / 'scripts/storage-backup.py', DEST / 'tools/storage-backup.py')
+shutil.copytree(ROOT / 'scripts/storage_backup', DEST / 'tools/storage_backup',
+                ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+(DEST / 'PreM-maintenance').write_text(f'''#!/bin/sh
+# Purpose: Run offline backup/restore with the bundled Python interpreter.
+# Pattern: Relocatable maintenance entry point; never uses a system package manager.
+# Usage: ./PreM-maintenance backup --data-storage-path /data --output /backups/snapshot.tar.gz
+# Related: tools/storage-backup.py, runtime/.
+set -eu
+PREM_ROOT=$(CDPATH= cd -- "${{0%/*}}" && pwd)
+export PYTHONDONTWRITEBYTECODE=1
+export LD_LIBRARY_PATH="$PREM_ROOT/runtime/lib${{LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}}"
+exec "$PREM_ROOT/runtime/{manifest['python']}" "$PREM_ROOT/tools/storage-backup.py" "$@"
+''')
+(DEST / 'PreM-maintenance').chmod(0o755)
 shutil.copy2(ROOT / 'README.md', DEST / 'README.md')
 notices = DEST / 'licenses'
 shutil.copytree(ROOT / 'licenses', notices)
@@ -150,7 +173,7 @@ for file in sorted(DEST.rglob('*')):
         files[key] = {'symlink': os.readlink(file)}
     elif file.is_file():
         files[key] = {'sha256': digest(file)}
-release = {'tag': TAG, 'platform': OS, 'arch': ARCH,
+release = {'tag': TAG, 'platform': OS, 'arch': ARCH, 'source_dirty': source_dirty,
            'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
            'minimum_os': 'macOS 14' if OS == 'macos' else 'Linux glibc 2.39+ (Ubuntu 24.04+)', 'files': files}
 (DEST / 'RELEASE.json').write_text(json.dumps(release, indent=2) + '\n')

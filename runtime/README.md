@@ -1,6 +1,6 @@
 # PreM runtime
 
-문서 처리에 사용하는 고정 버전의 로컬 실행 도구를 보관한다. `pnpm runtime:install`은 명시적인 개발·빌드 단계에서 Node 26.13.0, CPython 3.13.18, Kordoc 4.24.80, 인쇄 한국어 OCR 모델과 PPT Master 소스를 준비한다. uv·npm·tar는 설치 단계의 개발 도구이며 앱 실행 시 호출하지 않는다.
+문서 처리에 사용하는 고정 버전의 로컬 실행 도구를 보관한다. `pnpm runtime:install`은 명시적인 개발·빌드 단계에서 Node 26.13.0, CPython 3.13.18, Kordoc 4.24.83, 인쇄 한국어 OCR 모델과 PPT Master 소스를 준비한다. uv·npm·tar는 설치 단계의 개발 도구이며 앱 실행 시 호출하지 않는다.
 
 - `node/`, `python/`: 번들된 플랫폼별 실행기.
 - `kordoc/`: lockfile 기반 Node 의존성, PDFium·Sharp·ONNX Runtime, OCR 모델.

@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Folder, RefreshCw, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { notify } from '@/shared/notifications';
@@ -204,7 +204,8 @@ export function ProjectDirectory({ filters, offset, onFilter, onPage }: Props) {
           onClose={() => setSession(null)}
           onSaved={(project) => {
             saved();
-            if (session.command !== 'rename') navigate(`/studio/${project.id}`);
+            if (session.command !== 'rename')
+              void navigate({ to: '/studio/$projectId', params: { projectId: project.id } });
           }}
         />
       )}

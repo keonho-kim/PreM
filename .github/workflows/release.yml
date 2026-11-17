@@ -58,25 +58,26 @@ jobs:
           - runner: macos-15
             platform: macos-arm64
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
-      RUSTUP_TOOLCHAIN: '1.99.1'
       CARGO_INCREMENTAL: '0'
       CARGO_PROFILE_RELEASE_DEBUG: '0'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.sha }}
+      - id: versions
+        run: python3 scripts/ci-versions.py >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '26.13.0'
+          node-version: ${{ steps.versions.outputs.node }}
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
-          version: '0.13.6'
+          version: ${{ steps.versions.outputs.uv }}
       - name: Build prerequisites
         run: |
-          npm install --global pnpm@12.16.1
-          rustup toolchain install 1.99.1 --profile minimal
+          npm install --global pnpm@${{ steps.versions.outputs.pnpm }}
+          rustup toolchain install ${{ steps.versions.outputs.rust }} --profile minimal --component rustfmt,clippy
           pnpm install --frozen-lockfile
       - name: Install target runtimes and OCR models
         run: |
@@ -84,11 +85,13 @@ jobs:
           node scripts/install-release-fonts.mjs
       - name: Build and test
         run: |
+          pnpm check:versions "${{ needs.prepare.outputs.tag }}"
+          pnpm check:core
           pnpm build
-          pnpm lint
-          pnpm --filter @prem/frontend test
-          cargo test --locked --lib
           python3 scripts/smoke_test.py "$PWD/target/release/PreM"
+      - name: Rust dependency and license policies
+        if: matrix.platform == 'linux-amd64'
+        run: node scripts/rust-policy.mjs install
       - name: Package and verify relocated bundle
         env:
           TAG: ${{ needs.prepare.outputs.tag }}
@@ -105,8 +108,38 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.prepare.outputs.tag }}
         run: gh release upload "$TAG" release/*.tar.gz release/*.sha256 --clobber
+  browser:
+    needs: prepare
+    if: needs.prepare.outputs.build == 'true'
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      CARGO_INCREMENTAL: '0'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+      - id: versions
+        run: python3 scripts/ci-versions.py >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: ${{ steps.versions.outputs.uv }}
+      - name: Prepare app and browser tests
+        run: |
+          npm install --global pnpm@${{ steps.versions.outputs.pnpm }}
+          rustup toolchain install ${{ steps.versions.outputs.rust }} --profile minimal
+          pnpm install --frozen-lockfile
+          pnpm runtime:install
+          pnpm build
+          mkdir -p tests/.artifacts/browser-tools
+          npm install --prefix tests/.artifacts/browser-tools --no-audit --no-fund puppeteer-core@${{ steps.versions.outputs.puppeteer }}
+      - name: Run all real-server journeys
+        run: pnpm test:e2e
   verify-assets:
-    needs: [prepare, build]
+    needs: [prepare, build, browser]
     if: needs.prepare.outputs.build == 'true'
     runs-on: ubuntu-24.04
     steps:

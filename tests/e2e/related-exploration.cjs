@@ -1,12 +1,12 @@
 // Purpose: Verify adaptive source discovery, separate planner settings and visible source evidence.
 // Pattern: Real product server, synthetic local models, isolated storage and independent browsers.
-// Usage: Run after pnpm build; screenshots belong to mock/captures/folio.
+// Usage: Run after pnpm build; screenshots belong to tests/.artifacts/captures/folio.
 // Related: related-fixture.cjs, backend/tests/related_exploration.rs.
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const path = require('node:path');
 const { createServer } = require('./server.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { model, json, seed, upload, ready } = require('./related-fixture.cjs');
 async function click(page, name, role = 'button') {
   const button = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
@@ -73,7 +73,10 @@ async function click(page, name, role = 'button') {
       planner_connection_id: planner.id,
     });
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/related-exploration-settings.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/related-exploration-settings.png',
+      ),
       fullPage: true,
     });
     const route = `${server.base}/home/studio/${target.id}?step=evidence`;
@@ -104,7 +107,10 @@ async function click(page, name, role = 'button') {
     assert.equal(evidenceCalls, 0);
     await a.evaluate(() => window.scrollTo(0, 0));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/related-exploration-results.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/related-exploration-results.png',
+      ),
     });
     const results = await json(
       server.base,
@@ -140,7 +146,10 @@ async function click(page, name, role = 'button') {
       ),
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/related-exploration-evidence.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/related-exploration-evidence.png',
+      ),
     });
     await a.click(`${row} .related-select`);
     await a.waitForFunction(
@@ -202,12 +211,12 @@ async function click(page, name, role = 'button') {
       ),
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/related-exploration-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/related-exploration-phone.png'),
     });
     await click(a, '목록으로');
     assert.ok(Math.abs((await a.evaluate(() => scrollY)) - listScroll) < 2);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/evidence-mobile-list.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/evidence-mobile-list.png'),
     });
     const calls = fixture.state.calls;
     await server.stop();

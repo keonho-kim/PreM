@@ -15,8 +15,6 @@
       "!!.hallmark",
       "!!runtime",
       "!!release",
-      "!!mock/captures",
-      "!!mock/helpers/.artifacts",
       "!!tests/.artifacts"
     ]
   },

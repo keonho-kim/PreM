@@ -3,7 +3,7 @@
 // Usage: SpaceDirectory supplies the current query and navigation callback.
 // Related: space-directory.tsx, api.ts, space.css.
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {

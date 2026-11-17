@@ -2,10 +2,11 @@
 // Pattern: Route parsing with native form validation in the feature.
 // Usage: Mounted at /home; browser back restores committed filters.
 // Related: features/projects/index.ts, features/projects/api.ts.
-import { useSearchParams } from 'react-router';
+
+import { useUrlSearch } from '@/shared/routing/search';
 import { ProjectDirectory, defaultFilters, type ProjectFilters } from '@/features/projects';
 export function ProjectsPage() {
-  const [params, setParams] = useSearchParams();
+  const [params, setParams] = useUrlSearch();
   const raw = Number(params.get('offset') ?? 0);
   const offset =
     Number.isSafeInteger(raw) && raw >= 0 && raw <= 1_000_000 ? Math.floor(raw / 6) * 6 : 0;

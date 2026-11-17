@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const { once } = require('node:events');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const path = require('node:path');
@@ -100,7 +100,7 @@ const path = require('node:path');
     await page.waitForSelector('.provider-summary');
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-connections.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-connections.png'),
       fullPage: true,
     });
     await page.setViewport({ width: 390, height: 844 });
@@ -110,7 +110,7 @@ const path = require('node:path');
     );
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-connections-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-connections-phone.png'),
       fullPage: true,
     });
     await server.stop();

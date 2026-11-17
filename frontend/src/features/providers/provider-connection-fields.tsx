@@ -42,7 +42,7 @@ export function ProviderConnectionFields({
   secret: string;
   clearSecret: boolean;
   addressRequired: boolean;
-  update: (key: keyof ProviderDraft, value: string | number | boolean | null) => void;
+  update: <K extends keyof ProviderDraft>(key: K, value: ProviderDraft[K]) => void;
   modelPicker: ReactNode;
   onAddress: (value: string) => void;
   onSecret: (value: string) => void;

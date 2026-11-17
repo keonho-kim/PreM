@@ -54,6 +54,16 @@ node_modules/
 .vite/
 .vite-temp/
 *.tsbuildinfo
+/frontend/.tanstack/
+
+# Ad-hoc scratch/cache directories; keep fixtures, source files and tool configuration visible
+/tmp/
+/temp/
+/.tmp/
+/.temp/
+/.cache/
+/frontend/.cache/
+/backend/.cache/
 
 # Python helpers and local environments
 __pycache__/
@@ -79,12 +89,28 @@ lcov.info
 *.heapprofile
 *.heapsnapshot
 /report.*.json
+.coverage
+.coverage.*
+htmlcov/
 
-# Local design metadata and generated screenshots; keep capture documentation
+# Native crashes and package-manager diagnostics (including rotated logs)
+/core
+/core.[0-9]*
+/backend/core
+/backend/core.[0-9]*
+/frontend/core
+/frontend/core.[0-9]*
+*.dmp
+*.stackdump
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log.[0-9]*
+*.log.gz
+
+# Local design metadata; product screenshots belong under tests/.artifacts/captures/
 /.hallmark/
-/mock/captures/**
-!/mock/captures/**/
-!/mock/captures/**/README.md
 
 # Downloaded runtime/tools/models and copied adapters are reconstructed during setup/build
 # Keep these exact npm inputs: the offline runtime installer requires both files
@@ -111,6 +137,9 @@ lcov.info
 *.pid.lock
 *.swp
 *.swo
+*.swn
+.#*
+\#*#
 *~
 *.orig
 *.rej

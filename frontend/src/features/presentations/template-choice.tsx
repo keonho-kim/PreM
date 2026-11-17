@@ -4,7 +4,7 @@
 // Related: api.ts, features/document-processing/, features/space/.
 import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 import { Check, ArrowRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { listAssets, type Asset } from '@/features/space';
@@ -51,7 +51,9 @@ export function TemplateChoice({
           </p>
         </div>
         <Button asChild variant="secondary">
-          <Link to="/space/library?tab=templates">템플릿 관리</Link>
+          <Link to="/space/library" search={{ tab: 'templates' }}>
+            템플릿 관리
+          </Link>
         </Button>
       </header>
       {!state.evidence_review_id && (

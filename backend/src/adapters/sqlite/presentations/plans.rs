@@ -17,12 +17,12 @@ pub(super) fn next(db: &mut rusqlite::Connection, r: Run) -> Result<Option<Plan>
     }
     let mut blocks = vec![];
     let mut texts = vec![];
-    for (id, text, priority) in rows {
+    for (id, text, _priority) in rows {
         blocks.push(uuid(id.clone())?);
-        let end = text.floor_char_boundary(text.len().min(if priority == 0 { 700 } else { 200 }));
-        texts.push(json!({"id":id,"text":&text[..end],"partial":end<text.len()}));
+        texts.push(json!({"id":id,"text":text}));
     }
-    let context = json!({"task":"presentation_slide","presentation_title":r.title,"section":{"title":title,"description":description},"direction":{"do":do_text,"dont":dont_text},"additional_request":instructions,"sources":texts});
+    let deck_outline = db.prepare("SELECT v.title FROM outline_revision_nodes n JOIN outline_node_versions v ON v.id=n.node_version_id WHERE n.revision_id=? ORDER BY n.position").map_err(failure)?.query_map([&outline], |r|r.get::<_,String>(0)).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
+    let context = json!({"task":"presentation_slide","presentation_title":r.title,"section":{"title":title,"description":description},"direction":{"do":do_text,"dont":dont_text},"additional_request":instructions,"sources":texts,"deck_outline":deck_outline});
     Ok(Some(Plan {
         first: db
             .query_row(

@@ -8,7 +8,7 @@ const { randomUUID } = require('node:crypto');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
 const { upload, ready } = require('./related-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { poll, click } = require('./canvas-browser-helpers.cjs');
 (async () => {
   const server = await createServer('presentation-scope-'),
@@ -33,6 +33,10 @@ const { poll, click } = require('./canvas-browser-helpers.cjs');
       model_identifier: 'outline-fixture',
       timeout_seconds: 30,
       enabled: true,
+    });
+    await json(base, '/api/v1/admin/document-processing/settings', 'PUT', {
+      expected_version: 0,
+      connection_id: connection,
     });
     const source = await upload(
       base,
@@ -119,14 +123,17 @@ const { poll, click } = require('./canvas-browser-helpers.cjs');
     await page.keyboard.press('Space');
     await page.$eval('.generation-scope', (n) => n.scrollIntoView({ block: 'center' }));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-scope-desktop.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/presentation-scope-desktop.png',
+      ),
     });
     await page.setViewport({ width: 390, height: 844, hasTouch: true });
     await page.$eval('.generation-scope', (n) => n.scrollIntoView({ block: 'center' }));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     assert(await parent.evaluate((n) => n.closest('label').getBoundingClientRect().height >= 48));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-scope-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/presentation-scope-phone.png'),
     });
     await page.setViewport({ width: 1440, height: 1100, hasTouch: true });
     assert.equal(await page.$('#presentation-model'), null);
@@ -162,7 +169,10 @@ const { poll, click } = require('./canvas-browser-helpers.cjs');
     assert.equal(fixture.calls(), beforeCalls + 1);
     await page.$eval('.presentation-run-status', (n) => n.scrollIntoView({ block: 'start' }));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-inline-editor.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/presentation-inline-editor.png',
+      ),
     });
     const other = await (await browser.browser.createBrowserContext()).newPage();
     await other.goto(route, { waitUntil: 'networkidle0' });
@@ -196,7 +206,10 @@ const { poll, click } = require('./canvas-browser-helpers.cjs');
     assert.equal((await json(base, root + '/presentations')).length, 1);
     await page.$eval('.generation-scope', (n) => n.scrollIntoView({ block: 'center' }));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/generation-outline-actions.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/generation-outline-actions.png',
+      ),
     });
     await server.stop();
     await server.start();

@@ -1,13 +1,14 @@
 // Purpose: Verify Markdown upload and safe extracted content in Space and project Studio.
-// Pattern: Compiled product, two browser contexts and isolated local fixtures; no model or remote assets.
-// Usage: Run after pnpm build; UI captures go under mock/captures/folio.
+// Pattern: Compiled product, two browser contexts and isolated local fixtures; synthetic classification and no remote assets.
+// Usage: Run after pnpm build; UI captures go under tests/.artifacts/captures/folio.
 // Related: backend/tests/markdown_documents.rs, space-checks.cjs, server.cjs.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
+const { configureDocuments } = require('./configure-documents.cjs');
 const { upload, notifications } = require('./space-checks.cjs');
 async function click(page, name, role = 'button') {
   const node = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, { visible: true });
@@ -16,11 +17,12 @@ async function click(page, name, role = 'button') {
 }
 (async () => {
   const server = await createServer('markdown-browser-');
-  let session;
+  let session, fixture;
   const source = path.join(projectRoot, 'tests/fixtures/documents/reference.md');
   const bytes = fs.readFileSync(source);
   try {
     await server.start();
+    fixture = await configureDocuments(server.base);
     session = await openBrowser('markdown-production');
     const a = await (await session.browser.createBrowserContext()).newPage();
     const b = await (await session.browser.createBrowserContext()).newPage();
@@ -61,7 +63,7 @@ async function click(page, name, role = 'button') {
         ) && document.querySelectorAll('.processing-block').length === 1,
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/space-markdown.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/space-markdown.png'),
       fullPage: true,
     });
     await a.keyboard.press('Escape');
@@ -101,7 +103,7 @@ async function click(page, name, role = 'button') {
     await a.setViewport({ width: 390, height: 844 });
     assert.equal(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/studio-markdown-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/studio-markdown-phone.png'),
     });
     await a.keyboard.press('Escape');
     await a.waitForSelector('.processing-dialog', { hidden: true });
@@ -120,6 +122,7 @@ async function click(page, name, role = 'button') {
   } finally {
     if (session) await session.close();
     await server.close();
+    if (fixture) await fixture.close();
   }
 })().catch((error) => {
   console.error(error);

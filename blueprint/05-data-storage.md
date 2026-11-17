@@ -231,10 +231,6 @@ Blob 저장과 DB 등록 사이에 프로세스가 중단될 수 있으므로 �
 
 PPT 슬라이드/차트 component에는 master·layout·theme·font·media·workbook 의존성 Artifact 연결을 둔다. SlideSpec의 source insertion은 고정된 자산 버전과 component ID를 참조하고 별도 원문 복사를 하지 않는다. 검색 집계는 파일별 hit 그룹과 개별 content hit를 모두 반환한다. 사용자 업로드는 추출 완료 전 검색 가능한 실제 콘텐츠가 있는 것처럼 표시하지 않는다.
 
-## Mock editable slide records
-
-The mock adds optional textStyles and objects to slide snapshots. Objects have stable IDs, type, x/y/w/h in a 960x540 coordinate system, plain text/style or an inline raster-image source. Source insertions remain separate lineage records. Images are browser-memory data and appear in mock JSON export; this is not the production Blob/Artifact schema. Production must replace inline image bytes with immutable Blob/Artifact references and preserve geometry and formatting through versioned SlideSpec upcasting.
-
 ## 프로젝트 마감일 계약
 
 프로젝트의 일정 값은 **마감일(Due Date)** 하나이며 canonical 필드는 `projects.due_date`다. 시간대 없는 `YYYY-MM-DD`로 저장하고 신규 등록에 필수 입력한다. 기존 날짜 미정 데이터는 null을 유지한다. 프로젝트 시작일/종료일 쌍은 만들지 않는다. 생성 요청 멱등성 기록은 당시 날짜 `original_due_date`를 보관한다. V3 Migration은 V2 컬럼을 이름 변경해 기존 값·리비전·삭제 상태를 보존한다. 세부 구현 계약은 [현재 데이터/API](../dev-docs/04-data-api.md)를 따른다.

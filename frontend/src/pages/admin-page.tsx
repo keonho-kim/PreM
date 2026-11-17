@@ -3,7 +3,8 @@
 // Usage: /home/admin with section, provider and tab query parameters; startup-token gate.
 // Related: features/providers/, features/system-status/, admin-layout.css.
 import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from '@tanstack/react-router';
+import { useUrlSearch } from '@/shared/routing/search';
 import { Cable, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -19,7 +20,7 @@ export function AdminPage() {
   );
 }
 function AdminContent() {
-  const [params, setParams] = useSearchParams();
+  const [params, setParams] = useUrlSearch();
   const section =
     params.get('section') === 'general'
       ? 'general'
@@ -46,7 +47,7 @@ function AdminContent() {
     q.set('section', next);
     q.set('tab', 'settings');
     q.delete('provider');
-    return `?${q}`;
+    return Object.fromEntries(q);
   };
   const update = (key: string, value: string) =>
     setParams((old) => {
@@ -80,7 +81,8 @@ function AdminContent() {
               <ul>
                 <li>
                   <Link
-                    to={destination('general')}
+                    to="/admin"
+                    search={destination('general')}
                     aria-current={section === 'general' ? 'page' : undefined}
                   >
                     <Settings aria-hidden="true" />
@@ -89,7 +91,8 @@ function AdminContent() {
                 </li>
                 <li>
                   <Link
-                    to={destination('llm')}
+                    to="/admin"
+                    search={destination('llm')}
                     aria-current={section === 'llm' ? 'page' : undefined}
                   >
                     <Cable aria-hidden="true" />
@@ -98,7 +101,8 @@ function AdminContent() {
                 </li>
                 <li>
                   <Link
-                    to={destination('decision')}
+                    to="/admin"
+                    search={destination('decision')}
                     aria-current={section === 'decision' ? 'page' : undefined}
                   >
                     <Cable aria-hidden="true" />

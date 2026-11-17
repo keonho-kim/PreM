@@ -2,7 +2,7 @@
 // Pattern: Semantic content card with independent contextual commands.
 // Usage: ProjectDirectory renders one card per server result.
 // Related: project-menu.tsx, calendar.ts, project-gallery.css.
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 import { Card } from '@/components/ui/card';
 import { Folder } from 'lucide-react';
 import type { Project } from './api';
@@ -30,7 +30,8 @@ export function ProjectCard({
       >
         <Link
           data-project-link
-          to={`/studio/${project.id}`}
+          to="/studio/$projectId"
+          params={{ projectId: project.id }}
           className="project-card-preview"
           aria-label={`${project.name} 열기`}
         >
@@ -43,7 +44,7 @@ export function ProjectCard({
             <span className={due.urgent ? 'deadline urgent' : 'deadline'}>{due.label}</span>
           </div>
           <h2>
-            <Link data-project-link to={`/studio/${project.id}`}>
+            <Link data-project-link to="/studio/$projectId" params={{ projectId: project.id }}>
               {project.name}
             </Link>
           </h2>

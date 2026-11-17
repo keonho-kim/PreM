@@ -1,14 +1,16 @@
 # 검증 디렉터리
 
-| 경로                 | 용도                               |
-| -------------------- | ---------------------------------- |
-| `fixtures/`          | 입력 문서·기준 산출물              |
-| `integration/`       | 서비스·스토리지 통합 검증          |
-| `provider-contract/` | LLM Provider별 계약 검증           |
-| `workflow/`          | 체크포인트·재시도·복구 검증        |
-| `migration/`         | 이전 릴리스 데이터 업그레이드 검증 |
-| `e2e/`               | 사용자 흐름 검증                   |
+| 경로                                | 실제 소유                                                      |
+| ----------------------------------- | -------------------------------------------------------------- |
+| `backend/tests/` (저장소 루트 기준) | Rust 도메인·HTTP·SQLite·외부 도구 통합 및 migration/복구       |
+| `frontend/src/**/*.test.ts(x)`      | React 행동·상태·라우팅·폼·접근성 계약                          |
+| `tests/fixtures/`                   | 공개/합성 입력과 사람이 작성한 기대값                          |
+| `tests/helpers/`                    | 브라우저 어댑터·추출/백업 검사·fixture 도구                    |
+| `tests/e2e/`                        | 실제 컴파일 서버와 브라우저 여정; suites.json이 실행 목록 소유 |
+| `tests/.artifacts/`                 | 격리 DB·브라우저 프로필·보고서·캡처·임시 패키지                |
 
-현재 HTTP 통합 테스트는 `backend/tests/http.rs`, 실제 실행 파일 Smoke 검증은 `scripts/smoke_test.py`에 있다. 기반 패키지의 SQLite·Migration·Schema·SSE·취소 조합은 `backend/tests/dependency_contracts.rs`에서 검사한다. 프론트엔드는 `frontend/src/pages/home-page.test.tsx`에서 연결 상태의 오류·재시도·요청 취소를 검사한다. 추가 테스트는 기능별 `*.test.ts(x)`로 둔다. 의존성 구성과 검증 경계는 [의존성 명세](../dev-docs/08-dependencies.md)를 따른다.
+`pnpm check:core`가 로컬과 네이티브 릴리스 CI의 공통 게이트다. `pnpm test:e2e`는 모든 여정을 순서대로 실행하고 실패 후에도 나머지 결과를 모은다. 특정 검사만 재실행하려면 `pnpm test:e2e projects backup-restore`처럼 이름을 전달한다.
 
-공유 프로젝트의 HTTP·동시 변경·재시작은 `backend/tests/projects.rs`, DB 시작·보존은 `backend/tests/database_startup.rs`에서 검사한다. 실제 브라우저의 두 접속자 공유 흐름은 `pnpm build` 후 `pnpm test:e2e`로 검사한다. E2E 데이터는 `tests/.artifacts/`에 격리하고 화면 이미지는 `mock/captures/folio/`에 저장한다.
+문서 준비에 필요한 공통 판정 연결은 테스트가 명시적으로 설정한다. `configure-documents.cjs`는 실제 문서 파서를 그대로 사용하면서 분류만 로컬 합성 응답으로 고정한다. 모델 미설정 gate는 document-processing 여정과 Rust 해당 테스트가 별도로 검증한다. 합성 테스트는 실모델의 작성 품질이나 업무 문서 전체 정확도를 보장하지 않는다.
+
+브라우저 도구는 `tests/.artifacts/browser-tools/`에 설치하며 버전은 `scripts/runtime-versions.json`에서 읽는다. Chrome 경로는 `CHROME_PATH`로 지정할 수 있다. 실제 `data/`에 QA 자료를 만들지 않는다.

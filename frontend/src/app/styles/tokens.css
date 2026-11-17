@@ -5,7 +5,7 @@
 /* Purpose: Own the production scaffold's light-only design tokens.
  * Pattern: Semantic theme tokens.
  * Usage: Imported by frontend/src/app/styles/index.css.
- * Related: mock/tokens.css, blueprint/07-ui-design.md. */
+ * Related: design.md, blueprint/07-ui-design.md. */
 
 :root {
   color-scheme: light;

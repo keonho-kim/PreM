@@ -3,7 +3,8 @@
 // Usage: /home/space; project originals never enter this search scope.
 // Related: api.ts, search-box.tsx, search.css, document-processing document-page.
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from '@tanstack/react-router';
+import { useUrlSearch } from '@/shared/routing/search';
 import { useQuery } from '@tanstack/react-query';
 import { FileText, ArrowLeft, ArrowRight, SlidersHorizontal } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -89,10 +90,14 @@ function Result({ item, input }: { item: SearchItem; input: SearchInput }) {
     ...(item.job_id ? { job: item.job_id } : {}),
     ...(item.page_id ? { page: item.page_id } : {}),
   });
-  const href = `/space/documents/${item.kind}/${item.id}?${query}`;
+  const destination = {
+    to: '/space/documents/$kind/$id' as const,
+    params: { kind: item.kind, id: item.id },
+    search: Object.fromEntries(query),
+  };
   return (
     <article className="search-result">
-      <Link to={href} className="search-result-thumb" tabIndex={-1} aria-hidden="true">
+      <Link {...destination} className="search-result-thumb" tabIndex={-1} aria-hidden="true">
         {item.preview && item.job_id ? (
           <img
             src={`/api/v1/document-jobs/${item.job_id}/files/${item.preview}`}
@@ -114,7 +119,7 @@ function Result({ item, input }: { item: SearchItem; input: SearchInput }) {
           {item.page_label && ` · ${item.page_label}`}
         </p>
         <h2>
-          <Link to={href}>{item.title}</Link>
+          <Link {...destination}>{item.title}</Link>
         </h2>
         <MatchText text={item.excerpt || item.filename} query={input.q} />
         <footer>
@@ -129,7 +134,7 @@ function Result({ item, input }: { item: SearchItem; input: SearchInput }) {
   );
 }
 export function SearchPage() {
-  const [params, setParams] = useSearchParams(),
+  const [params, setParams] = useUrlSearch(),
     input = searchParams(params),
     key = encodeSearch(input);
   const result = useQuery({
@@ -138,7 +143,7 @@ export function SearchPage() {
     enabled: !!input.q,
     retry: false,
   });
-  const navigate = (next: SearchInput) => setParams(encodeSearch(next));
+  const navigate = (next: SearchInput) => setParams(new URLSearchParams(encodeSearch(next)));
   return (
     <main className="container workspace search-workspace">
       <title>Space · 자료 검색 | PreM</title>

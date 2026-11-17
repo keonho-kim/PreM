@@ -6,13 +6,14 @@ import { lazy, Suspense, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { startNotifications } from '@/shared/notifications';
-import { useWorkPanelState } from '@/shared/work-panel-state';
+import { useSelector } from 'react-redux';
+import { selectPanelHeight } from '@/shared/work-panel-state';
 import './feedback.css';
 const UploadWorkPanel = lazy(() =>
   import('@/features/space').then((module) => ({ default: module.UploadWorkPanel })),
 );
 export function Feedback() {
-  const height = useWorkPanelState((state) => state.height);
+  const height = useSelector(selectPanelHeight);
   useEffect(startNotifications, []);
   useEffect(() => {
     const root = document.documentElement;

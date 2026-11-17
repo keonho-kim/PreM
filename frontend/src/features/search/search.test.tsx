@@ -2,11 +2,13 @@
 // Pattern: Real Router/Query behavior with mocked read transport; server tests enforce Space scope.
 // Usage: Vitest; browser tests own layout and native navigation.
 // Related: search-page.tsx, search-box.tsx, api.ts.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, it, expect, vi } from 'vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, useLocation } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
+import { useLocation } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchPage } from './search-page';
 import { findDocuments } from './api';
@@ -16,18 +18,18 @@ vi.mock('./api', async (original) => ({
 }));
 const clients: QueryClient[] = [];
 function Location() {
-  return <output data-testid="location">{useLocation().pathname + useLocation().search}</output>;
+  return <output data-testid="location">{useLocation().pathname + useLocation().searchStr}</output>;
 }
-function mount(route = '/space') {
+async function mount(route = '/space') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   clients.push(client);
-  return render(
-    <MemoryRouter initialEntries={[route]}>
+  return await render(
+    <RouterTestHarness initialEntries={[route]}>
       <QueryClientProvider client={client}>
         <SearchPage />
         <Location />
       </QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
 }
 afterEach(() => {
@@ -37,7 +39,7 @@ afterEach(() => {
 });
 it('waits for explicit submission and searches the shared Space scope', async () => {
   vi.mocked(findDocuments).mockResolvedValue({ items: [], total: 0, offset: 0, limit: 12 });
-  mount();
+  await mount();
   const input = screen.getByRole('searchbox', { name: 'Space 자료 검색' });
   await userEvent.type(input, '분기 보고');
   expect(findDocuments).not.toHaveBeenCalled();
@@ -77,7 +79,7 @@ it('shows safe excerpt text and links to the exact job/page on a document route'
     offset: 0,
     limit: 12,
   });
-  const { container } = mount('/space?q=분기');
+  const { container } = await mount('/space?q=분기');
   const link = await screen.findByRole('link', { name: '운영 보고' });
   expect(link.getAttribute('href')).toContain('/documents/references/');
   expect(link.getAttribute('href')).toContain('job=25ff0cd9');

@@ -4,13 +4,15 @@
 // Related: app/feedback.tsx, features/space/upload-work-panel.css, studio.cjs.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
+const { configureDocuments } = require('./configure-documents.cjs');
 (async () => {
   const server = await createServer('mobile-work-panel-');
-  let session;
+  let session, fixture;
   try {
     await server.start();
+    fixture = await configureDocuments(server.base);
     const created = await fetch(server.base + '/api/v1/projects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
@@ -53,7 +55,10 @@ const { createServer } = require('./server.cjs');
       });
     if (process.env.PANEL_BEFORE) {
       await page.screenshot({
-        path: path.join(projectRoot, 'mock/captures/folio/upload-panel-mobile-before.png'),
+        path: path.join(
+          projectRoot,
+          'tests/.artifacts/captures/folio/upload-panel-mobile-before.png',
+        ),
         fullPage: false,
       });
       await page.$eval('.studio-review button', (n) => n.scrollIntoView({ block: 'end' }));
@@ -82,7 +87,7 @@ const { createServer } = require('./server.cjs');
         await page.screenshot({
           path: path.join(
             projectRoot,
-            `mock/captures/folio/upload-panel-mobile-${width}-${state}.png`,
+            `tests/.artifacts/captures/folio/upload-panel-mobile-${width}-${state}.png`,
           ),
           fullPage: false,
         });
@@ -104,6 +109,7 @@ const { createServer } = require('./server.cjs');
   } finally {
     if (session) await session.close();
     await server.close();
+    if (fixture) await fixture.close();
   }
 })().catch((e) => {
   console.error(e);

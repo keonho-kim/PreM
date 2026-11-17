@@ -1,7 +1,7 @@
 // Purpose: Describe the bounded object language to native structured-output providers.
 // Pattern: Explicit schemas mirror domain validation without exposing arbitrary capabilities.
 // Usage: Editing prompt only; server validation remains authoritative.
-// Related: objects.rs, edit_model.rs.
+// Related: objects.rs, editing/request.rs.
 use super::Media;
 use serde_json::{Value, json};
 fn object(properties: Value) -> Value {

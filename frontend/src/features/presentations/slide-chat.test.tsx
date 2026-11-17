@@ -12,7 +12,9 @@ import { EditProposal } from './edit-proposal';
 import { getEdits, sendEdit, editCommand, type Edit } from './edit-api';
 import type { Run, Slide } from './api';
 import { useEditThread } from './use-edit-thread';
-import { useChatDrafts } from './chat-drafts';
+import { Provider } from 'react-redux';
+import { createTestStore } from '@/test/state';
+import { draftUpdated, resetDrafts, chatDraftSelectors } from './chat-state';
 vi.mock('./edit-api', async (original) => ({
   ...(await original<typeof import('./edit-api')>()),
   getEdits: vi.fn(),
@@ -27,6 +29,7 @@ vi.mock('@/components/ui/message-scroller', () => ({
   MessageScrollerItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   MessageScrollerButton: () => null,
 }));
+const store = createTestStore();
 const run: Run = {
   id: 'run',
   project_id: 'p',
@@ -95,21 +98,23 @@ function TestChat(props: Partial<React.ComponentProps<typeof SlideChat>>) {
 function mount(props: Partial<React.ComponentProps<typeof SlideChat>> = {}) {
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(
-    <QueryClientProvider client={client}>
-      <TestChat {...props} />
-    </QueryClientProvider>,
+    <Provider store={store}>
+      <QueryClientProvider client={client}>
+        <TestChat {...props} />
+      </QueryClientProvider>
+    </Provider>,
   );
 }
 afterEach(() => {
   cleanup();
   client.clear();
   vi.clearAllMocks();
-  useChatDrafts.setState({ drafts: {} });
+  store.dispatch(resetDrafts());
 });
 it('does not send IME confirmation keys and defaults to the entire current slide without model controls', async () => {
   vi.mocked(getEdits).mockResolvedValue([]);
   vi.mocked(sendEdit).mockResolvedValue({ ...edit, status: 'queued' });
-  useChatDrafts.getState().update('p:run:slide', { prompt: '제목을 수정해줘' });
+  store.dispatch(draftUpdated({ key: 'p:run:slide', change: { prompt: '제목을 수정해줘' } }));
   mount();
   const input = screen.getByRole('textbox', { name: '슬라이드 수정 요청' });
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
@@ -141,19 +146,27 @@ it('does not apply the returned proposal until the user accepts its visible diff
   expect(vi.mocked(editCommand).mock.calls[0]?.[2]).toBe('apply');
 });
 it('retains drafts independently for different immutable slide scopes', () => {
-  const update = useChatDrafts.getState().update;
+  const update = (key: string, change: { prompt: string }) =>
+    store.dispatch(draftUpdated({ key, change }));
   update('p:run:slide', { prompt: '첫 슬라이드 요청' });
   update('p:run:other', { prompt: '다른 슬라이드 요청' });
-  expect(useChatDrafts.getState().drafts['p:run:slide']?.prompt).toBe('첫 슬라이드 요청');
+  expect(chatDraftSelectors.selectById(store.getState(), 'p:run:slide')?.prompt).toBe(
+    '첫 슬라이드 요청',
+  );
   client = new QueryClient();
 });
 
 it('pins a multi-slide visual request while preserving the selected text fields', async () => {
   vi.mocked(getEdits).mockResolvedValue([]);
   vi.mocked(sendEdit).mockResolvedValue({ ...edit, status: 'queued' });
-  useChatDrafts.getState().update('p:run:slide', {
-    prompt: '두 장표에 차트를 추가해줘',
-  });
+  store.dispatch(
+    draftUpdated({
+      key: 'p:run:slide',
+      change: {
+        prompt: '두 장표에 차트를 추가해줘',
+      },
+    }),
+  );
   mount({ targetSlides: [slide, { ...slide, id: 'second', position: 2 }] });
   await userEvent.click(screen.getByRole('button', { name: '수정 요청 보내기' }));
   await waitFor(() => expect(sendEdit).toHaveBeenCalledTimes(1));
@@ -165,7 +178,7 @@ it('pins a multi-slide visual request while preserving the selected text fields'
 it('limits a component-selected request to explicit object IDs', async () => {
   vi.mocked(getEdits).mockResolvedValue([]);
   vi.mocked(sendEdit).mockResolvedValue({ ...edit, status: 'queued' });
-  useChatDrafts.getState().update('p:run:slide', { prompt: '오른쪽으로 옮겨줘' });
+  store.dispatch(draftUpdated({ key: 'p:run:slide', change: { prompt: '오른쪽으로 옮겨줘' } }));
   mount({ objectIds: ['chart-1', 'image-1'] });
   await userEvent.click(screen.getByRole('button', { name: '수정 요청 보내기' }));
   await waitFor(() => expect(sendEdit).toHaveBeenCalledTimes(1));

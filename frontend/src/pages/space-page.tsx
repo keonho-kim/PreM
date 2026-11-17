@@ -2,10 +2,11 @@
 // Pattern: Route-owned state; feature owns API integration and transient drafts.
 // Usage: Mounted at /home/space/library with no account or project prerequisite.
 // Related: features/space/index.ts, app/app.tsx.
-import { useSearchParams } from 'react-router';
+
+import { useUrlSearch } from '@/shared/routing/search';
 import { SpaceDirectory } from '@/features/space';
 export function SpacePage() {
-  const [params, setParams] = useSearchParams();
+  const [params, setParams] = useUrlSearch();
   const raw = Number(params.get('offset') ?? 0),
     offset =
       Number.isSafeInteger(raw) && raw >= 0 && raw <= 1_000_000 ? Math.floor(raw / 12) * 12 : 0;

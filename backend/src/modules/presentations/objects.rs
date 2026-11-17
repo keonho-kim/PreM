@@ -1,7 +1,7 @@
 // Purpose: Define bounded native slide objects and placement independently from app chrome.
 // Pattern: Versioned typed data; no URLs, executable markup or filesystem paths in model output.
 // Usage: SlideSpec v2, proposal validation and the native PPTX renderer.
-// Related: edit_model.rs, media.rs, backend/tools/presentation-objects.py.
+// Related: editing/request.rs, media.rs, backend/tools/presentation-objects.py.
 use super::Error;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

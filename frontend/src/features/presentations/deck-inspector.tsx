@@ -1,7 +1,7 @@
 // Purpose: Keep readable slide content, speaker notes and canonical evidence in the right panel.
 // Pattern: Manual Radix tabs stay mounted across panel collapse; reads are scoped to the current slide.
 // Usage: DeckPreview owns panel visibility and slide identity.
-// Related: slide-evidence.tsx, api.ts, mock/js/views/presentations.js.
+// Related: slide-evidence.tsx, api.ts, design.md
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MaterialSources } from './material-sources';
@@ -9,7 +9,8 @@ import { MaterialInsertion } from './material-insertion';
 import { SlideEvidence } from './slide-evidence';
 import { SlideChat } from './slide-chat';
 import { ObjectTools } from './object-tools';
-import { useChatDrafts } from './chat-drafts';
+import { useDispatch } from 'react-redux';
+import { draftUpdated } from './chat-state';
 import type { EditThread } from './use-edit-thread';
 import type { Slide, Run } from './api';
 export function DeckInspector({
@@ -39,6 +40,7 @@ export function DeckInspector({
   previewing: boolean;
   onResult: (id: string) => void;
 }) {
+  const dispatch = useDispatch();
   const [tab, setTab] = useState('chat');
   return (
     <Tabs value={tab} onValueChange={setTab} activationMode="manual">
@@ -79,7 +81,9 @@ export function DeckInspector({
             onSelect={onObjectSelect}
             onAsk={(prompt, keepSelection) => {
               if (!keepSelection) onObjectSelect('', false);
-              useChatDrafts.getState().update(`${project}:${run.id}:${slide.id}`, { prompt });
+              dispatch(
+                draftUpdated({ key: `${project}:${run.id}:${slide.id}`, change: { prompt } }),
+              );
               setTab('chat');
             }}
           />

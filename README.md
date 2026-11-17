@@ -7,7 +7,7 @@
 - **Space**: 공용 레퍼런스·템플릿 등록·추출·검색
 - **Admin**: LLM/Decision 연결·처리 설정·진단. 서버 시작 시 발급되는 토큰으로 진입
 
-실제 PPTX 생성·다운로드, 대화 기반 텍스트·이미지·차트·배치 수정과 여러 장표 편집을 지원합니다. 일반 사용에는 로그인이 없습니다. 웹 캔버스의 직접 드래그 조작 등 목업과 제품의 구현 차이는 [편집기 문서](dev-docs/03-editor.md)에서 확인하세요.
+실제 PPTX 생성·다운로드, 대화 기반 텍스트·이미지·차트·배치 수정과 여러 장표 편집을 지원합니다. 일반 사용에는 로그인이 없습니다. 웹 캔버스의 직접 편집 범위는 [편집기 문서](dev-docs/03-editor.md)에서 확인하세요.
 
 ## 릴리스로 실행하기
 
@@ -33,7 +33,7 @@
 | Node.js + npm       | `26.13.0` 기준, `>=26.13.0 <27` | 프론트엔드·설치 스크립트. [.node-version](.node-version) 기준            |
 | pnpm                | `12.16.1`                       | 워크스페이스 의존성·명령 실행                                            |
 | uv                  | PATH에서 실행 가능              | 번들 Python 및 고정 Python 의존성 설치                                   |
-| Bash·tar·Python 3   | PATH에서 실행 가능              | 설치·빌드·Smoke 검사·목업 서버                                           |
+| Bash·tar·Python 3   | PATH에서 실행 가능              | 설치·빌드·Smoke 검사                                                     |
 | C/C++ 컴파일러·링커 | 호스트에 맞게 준비              | Rust 네이티브 의존성 빌드                                                |
 | Chrome/Chromium     | 브라우저 검사 시 필요           | 실제 화면 E2E 검사                                                       |
 
@@ -160,7 +160,7 @@ pnpm build
 
 문서 처리 도구는 실행 파일에 들어가지 않고 `runtime/`에 있습니다. 다른 위치로 옮길 때는 같은 플랫폼에서 준비한 런타임도 제공해야 합니다. 서버는 실행 파일 옆의 `runtime/`을 우선 탐색하며, `APP_DOCUMENT_RUNTIME_PATH`로 별도 위치를 지정할 수도 있습니다. 저장소 안에서 개발할 때는 프로젝트의 `runtime/`을 사용합니다.
 
-`pnpm build`는 실행 파일을 빌드합니다. `pnpm release:package -- vYYYYMMDD`는 현재 호스트의 런타임을 포함한 릴리스 압축을 만들고, `pnpm release:verify -- <archive>`로 재배치 실행을 확인합니다. GitHub의 Release workflow는 세 네이티브 환경에서 빌드·검증한 파일을 draft 릴리스에 업로드합니다. 모두 검증한 뒤 draft를 게시합니다. LibreOffice·H2Orestart·Java 기반 Office PDF 정규화도 아직 제품에 연결되지 않았습니다. 런타임·라이선스·플랫폼 검증 범위는 [runtime 안내](runtime/README.md)와 [운영 준비도](dev-docs/07-quality-readiness.md)를 따릅니다.
+`pnpm build`는 실행 파일을 빌드합니다. `pnpm release:package vYYYYMMDD`는 현재 호스트의 런타임을 포함한 릴리스 압축을 만들고, `pnpm release:verify <archive>`로 재배치 실행을 확인합니다. GitHub의 Release workflow는 세 네이티브 환경에서 빌드·검증한 파일을 draft 릴리스에 업로드합니다. 모두 검증한 뒤 draft를 게시합니다. LibreOffice·H2Orestart·Java 기반 Office PDF 정규화도 아직 제품에 연결되지 않았습니다. 런타임·라이선스·플랫폼 검증 범위는 [runtime 안내](runtime/README.md)와 [운영 준비도](dev-docs/07-quality-readiness.md)를 따릅니다.
 
 ### 직접 실행 옵션
 
@@ -192,18 +192,18 @@ CLI 인자는 대응 환경변수보다 우선합니다. Rust 서버는 `.env` �
 | `pnpm coverage`                      | Rust·React 커버리지, `tests/.artifacts/coverage/`에 저장               |
 | `pnpm tokens` / `pnpm tokens:check`  | 공유 디자인 토큰 생성 / 일치 여부 확인                                 |
 
-Rust 통합 검사는 설치된 문서 런타임을 사용합니다. 토큰 생성 원본은 `design/refract.tokens.json`이며 생성된 CSS는 직접 수정하지 않습니다. `pnpm check`의 취약점 조회 등은 네트워크를 사용할 수 있습니다. E2E·Smoke·실모델 검사는 각각 별도 실행 항목입니다.
+Rust 통합 검사는 설치된 문서 런타임을 사용합니다. 토큰 생성 원본은 `design/refract.tokens.json`이며 생성된 CSS는 직접 수정하지 않습니다. `pnpm check:core`는 네이티브 CI와 같은 게이트이며 `pnpm check`는 개발 CLI/의존성 정책 검사도 포함합니다. 취약점 조회 등은 네트워크를 사용할 수 있습니다. E2E·Smoke·실모델 검사는 각각 별도 실행 항목입니다.
 
 ### 브라우저 E2E 준비
 
 Chrome/Chromium과 `puppeteer-core`가 필요합니다. 브라우저 도구를 제품 의존성과 분리해 다음 위치에 설치할 수 있습니다. 아래 버전은 현재 브라우저 검증에 사용한 버전입니다.
 
 ```sh
-mkdir -p mock/helpers/.artifacts/browser-tools
-npm install --prefix "$PWD/mock/helpers/.artifacts/browser-tools" \
-  --save-exact puppeteer-core@25.17.0
+mkdir -p tests/.artifacts/browser-tools
+npm install --prefix "$PWD/tests/.artifacts/browser-tools" \
+  --save-exact puppeteer-core@"$(node -p 'require("./scripts/runtime-versions.json").puppeteer')"
 
-export PREM_BROWSER_TOOLS="$PWD/mock/helpers/.artifacts/browser-tools"
+export PREM_BROWSER_TOOLS="$PWD/tests/.artifacts/browser-tools"
 # Chrome 실행 파일을 자동으로 찾지 못할 때만 지정
 # export CHROME_PATH="/absolute/path/to/chrome"
 
@@ -211,19 +211,9 @@ pnpm build
 pnpm test:e2e
 ```
 
-E2E는 임시 포트와 `tests/.artifacts/`의 격리된 서버 데이터를 사용하며, 개발용 `data/`에 테스트 프로젝트를 만들지 않습니다. 화면 캡처는 `mock/captures/folio/`에 저장합니다. 기본 AI 응답은 합성 계약 서버를 사용하며, 실제 모델 검증은 [품질 문서](dev-docs/07-quality-readiness.md)에 설명된 명시적 옵션으로 실행합니다.
+E2E는 임시 포트와 `tests/.artifacts/`의 격리된 서버 데이터를 사용하며, 개발용 `data/`에 테스트 프로젝트를 만들지 않습니다. 화면 캡처는 `tests/.artifacts/captures/folio/`에 저장합니다. 기본 AI 응답은 합성 계약 서버를 사용하며, 실제 모델 검증은 [품질 문서](dev-docs/07-quality-readiness.md)에 설명된 명시적 옵션으로 실행합니다.
 
-## 8. 독립 목업 실행
-
-```sh
-python3 mock/helpers/serve.py
-# 포트를 바꾸려면
-python3 mock/helpers/serve.py --port 5175
-```
-
-기본 주소는 `http://127.0.0.1:5174/`입니다. 서버 없이 `mock/index.html`을 직접 열 수도 있습니다. 목업에는 Rust·React·DB가 필요하지 않으며, 상태는 브라우저 메모리에만 두고 새로고침하면 초기화합니다. 목업의 문서 분석·AI·생성은 시뮬레이션입니다.
-
-## 9. 자주 발생하는 문제
+## 8. 자주 발생하는 문제
 
 | 증상                           | 확인·대응                                                                                                          |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
@@ -238,21 +228,20 @@ python3 mock/helpers/serve.py --port 5175
 | LLM 호출 불가                  | Admin의 연결 주소·활성 모델·인증 설정과 모델 서버 실행 상태 확인                                                   |
 | E2E에서 브라우저를 찾지 못함   | `PREM_BROWSER_TOOLS`와 `CHROME_PATH` 확인                                                                          |
 
-## 10. 저장소와 Git 관리
+## 9. 저장소와 Git 관리
 
-| 경로                                         | 책임                                          |
-| -------------------------------------------- | --------------------------------------------- |
-| `backend/`, `frontend/`                      | 실제 제품 코드·테스트·DB Migration            |
-| `blueprint/`                                 | 제품·아키텍처 요구사항, 최대 10개 문서        |
-| `dev-docs/`                                  | 현재 구현·실행·검증 계약                      |
-| `design/`, `design.md`                       | Folio 디자인 원본·적용 기준                   |
-| `scripts/`                                   | 설치·개발·빌드·검사 진입점                    |
-| `runtime/`                                   | 설치된 문서 도구·모델. 설치 입력만 Git에 보관 |
-| `tests/fixtures/`                            | 검토된 공개·합성 테스트 자료와 라이선스       |
-| `tests/.artifacts/`                          | 폐기 가능한 제품 QA 출력                      |
-| `mock/`, `mock/helpers/`                     | 독립 목업·개발 보조 소스                      |
-| `mock/helpers/.artifacts/`, `mock/captures/` | 임시 도구·프로필·캡처                         |
-| `data/`                                      | 앱이 사용하는 데이터만 저장                   |
+| 경로                                              | 책임                                          |
+| ------------------------------------------------- | --------------------------------------------- |
+| `backend/`, `frontend/`                           | 실제 제품 코드·테스트·DB Migration            |
+| `blueprint/`                                      | 제품·아키텍처 요구사항, 최대 10개 문서        |
+| `dev-docs/`                                       | 현재 구현·실행·검증 계약                      |
+| `design/`, `design.md`                            | Folio 디자인 원본·적용 기준                   |
+| `scripts/`                                        | 설치·개발·빌드·검사 진입점                    |
+| `runtime/`                                        | 설치된 문서 도구·모델. 설치 입력만 Git에 보관 |
+| `tests/fixtures/`                                 | 검토된 공개·합성 테스트 자료와 라이선스       |
+| `tests/.artifacts/`                               | 폐기 가능한 제품 QA 출력                      |
+| `tests/.artifacts/`, `tests/.artifacts/captures/` | 임시 도구·프로필·캡처                         |
+| `data/`                                           | 앱이 사용하는 데이터만 저장                   |
 
 [.gitignore](.gitignore)는 앱 데이터·키·환경 파일·설치 의존성·런타임·빌드·프로파일·QA 출력·캡처 이미지를 제외합니다. 캡처 폴더의 README는 남기며, 이미지 링크는 로컬 검사를 실행한 뒤 사용할 수 있습니다.
 
@@ -269,3 +258,14 @@ git ls-files -ci --exclude-standard
 마지막 명령은 추적 중이면서 현재 제외 규칙에도 해당하는 파일을 보여줍니다. 기록에서 제거할 필요가 있다면 실제 데이터와 기존 커밋을 먼저 검토합니다.
 
 자세한 내용은 [개발 문서 색인](dev-docs/README.md), [아키텍처](dev-docs/01-architecture.md), [업무 흐름](dev-docs/02-product-workflows.md), [실행·운영](dev-docs/06-development-operations.md), [의존성](dev-docs/08-dependencies.md), [제품 설계](blueprint/README.md)를 참고하세요.
+
+## 오프라인 백업·복원
+
+서버를 정상 종료한 뒤 릴리스의 `PreM-maintenance`로 DB·Blob·암호화 키를 함께 백업합니다. 실행 중 저장소, 기존 아카이브 덮어쓰기와 기존 경로 복원은 거부합니다.
+
+```sh
+./PreM-maintenance backup --data-storage-path /absolute/path/to/data --output /absolute/path/to/backups/snapshot.tar.gz
+./PreM-maintenance restore --archive /absolute/path/to/backups/snapshot.tar.gz --data-storage-path /absolute/path/to/restored-data
+```
+
+개발 checkout에서는 `python3 scripts/storage-backup.py`로 실행합니다. 외부 키 지정, 권한, 복원 후 확인과 보존 절차는 [운영 문서](dev-docs/06-development-operations.md#오프라인-백업과-복원)를 따릅니다. 자동 migration DB 백업만으로 파일/키까지 복구되지는 않습니다.

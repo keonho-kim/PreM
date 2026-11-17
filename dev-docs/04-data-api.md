@@ -1,160 +1,40 @@
-# 디자인과 접근성
+# 데이터와 HTTP 계약
 
-## Folio 디자인 시스템
+이 문서는 현재 구현된 저장·동시성·HTTP 계약을 설명한다. 전체 목표 스키마와 API 목록은 [데이터 설계](../blueprint/05-data-storage.md), [API 설계](../blueprint/08-rest-api.md)를 참조하며 구현 여부는 실제 handler와 테스트로 확인한다.
 
-PreM는 라이트 전용 Folio를 사용한다. 문서 종이와 슬라이드의 내용을 중심으로 중립 배경, 명확한 글자, 제한된 강조색을 적용한다. 테마 전환이나 OS 다크 모드 연동은 제공하지 않는다.
+## 공통 규칙
 
-| 역할                  | 값                    |
-| --------------------- | --------------------- |
-| 작업 배경             | `#F6F5F2`             |
-| 콘텐츠 표면           | `#FFFEFA`             |
-| 중립 작업 영역        | `#EEEDE8`             |
-| 기본 글자             | `#262824`             |
-| 보조 글자             | `#51564F`             |
-| 약한 글자             | `#60665D`             |
-| 주요 명령 배경·글자   | `#F58254` / `#262824` |
-| 링크·포커스·선택 강조 | `#9C3D1E`             |
-| 필수 컨트롤 경계      | `#7D8177`             |
-| 구분선                | `#DCDED6`             |
+- 업무 API는 `/api/v1` 아래에 있고 Admin API는 시작 토큰이 필요하다. 일반 프로젝트에는 계정·소유자 필터가 없다.
+- 생성·작업 명령은 `Idempotency-Key`, 수정은 `expected_version` 또는 해당 endpoint의 버전 조건을 사용한다. 같은 키로 다른 내용을 보내거나 오래된 버전으로 쓰면 충돌이다.
+- 외부 응답과 사용자 입력은 경계에서 검증한다. 클라이언트는 Zod로 성공 응답을 검사하며 오류·취소·재시도는 [공통 HTTP 어댑터](../frontend/src/shared/api/http.ts)가 구분한다.
+- 비밀 키와 토큰은 일반 조회 응답에 포함하지 않는다. 원본 HTML은 다운로드만 허용하고 브라우저에서 실행하지 않는다.
 
-색상 원본은 [refract.tokens.json](../design/refract.tokens.json)이고 [generate-design-tokens.mjs](../scripts/generate-design-tokens.mjs)가 다음 파일을 생성한다.
+## 주요 리소스
 
-- [mock/theme.generated.css](../mock/theme.generated.css)
-- [frontend/src/app/styles/theme.generated.css](../frontend/src/app/styles/theme.generated.css)
+| 리소스         | HTTP 경로                      | 저장 책임                                   |
+| -------------- | ------------------------------ | ------------------------------------------- |
+| 프로젝트       | `/projects`                    | `modules/projects`                          |
+| 프로젝트 원본  | `/projects/{id}/files`         | source item/version·Blob·문서 작업          |
+| 작성 방향      | `/projects/{id}/guide`         | 불변 guide revision                         |
+| 목차·원문 연결 | `/projects/{id}/outline`       | outline revision·canonical block assignment |
+| Space 자료     | `/space/{kind}`                | 공용 reference/template 버전                |
+| 자료 검색      | `/search`                      | 현재 공용 자료의 색인 조회                  |
+| 발표자료       | `/projects/{id}/presentations` | run·slide·검토·리비전·PPTX                  |
+| 모델 연결      | `/admin/llm/providers`         | 암호화된 불변 연결 설정                     |
 
-`pnpm tokens`로 생성하고 `pnpm tokens:check`로 원본과 출력의 일치를 검사한다. 생성 CSS를 직접 수정하지 않는다. 간격·서체 로딩·배치와 상태별 컨트롤 스타일은 각 UI의 소유다.
+실제 하위 명령과 DTO는 [HTTP 어댑터](../backend/src/adapters/http/)와 [통합 테스트](../backend/tests/)가 소유한다. 설계 문서에만 있는 경로를 동작하는 API로 간주하지 않는다.
 
-## 타이포그래피·아이콘
+## Markdown 원본추출 계약
 
-로컬 Red Hat Text는 인터페이스에, Red Hat Display는 제목에 사용한다. 한글은 시스템 글꼴로 대체된다. 반복 보조 명령은 로컬 Lucide 아이콘을 사용하고, 주요 흐름의 실행 버튼은 의미 있는 라벨을 유지한다.
+`.md`/`.markdown`은 UTF-8, 최대 2 MiB다. Rust Comrak 어댑터가 구조화 블록과 원문 위치를 저장한다. HTML·링크를 실행하거나 외부 이미지를 가져오지 않는다. Space 자료와 프로젝트 원본의 scope를 구분하며 원본 bytes는 다운로드할 수 있다.
 
-아이콘 전용 버튼에는 접근 가능한 이름, title, 키보드 포커스를 제공한다. 기본 명령 대상은 44px 이상, coarse pointer에서는 48px 이상이다. 버튼 모서리는 8px이며 문서·슬라이드 내용의 색은 앱 토큰과 독립적으로 유지한다.
+## 공통 PPT 패키지와 저장 수명
 
-## 화면 구성
+원본 Blob과 추출 프로필을 기준으로 PPT 추출을 공유하며 페이지·블록·자료 재사용 항목은 canonical IDs를 참조한다. 이미지·패키지·미리보기는 별도 Blob이다. 삭제된 자료의 과거 생성물·백업 참조를 보존하며 즉시 파일을 없애지 않는다. native 재사용은 버전이 고정된 출처·검토·삽입 명령을 통해 수행한다.
 
-| 영역      | 구성 기준                                                         |
-| --------- | ----------------------------------------------------------------- |
-| 전역 메뉴 | 고정된 제품 Nav, 현재 위치 표시; 제품 Admin에는 역할 구분 없음    |
-| Studio    | 프로젝트 컨텍스트와 원형 마커가 이어지는 단계 표시                |
-| 문서      | 페이지 비율을 확보한 갤러리, 근접 페이지의 미리보기 지연 구성     |
-| 근거 검색 | 썸네일 왼쪽·제목과 발췌 오른쪽의 행, 실제 문자열 일치 강조        |
-| 편집기    | 좌측 슬라이드·중앙 캔버스·우측 대화/Reference                     |
-| Space     | 진행 바와 텍스트 상태, Studio Stepper와 구분                      |
-| Admin     | 제품 전용 접이식 사이드 메뉴 + 연결 설정·연결 테스트·요청 이력 탭 |
+## V18 검색 작업 공간
 
-각 화면의 DOM 순서와 시각적 읽기 순서를 일치시킨다. 작은 화면에서는 패널을 쌓고 목록의 스크롤 방향을 조정한다. 숨긴 패널의 버튼은 키보드 탐색 대상에서 빠지며 외부의 다시 펼치기 버튼은 남는다.
-
-## 컴포넌트 기준과 현재 적용 범위
-
-제품 컴포넌트는 공식 shadcn/ui 우선이며 AI UI는 [AI Elements](https://ui.shadcn.com/docs/ai-elements)를 기준으로 설계한다. Folio 시각 토큰은 컴포넌트 공급원과 독립적으로 유지한다. Home은 공식 shadcn registry의 Button·Input·Label·Select·Card·Pagination·Dialog·Alert Dialog·Dropdown Menu·Context Menu·Popover·Calendar를 사용한다. 제품 AI 대화는 공식 Message/Bubble/Message Scroller와 Prompt Input의 InputGroup 조합으로 실제 수정안 검토·적용에 연결된다. 도입 대상·책임·의존성은 [컴포넌트 명세](08-dependencies.md)에 정의한다.
-
-Home의 단일 `due_date`, API mutation 멱등성/충돌 처리, dialog draft, 생성 버튼 위치와 우클릭 대상은 feature에 남는다. 자체 popover/focusgroup/좌표 fallback은 제거하고 Radix에 overlay·메뉴 탐색을 맡겼다. 메뉴에서 대화상자로 전환할 때 메뉴 종료 후 열고, 취소는 원래 명령 위치로, 저장 완료는 Home 제목으로 초점을 돌린다. 저장 중에는 닫기와 중복 제출을 막고, 삭제 확인은 Alert Dialog의 취소가 초기 초점이다. 라이브러리 도입만으로 접근성 검증 완료를 주장하지 않는다.
-
-## 현재 구현의 입력·접근성 동작
-
-아래는 제품 Home과 별도 정적 목업의 현재 동작을 구분한다.
-
-| 항목             | 구현 방식                                                       |
-| ---------------- | --------------------------------------------------------------- |
-| 대화상자         | 제품 Home: shadcn Dialog/Alert Dialog; 목업: native dialog      |
-| 슬라이드 메뉴    | Popover API, 미지원 환경의 표시 fallback, 키보드 메뉴           |
-| AI·Reference 탭  | ARIA tab 관계, 좌우/Home/End 이동                               |
-| 패널 표시        | `hidden`, `aria-controls`, `aria-expanded` 동기화               |
-| 채팅             | 라벨이 있는 textarea, role log, 선택 대상 status, IME-safe 전송 |
-| 직접 텍스트 편집 | plain text와 텍스트 붙여넣기, 명시적 확정·취소                  |
-| 검색 강조        | CSS Highlight API와 `mark` fallback                             |
-| 문서 지연 표시   | IntersectionObserver와 이벤트 기반 fallback                     |
-| 테이블           | 표 제목·헤더, 좁은 화면 스크롤 영역                             |
-| 색상             | 상태 문구·아이콘 병행, forced-colors에서 시스템 색상            |
-| 움직임           | reduced-motion 대응, 불필요한 장식 애니메이션 없음              |
-
-색 대비 목표는 본문 4.5:1, 핵심 아이콘·컨트롤 경계·포커스 3:1이다. 배경을 바꾸는 경우 토큰 단독 값이 아니라 실제 렌더링 조합으로 검사한다. 채팅 입력의 포커스는 입력창을 포함하는 composer 테두리에 표시한다.
-
-## 검증 범위
-
-[theme-check.cjs](../mock/helpers/theme-check.cjs)는 실제 UI의 색 조합을 검사하고, [capture.cjs](../mock/helpers/capture.cjs)는 화면·반응형·포커스 관련 상태와 캡처를 수집한다. 편집기 대화와 선택 동작은 [editor-chat.cjs](../mock/helpers/editor-chat.cjs)가 담당한다.
-
-현재 브라우저 자동화는 로컬 Chrome/Chromium 기반이다. fallback 코드의 존재는 Safari·Firefox·스크린리더에서의 검증을 의미하지 않는다. 접근성 적합성 인증, 전 기능 키보드 조작, 모바일 네이티브 입력기와 보조기기 조합은 운영 수용 검증 대상으로 남는다.
-
-## 제품 Home
-
-실제 Home은 shadcn Card를 semantic `<article>`로 조정하고 독립 메뉴 버튼을 둔다. 아직 없는 Studio 목적지 링크를 만들지 않는다. Dropdown Menu/Context Menu는 같은 명령을 사용하며 방향키·Esc·위치 계산은 Radix가 담당한다. Shift+F10의 진입만 Context Menu trigger로 연결하고 입력 컨트롤의 브라우저 우클릭은 보존한다. 날짜 타이머와 feature 상태는 화면 이탈 시 정리한다. 마감일은 라벨이 있는 Input과 Calendar/Popover를 제공하고 필수·달력 날짜 검증을 유지한다.
-
-마감일은 `Temporal.PlainDate`를 우선 사용한다. 미지원 브라우저는 기존 목업과 같은 Gregorian 숫자 ordinal 계산으로 제한된 날짜 차이만 구하며 날짜 문자열을 현지 timestamp로 표시하지 않는다. 서버도 동일 범위의 달력 날짜를 검증한다. 제품의 `data/`와 개발용 캡처 저장소는 분리한다.
-
-## 제품 Space
-
-공식 shadcn Tabs, Progress, Dialog/AlertDialog, Input, Select, Card, Dropdown Menu, Pagination을 Folio 토큰으로 사용한다. Uppy의 실제 바이트 전송률에만 Progress 값을 부여하고 서버 파일 확인은 별도 상태 문구로 구분한다. 완료 알림은 포커스를 이동하지 않는다. Modern Web Guidance의 progress 지침을 적용하되 사용자 지침에 따라 native progress 대신 shadcn의 접근성 속성을 사용한다.
-
-전송 대기열은 라우트 이동 동안 유지되며 새로고침하면 초기화된다. 자료 메뉴·버전 dialog의 Escape와 포커스 복귀, 320/390/768/1024/1440px 가로 넘침을 실제 브라우저에서 검사한다. 문서 썸네일은 추출 구현 전이므로 파일 형식·제목·버전 등 실제 메타데이터를 표시한다.
-
-Space의 전체/레퍼런스/템플릿은 같은 화면의 자료 필터다. Modern Web Guidance `tabs`의 지연 조회·URL 변경 시 수동 활성화 지침에 따라 shadcn Tabs를 `activationMode="manual"`로 사용한다. 방향키는 포커스만 옮기고 Enter/Space가 조회와 URL 변경을 확정한다. Radix가 키보드·포커스·ARIA를 맡으며 별도 focusgroup/polyfill을 겹치지 않는다. 선택은 색상 외에 border 밑줄로 표시해 forced-colors에서도 남는다.
-
-작업 진행은 body portal의 비모달 하단 패널이 맡고 간단한 알림은 하단 Sonner 토스트가 맡는다. 자동 작업 표시가 포커스를 빼앗지 않으며 Collapsible이 접기 버튼의 키보드·ARIA 상태를 관리한다. 닫은 패널은 작업 보기 버튼으로 다시 열 수 있다. 바깥 클릭은 작업 패널을 닫지 않는다.
-
-HTML 업로드의 형식·UTF-8 제한은 파일 선택 입력의 지속적인 안내 문구로 제공하고 aria-describedby로 연결한다. Modern Web Guidance forms 지침에 따라 브라우저 accept는 선택 편의로만 사용하며 실제 파일 내용과 인코딩은 서버에서 검사한다. 기존 shadcn 입력·대화상자·업로드 알림을 재사용한다.
-
-작업 패널은 shadcn Collapsible + Item + Progress, 토스트는 shadcn Sonner를 사용한다. 패널은 최대 360px 폭과 제한된 내부 스크롤을 가지며 바닥/오른쪽 안전 영역을 고려한다. 토스트는 ResizeObserver로 측정한 패널/런처 높이 위에 놓는다. Modern Web Guidance persistent-toast-notifications의 지속 결과 접근·비모달 표시·포커스 보호 원칙을 적용한다. shadcn 우선 정책에 따라 Sonner가 알림과 닫기·타이머를 관리하며, 진입 모션은 작업 버튼 위를 지나지 않는 fade로 제한한다.
-
-토스트의 정보 영역은 뒤의 화면 명령 클릭을 가로채지 않고 닫기 버튼만 포인터 입력을 받는다. 진행 패널의 취소/재시도는 일반 버튼으로 유지한다. 모달이 열린 동안 발생한 새 알림은 닫힌 뒤 표시하며, 결과는 자료 목록·작업 패널에도 남는다.
-
-제품 Admin의 사이드 메뉴는 기존 shadcn Collapsible/Button과 의미 있는 링크로 조합한다. 두 개의 로컬 목적지를 위해 별도 Sidebar 런타임이나 중복 내비게이션 트리를 추가하지 않는다. Radix Tabs를 사용하며 focusgroup·추가 키보드 핸들러·polyfill을 겹치지 않는다. 탭의 선택 상태는 밑줄, 메뉴의 현재 위치는 세로 선으로 함께 표시하고 forced-colors에서도 선을 유지한다.
-
-## 일반 사무직 사용자 경험
-
-주 사용자는 일반 사무직이며 화면·대화 상자·알림·접근성 이름에 내부 개발 용어나 로직을 노출하지 않는다. Folio 색상·서체와 원본 장표 색상은 유지하고, 문서·미리보기와 다음 행동을 우선한다. 버전 기록·연결 상세는 필요할 때 펼친다. 공통 언어 기준은 blueprint/07-ui-design.md가 소유한다. 원문과 사용자 입력은 정책 적용을 이유로 치환하지 않는다.
-
-## 모바일 작업 패널
-
-640px 이하에서 작업 패널은 화면 하단에 붙는 전체 폭 도크로 표시한다. 좌우 safe-area와 하단 홈 인디케이터 여백을 패널 안에 포함하고 내용만 제한 높이에서 스크롤한다. 접기·닫기·재열기는 같은 패널 수명과 키보드 포커스를 유지한다. 데스크톱은 기존 우측 하단 360px 패널이다.
-
-Feedback이 측정된 도크 높이를 문서 하단 padding과 scroll-padding에 반영하여 마지막 본문 버튼이 패널 위까지 스크롤되도록 한다. 패널이 사라지면 예약 여백도 해제한다. Toast는 데스크톱의 외부 간격과 모바일의 하단 밀착 위치를 구분하여 도크 위에 배치한다. 목업도 같은 모바일 규칙과 측정/해제 수명을 따른다. 모바일 고정 패널 캡처는 전체 문서가 아니라 실제 viewport 단위로 기록한다.
-
-## Space 통합 검색 화면
-
-상단 공통 검색은 Space 레퍼런스·템플릿만 대상으로 한다. `/home/space`에서 하나의 큰 검색 입력과 전체/레퍼런스/템플릿 탭, 파일 정보·본문 조건, 자료 상태와 페이지네이션을 제공한다. 추가 검색 조건은 접어 두고 필요할 때 펼치며, 조건이 적용된 URL로 진입하면 해당 설정을 표시한다. 검색 전·로딩·빈 결과·오류·재시도를 구분한다. 입력 중에는 요청하지 않고 명시적으로 제출하며 한글 조합 중 Enter로 제출하지 않는다.
-
-결과는 왼쪽 원본 썸네일, 오른쪽 제목·출처·일치 본문·파일명·날짜의 뉴스형 행이다. 실제 일치 텍스트만 강조하며 native Highlight API와 안전한 mark fallback을 공유한다. 원문 HTML은 실행하지 않는다. 원본 썸네일은 lazy load하고 원래 색상을 유지한다.
-
-결과는 `/home/space/documents/:kind/:id`의 정상 페이지로 이동하며 모달이나 추가 본문 검색 입력을 열지 않는다. 명시적인 검색 결과 복귀 링크가 조건과 페이지를 유지하고, 상세 로딩 후 문서 제목으로 키보드 초점을 옮긴다. 기존 자료 관리의 빠른 미리보기는 동일한 내용 컴포넌트를 사용한다. 검색과 상세 페이지에서는 Space 내비게이션을 현재 위치로 표시한다.
-
-## Studio 목차·내용 화면
-
-세 번째 단계는 mock의 수평 목차 선택을 한 곳에 두고, 왼쪽의 사용할 내용과 오른쪽의 원문 근거를 나란히 배치한다. 전체 목차 입력 폼을 본문에 상시 노출하지 않는다. 목차 편집·제목 수정은 shadcn Dialog에서 수행하며 변경은 닫은 뒤에도 초안으로 유지한다. 내용 담기는 별도 Dialog에서 원문을 검색·선택하고, 원문 후보는 이때만 조회한다. 연결 내용을 선택하면 오른쪽에 전체 본문·이미지·출처를 표시하며 원문 보기는 해당 파일 버전/페이지로 연다. AI 선택·자동 연결은 shadcn Collapsible에 모으고 기존 목차가 있으면 기본으로 접는다. 작업 진행·오류·재시도는 접힘 여부와 무관하게 표시한다. 모바일은 두 영역을 위아래로 배치한다. 프로젝트 선택기에서 현재 프로젝트를 표시한다. 관련 자료 검색은 근거 단계의 추가 검색에서 제공한다. 작업 패널이 있는 데스크톱에서도 측정된 패널 높이만큼 문서 끝 여유를 확보해 최종 저장 버튼까지 스크롤할 수 있다. 제목·설명은 일반 사무직 표현을 사용하고 모델 ID·Provider 설정·체크포인트를 표시하지 않는다. 같은 원문을 여러 목차에 연결할 수 있으며 파일·페이지·원본 버전을 확인할 수 있다.
-
-순서 변경은 실제 DOM 순서와 일치하는 stable key 전환이며 한 번의 상태 안내를 제공한다. 이동 버튼의 경계 상태는 aria-disabled로 알리고 클릭을 무시해 이동 직후 키보드 초점을 유지한다. 상위 목차와 하위 목차를 함께 이동하며 세 번째 계층은 만들지 않는다. 저장하지 않은 가이드로 다음 단계에 진행하지 않는다. 목차 세션은 이전 Studio 단계로 이동해도 유지하고 원본/가이드 변경 시 연결을 명시적으로 다시 검토한다.
-
-원문 표는 공식 shadcn Table source를 사용한다. 이름 있는 스크롤 영역과 caption, 제공된 헤더/병합 셀 semantics를 유지하며 원본 병합 관계를 훼손하는 모바일 카드 전환은 적용하지 않는다. 정보가 부족한 표는 안전한 텍스트로 표시한다. 네이티브 스크롤 영역에 대한 좁은 lint 예외는 키보드 접근 목적을 코드에 명시한다.
-
-Modern Web Guidance `content-first-noise-reduction`의 보조 도구 지연 노출 원칙을 적용한다. 전역 내비게이션은 기존 계약대로 고정하며 자동으로 숨기지 않는다. Dialog와 Collapsible는 기존 Radix 기반 shadcn 소스를 재사용하고 닫기/Escape 후 호출 버튼으로 초점을 돌린다. 목차 선택은 단일 Tabs이며 방향키·Enter/Space는 Radix가 소유한다.
-
-## 추가 탐색 상태와 원문 문맥
-
-관계 검색은 후보 수가 늘어나므로 전체 백분율을 표시하지 않는다. Modern Web Guidance progress의 “Announce completion without stealing focus”에 따라 polite status에서 비교·문맥 확인·추가 탐색·완료를 알린다. 기존 단일 평가 실행의 확정된 분모에만 shadcn Progress를 유지한다.
-
-Studio에서는 후보 제목을 선택할 때 검토 영역의 원문을 조회한다. Space 검색은 뉴스형 결과를 유지하고 Studio는 후보 목록과 원문/비교 자료를 나란히 제공한다. 후보 문맥 버전을 Query 키에 포함하고 상시 폴링하지 않는다. 정확한 버전·페이지의 미리보기를 닫으면 호출 버튼으로 초점을 돌린다. 부분 결과에는 한도와 확인이 필요한 자료를 표시하고 해시·프롬프트·실행 코드를 노출하지 않는다.
-
-## Space 탐색과 Studio 근거의 역할
-
-Space의 홈은 검색이다. `/home/space`에서 공용 자료를 찾고 뉴스형 결과를 읽으며 `/home/space/documents/:kind/:id`의 문서 상세로 이동한다. 검색 조건과 결과 복귀를 유지하고 업로드·버전·보관은 `/home/space/library`의 자료 관리에서 수행한다. 기존 `/home/search`, `/home/documents/...`와 구형 Space 자산 탭 링크는 새 내부 경로로 연결한다.
-
-Studio 근거는 검색 포털이 아닌 자료 선택 작업 영역이다. 선택한 근거를 기본으로 표시하고 추가 검색 탭에서 후보를 수집한다. 후보 목록은 짧은 발췌와 선택 상태를 보여주며 제목을 선택하면 옆 검토 영역의 원문/비교 자료 탭에서 읽는다. 원문을 모든 결과 행 아래에 펼치지 않는다.
-
-900px 초과에서는 실제 상단 내비게이션 높이와 작업 패널 여백을 뺀 동적 화면 높이에 두 검토 패널을 맞춘다. 목록과 원문은 각각 키보드로 스크롤할 수 있는 이름 있는 영역이며, 영역 끝에서 페이지로 스크롤이 전달되지 않도록 한다. 제목 선택 시 검토 영역을 내비게이션 아래로 이동한다. 900px 이하에서는 목록과 원문 상세 중 하나만 표시하고 내부 스크롤 없이 문서 전체가 스크롤된다. 상세에서는 검색 입력과 결과 탭을 감추며 ‘목록으로’로 이전 목록 위치와 제목 초점을 복원한다. 검색 초안, 결과와 선택 상태는 전환 중 유지한다. 이는 화면 전환이며 별도 모달이나 새 검색 실행이 아니다.
-
-Modern Web Guidance tabs의 “Use selection by activation instead when showing a panel has a cost”에 따라 URL 변경·조회가 있는 작업 탭은 수동 활성화한다. Radix가 키보드와 ARIA를 소유하며 선택은 테두리 밑줄로도 표시한다. 검색 입력은 탭 전환 시 보존하고 단계 방문·검색 완료·자료 선택만으로 근거 확정을 표시하지 않는다.
-
-## 실제 발표자료 생성 UI
-
-공식 shadcn Button/Input/Select/Collapsible을 사용해 템플릿 미리보기와 선택을 구분하고 명시적 제출로 생성한다. 근거 fingerprint 또는 디자인 version 충돌 시 입력을 유지하고 최신 상태를 조회한다. 슬라이드는 실제 출력 PNG와 생성 중 내용 초안을 구분하며, 텍스트/발표 메모/출처 disclosure를 제공해 이미지로만 읽기를 제한하지 않는다. Desktop은 좌측 세로 썸네일·중앙 장표·우측 내용/참고 자료 패널, 모바일은 가로 썸네일·장표·아래 정보 패널의 읽기 순서를 유지한다. 범용 웹 편집기를 구현한 것처럼 보이는 가짜 조작점은 없다.
-
-Studio Stepper는 모든 단계에서 전역 메뉴 아래에 고정한다. 실제 헤더/Stepper 높이를 측정하고 화면 이탈 시 관찰자를 정리한다. 모바일은 여섯 마커와 짧은 단계 이름을 한 줄에 모두 표시하며 접근성 이름은 원래 단계명을 유지한다. 근거 읽기와 장표 영역은 이 높이만큼 스크롤 여백을 확보한다.
-
-생성 범위·제목·추가 요청은 본문에 통합하며 별도의 설정 버튼이나 접기 영역을 제공하지 않는다. 생성 모델 선택은 서버가 담당한다. 기존 결과는 편집 영역을 먼저 보여주고 그 아래에 추가 생성 폼을 배치한다. 목차 행의 연필·＋가 버전 조건이 있는 제목·순서 수정과 중목차 추가를 제공한다. 장표 작업 영역은 목업의 3단 구성을 따른다. 좌우 패널은 공식 shadcn Collapsible로 독립 제어하고, Trigger는 숨겨지는 패널 밖에 둔다. 선택한 슬라이드·우측 탭을 유지하며 닫힌 패널은 키보드 탐색에서 제외한다. 원문 조회는 해당 슬라이드의 참고 자료 탭이 활성 상태일 때 수행한다. AI와 대화 탭은 텍스트·객체·배치와 여러 장표 수정안을 검토·적용한다. 객체 탭은 로컬 이미지 등록, 실제 차트 수치 입력, 객체 선택을 맡는다. 선택 버튼의 aria-pressed와 장표 수·객체 수를 함께 표시하고 Ctrl/⌘ 없이도 여러 장표를 고를 수 있다. 캔버스 드래그 핸들은 아직 제공하지 않는다.
-
-## 장표 객체와 일괄 수정
-
-이미지 정규화는 기존 Sharp 0.35.5, 이미지·도형·텍스트·네이티브 차트 출력은 기존 python-pptx 1.0.2와 전이 Pillow를 재사용한다. [공식 차트 API](https://python-pptx.readthedocs.io/en/latest/user/charts.html)의 CategoryChartData/add_chart로 데이터 workbook을 포함하고 [그림·도형 API](https://python-pptx.readthedocs.io/en/latest/api/shapes.html)를 사용한다. 별도 캔버스/차트 런타임이나 외부 편집 SaaS를 추가하지 않는다. Sharp의 실제 디코더로 PNG/JPEG/WebP·화소 수·페이지 수를 검사하고 메타데이터를 제거한 PNG를 만든다. React는 기존 Query/Zustand/shadcn으로 범위 선택·이미지 등록·데이터 검토를 구성한다.
+현재 원본·작성 방향과 후보 자료의 기간·단위·조건을 비교하고, 필요하면 주변 문맥과 추가 검색을 진행한다. 설정·입력을 고정하며 완료된 동일 판정과 checkpoint는 재사용한다. 외부 문서의 지시는 실행 권한이 아니다.
 
 ## V21 객체·이미지·일괄 수정 계약
 
@@ -300,3 +180,35 @@ PPT 생성 UI는 `connection_id`와 `model_version`을 보내지 않는다. `POS
 ## 공통 판정 연결 (V33)
 
 `decision_settings`가 문서 처리와 자료 찾기의 공통 연결 ID와 CAS 버전을 소유한다. 기존 document/relation 설정 API는 같은 선택값을 읽고 SQLite 공통 commit 함수로 갱신한다. V33은 기존 문서 설정을 우선하고 미지정이면 자료 찾기 설정을 채택한다. 원래 두 설정 행은 보존한다. 이미 시작한 작업의 config revision은 바꾸지 않는다. 미설정 문서는 추출 전 `waiting_configuration`으로 대기하고, 새 자료 찾기 요청은 `decision_model_required` 422로 거부한다. 템플릿의 모델 불필요한 미리보기 처리는 유지한다.
+
+## Provider 설정·진단 API
+
+`/api/v1/admin/llm/providers` 아래의 연결 조회·저장·모델 목록·연결 테스트·용량 설정·요청 이력은 Admin 토큰이 필요하다. 설정 저장은 버전을 확인하고 새 immutable config를 만든다. 진행 요청은 접수 시의 config와 출력 한도를 사용한다. 주소·키 교체 시 기존 비밀의 전달 대상을 확인하며 응답은 비밀 원문을 노출하지 않는다. [handler](../backend/src/adapters/http/providers.rs)가 실제 하위 경로를 소유한다.
+
+## Decision 설정과 평가 API
+
+판정 입력은 state와 이름 있는 choice 질문/선택지다. LLM bridge는 스키마에 맞는 답만 허용하며 확률을 만들어내지 않는다. native 판정은 Provider가 반환한 통계를 검증한다. 공통 선택은 V33 설정이고 문서 준비와 관계 검색에 공유한다. [adapter](../backend/src/adapters/http/decisions.rs)와 [계약 테스트](../backend/tests/decisions.rs)를 따른다.
+
+## Space 통합 검색 API
+
+`GET /api/v1/search`는 현재 공용 reference/template의 메타데이터·본문을 조회한다. 원본 HTML을 실행하지 않고 literal query 강조와 정확한 job/page/version으로 이동한다. 프로젝트 원본의 관계 검색은 별도 scope다. [검색 handler](../backend/src/adapters/http/search.rs).
+
+## Studio 원본·가이드 API
+
+프로젝트 files는 다른 프로젝트나 Space로 자동 복제되지 않는다. source-review는 현재 원본 snapshot을 명시적으로 확인한다. guide는 optional Do/Don't의 불변 버전이며 저장만으로 생성 작업을 시작하지 않는다. 이후 입력이 바뀌면 이전 결과를 보존하고 재검토를 요구한다.
+
+## 목차·콘텐츠 리비전과 작업
+
+목차는 stable node ID와 불변 revision, 원문 연결은 canonical block ID를 사용한다. 생성·매핑은 source snapshot·guide·model config를 고정하고 명시적 명령으로 실행한다. 수동 편집·확정은 버전을 검사하며 stale 결과가 공유 변경을 덮어쓰지 못한다.
+
+## 관계 검색 저장·API 계약
+
+관계 검색은 현재 원본과 후보 버전·판정 설정을 고정한다. 공용 라이브러리 검색과 달리 프로젝트 간 소속·차이·재사용 가능성을 비교하고 선택 근거를 버전으로 보존한다. 같은 입력 판정은 재사용하며 원문/설정이 달라지면 새로운 입력으로 처리한다. [handler](../backend/src/adapters/http/relations.rs).
+
+## V19 발표자료 준비·생성
+
+검토한 원본·가이드·목차·근거·디자인을 고정하고 장표별 spec과 PPTX를 생성한다. 원문·선택 범위를 검증하며 생성·재생성은 명시적 요청이다. 완료한 장표·렌더는 재시도에서 재사용하고 최종 결과는 revision 조건으로 게시한다.
+
+## V20 슬라이드 대화 수정
+
+대화 요청은 원본 deck revision과 선택 slide/object/field 범위를 고정한다. 수정안은 즉시 적용하지 않고 비교·검토 후 새 revision으로 게시한다. 여러 장표는 개별 제안을 checkpoint하고 전체 준비 후 함께 적용한다. 후속 객체·세션·실행 계약은 V21 이후 절을 따른다.

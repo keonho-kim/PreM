@@ -20,6 +20,17 @@ async function model(options = {}) {
     for await (const part of req) body += part;
     const input = JSON.parse(body);
     const context = JSON.parse(input.messages[1].content);
+    if (context.state?.regions) {
+      const answers = Object.fromEntries(
+        Object.keys(context.questions).map((key) => [key, { type: 'choice', choice: '0' }]),
+      );
+      res.end(
+        JSON.stringify({
+          choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ answers }) } }],
+        }),
+      );
+      return;
+    }
     calls++;
     await options.beforeCall?.(context, input);
     const source = context.source_excerpts;

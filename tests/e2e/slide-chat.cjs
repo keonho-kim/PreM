@@ -1,7 +1,7 @@
 // Purpose: Exercise real slide chat, explicit proposal apply and preserved native PPTX content.
 // Pattern: Isolated app/storage; synthetic initial deck, with opt-in live Ornith editing only.
 // Usage: PREM_EDIT_MODEL=ornith node tests/e2e/slide-chat.cjs after pnpm build.
-// Related: outline-fixture.cjs, backend/tests/slide_edits.rs, mock/captures/folio/.
+// Related: outline-fixture.cjs, backend/tests/slide_edits.rs, tests/.artifacts/captures/folio/.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs/promises');
@@ -11,7 +11,7 @@ const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
 const { upload, ready } = require('./related-fixture.cjs');
 const { compare, touchCompare, state: previewState } = require('./canvas-history.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function poll(read, done, limit = 90000) {
   const end = Date.now() + limit;
   while (Date.now() < end) {
@@ -47,6 +47,10 @@ async function click(page, name, role = 'button') {
       model_identifier: 'outline-fixture',
       timeout_seconds: 30,
       enabled: true,
+    });
+    await json(base, '/api/v1/admin/document-processing/settings', 'PUT', {
+      expected_version: 0,
+      connection_id: author,
     });
     const source = await upload(
       base,
@@ -162,7 +166,7 @@ async function click(page, name, role = 'button') {
     await page.screenshot({
       path: path.join(
         projectRoot,
-        `mock/captures/folio/${live ? 'ornith-' : ''}slide-proposal.png`,
+        `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}slide-proposal.png`,
       ),
     });
     await click(page, '수정안 적용');
@@ -202,7 +206,10 @@ async function click(page, name, role = 'button') {
       ),
     );
     await page.screenshot({
-      path: path.join(projectRoot, `mock/captures/folio/${live ? 'ornith-' : ''}slide-edited.png`),
+      path: path.join(
+        projectRoot,
+        `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}slide-edited.png`,
+      ),
     });
     await page.setViewport({ width: 390, height: 844, hasTouch: true });
     await touchCompare(page, 'current');
@@ -211,7 +218,7 @@ async function click(page, name, role = 'button') {
     await page.screenshot({
       path: path.join(
         projectRoot,
-        `mock/captures/folio/${live ? 'ornith-' : ''}slide-chat-phone.png`,
+        `tests/.artifacts/captures/folio/${live ? 'ornith-' : ''}slide-chat-phone.png`,
       ),
     });
     await page.setViewport({ width: 1440, height: 1000, hasTouch: true });
@@ -232,7 +239,7 @@ async function click(page, name, role = 'button') {
     assert(await page.$eval('button[aria-label="이전 상태로 되돌리기"]', (n) => n.disabled));
     await page.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await page.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-undo.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/presentation-undo.png'),
     });
     await click(page, 'Home', 'link');
     await page.waitForSelector('.project-workspace');

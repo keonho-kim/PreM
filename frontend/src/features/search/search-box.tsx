@@ -3,7 +3,8 @@
 // Usage: Compact header entry and the large results-page input share one behavior.
 // Related: search-page.tsx, api.ts, app/app.tsx.
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from '@tanstack/react-router';
+import { useAppPath } from '@/shared/routing/path';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ export function SearchBox({
         onSubmit={(event) => {
           event.preventDefault();
           if (onSearch) onSearch(draft.trim());
-          else navigate(`/space?${new URLSearchParams({ q: draft.trim() })}`);
+          else void navigate({ to: '/space', search: { q: draft.trim() } });
         }}
       >
         <Label className="search-label" htmlFor={id}>
@@ -59,8 +60,8 @@ export function SearchBox({
   );
 }
 export function GlobalSearch() {
-  const location = useLocation();
-  if (location.pathname === '/space' || location.pathname === '/search')
+  const pathname = useAppPath();
+  if (pathname === '/space' || pathname === '/search')
     return <span className="app-description">Space 자료 검색</span>;
-  return <SearchBox key={location.pathname} compact />;
+  return <SearchBox key={pathname} compact />;
 }

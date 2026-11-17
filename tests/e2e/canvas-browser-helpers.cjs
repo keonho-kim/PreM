@@ -1,11 +1,11 @@
 // Purpose: Own bounded browser waits, accessible canvas control input and screenshot output.
 // Pattern: Semantic locators and native input filling; no application data or provider state.
 // Usage: Canvas authoring's real-server journey.
-// Related: canvas-authoring.cjs, mock/helpers/browser.cjs.
+// Related: canvas-authoring.cjs, tests/helpers/browser.cjs.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { setTimeout: delay } = require('node:timers/promises');
-const { projectRoot } = require('../../mock/helpers/browser.cjs');
+const { projectRoot } = require('../helpers/browser.cjs');
 async function poll(read, done) {
   const end = Date.now() + 120000;
   while (Date.now() < end) {
@@ -26,6 +26,6 @@ async function fill(page, selector, value) {
 }
 
 async function capture(page, name) {
-  await page.screenshot({ path: path.join(projectRoot, 'mock/captures/folio', name) });
+  await page.screenshot({ path: path.join(projectRoot, 'tests/.artifacts/captures/folio', name) });
 }
 module.exports = { poll, click, fill, capture };

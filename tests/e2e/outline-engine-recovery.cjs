@@ -8,7 +8,7 @@ const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function poll(read, done) {
   const end = Date.now() + 60000;
   while (Date.now() < end) {
@@ -27,7 +27,7 @@ async function capture(page, name) {
   await page.evaluate(() =>
     document.querySelector('.outline-workflow-status').scrollIntoView({ block: 'center' }),
   );
-  await page.screenshot({ path: path.join(projectRoot, 'mock/captures/folio', name) });
+  await page.screenshot({ path: path.join(projectRoot, 'tests/.artifacts/captures/folio', name) });
 }
 (async () => {
   const server = await createServer('outline-engine-crash-');
@@ -65,6 +65,10 @@ async function capture(page, name) {
       'PUT',
       config(0, 'outline-fixture'),
     );
+    await json(server.base, '/api/v1/admin/document-processing/settings', 'PUT', {
+      expected_version: 0,
+      connection_id: provider,
+    });
     const project = await json(server.base, '/api/v1/projects', 'POST', {
       name: '발표 구성 복구',
       due_date: '2030-01-01',

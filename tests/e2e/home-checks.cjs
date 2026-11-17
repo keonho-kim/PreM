@@ -1,7 +1,7 @@
 // Purpose: Verify Home gallery controls against the real server in browser E2E.
 // Pattern: UI mutations, persisted HTTP assertions and narrow viewport captures.
 // Usage: Called by projects.cjs with its isolated server and browser ownership.
-// Related: frontend/src/features/projects/, mock/helpers/browser.cjs.
+// Related: frontend/src/features/projects/, tests/helpers/browser.cjs.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');

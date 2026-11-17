@@ -187,17 +187,17 @@ frontend/src/
 | 상태 | 소유자 | 무효화·수명 |
 | --- | --- | --- |
 | 서버 확정 데이터 | TanStack Query | 프로젝트·resource·revision·filter key |
-| 공유 UI 표시 상태 | Zustand | 현재 작업 패널 모드·토스트 배치 높이; 탭 메모리, 영속화 없음 |
-| 파일 전송 큐 | Uppy | 탭 수명, 재시도·서버 확인 후 취소; Query/Zustand에 복제 금지 |
-| 탐색·필터·선택 문서 경로 | Router | URL과 사용자 탐색 |
-| 작성 중 폼 | 해당 feature form | 저장·취소·이탈 정책 |
+| 공유 UI 표시 상태 | Redux Toolkit | 현재 작업 패널 모드·토스트 배치 높이; 탭 메모리, 영속화 없음 |
+| 파일 전송 큐 | Uppy | 탭 수명, 재시도·서버 확인 후 취소; Query/Redux Toolkit에 복제 금지 |
+| 탐색·필터·선택 문서 경로 | TanStack Router | URL과 사용자 탐색 |
+| 작성 중 폼 | 해당 feature form / React Hook Form | 저장·취소·이탈 정책 |
 | 편집 draft·선택·undo | presentation-editor | project/deck/base revision별 편집 session |
 | 대화 draft·메시지·수정안 | editor-chat | project/deck/slide별 대화 session |
 | 처리 진행 | Query + SSE 반영 | 영속 event ID, 재연결·최신 상태 재조회 |
 
 편집기와 대화는 페이지에서 `readSelection`, `readBaseRevision`, `previewPatch`, `commitPatch` 같은 실제 capability로 연결한다. 대화가 직접 canvas store를 수정하지 않는다.
 
-JSON HTTP는 공통 Axios adapter로 통일하고 취소·timeout·공개 오류·Zod 검증을 유지한다. 자동 재전송은 transport에 추가하지 않는다. 훅은 현재 설치된 React/Query/Uppy/Zustand에서 재사용하며, 추가 범용 훅 라이브러리는 도입하지 않는다. 제품 고유 상태 전환만 feature 훅으로 조합한다. 로컬 입력은 React 기본 훅을 사용할 수 있다. 설치된 구성과 후속 기능의 미설치 검토 후보는 [의존성 명세](../dev-docs/08-dependencies.md)를 따른다.
+JSON HTTP는 공통 Axios adapter로 통일하고 취소·timeout·공개 오류·Zod 검증을 유지한다. 자동 재전송은 transport에 추가하지 않는다. 훅은 현재 설치된 React/Query/Uppy/Redux Toolkit에서 재사용하며, 추가 범용 훅 라이브러리는 도입하지 않는다. 제품 고유 상태 전환만 feature 훅으로 조합한다. 로컬 입력은 React 기본 훅을 사용할 수 있다. 설치된 구성과 후속 기능의 미설치 검토 후보는 [의존성 명세](../dev-docs/08-dependencies.md)를 따른다.
 
 ### UI 컴포넌트 공급원과 책임
 
@@ -227,7 +227,7 @@ AI 컴포넌트에는 메시지·진행·근거의 명시적 view model과 callb
 | 생성·편집 | PresentationSpec·SlideSpec·ComponentId·선택 patch | 편집 가능한 PPTX·근거 계보·비대상 보존·stale 거부 |
 | 운영 수용 | 백업·복구·마이그레이션·부하·패키지 | [운영 준비도](../dev-docs/07-quality-readiness.md)의 증거 |
 
-목업의 샘플 Store·타이머·전체 스냅샷 저장은 제품의 영속 구현으로 가져오지 않는다. 검증된 화면 상호작용과 오류·취소 시나리오를 React 수용 테스트로 옮긴다. 디자인 토큰은 [Folio 설계](07-ui-design.md)의 공통 생성 출력을 유지한다.
+화면 상호작용과 오류·취소 시나리오는 실제 React 수용 테스트로 검증한다. 디자인 토큰은 [Folio 설계](07-ui-design.md)의 공통 생성 출력을 유지한다.
 
 현재 스캐폴드를 목표 트리와 같게 보이도록 빈 모듈로 늘리지 않는다. 실제 첫 소비자와 함께 기존 책임을 옮기고, 이전 구현과 호출 경로를 같은 변경에서 제거한다.
 
@@ -269,3 +269,11 @@ relations가 다른 프로젝트의 원본 검색, 관계 판정 정의, 검색 
 ### Markdown 입력 어댑터
 
 Markdown 입력은 Kordoc 생성/출력 기능과 분리하여 Comrak AST를 사용하는 `adapters/markdown`이 맡는다. 업로드 검증과 문서 작업에서 같은 UTF-8·용량 정책을 사용하며 추출 결과는 기존 documents 소유의 정본 블록에 저장한다. 원본 위치·표 행/셀 경계·수동 참조 메타데이터를 보존하고 HTML 실행·외부 리소스 로드는 하지 않는다. 현재 구현 경계는 [개발 아키텍처](../dev-docs/01-architecture.md#markdown-처리-책임)에 정의한다.
+
+## 모델 작업과 프롬프트 책임
+
+정적 모델 지시문은 `backend/src/prompts/`에서 작업별 상수로 관리한다. 이 폴더는 feature 구현이나 DB·Provider에 의존하지 않는다. 동적 입력과 스키마·응답 검증은 해당 작업 모듈이, 실행·재시도·저장은 기존 소유자가 담당한다. 기능 내부는 요청·응답·실행·타입 등 실제 변경 책임으로 분리하며 공용 거대 프롬프트나 범용 작업 프레임워크를 만들지 않는다.
+
+원문 입력은 전체 요청 예산을 기준으로 배분하고 생략 여부·범위·제공량을 명시한다. 원문 ID는 계보를 위한 메타데이터이며 발표 본문에 자동 출력하지 않는다. 다중 장표 수정은 선택된 장표별 실행과 전체 검토·적용을 구분한다. 프롬프트는 목적·범위·근거·출력 규칙을 명확하고 간결하게 표현한다. 구현 경계와 현재 한도는 [모델 작업과 프롬프트 책임](../dev-docs/01-architecture.md#모델-작업과-프롬프트-책임)이 소유한다.
+
+프론트엔드는 350줄 초과 여부 외에 책임 결합도를 기준으로 하위 모듈을 나눈다. 개발용 dependency-cruiser로 순환 참조와 `app → pages → features → shared` 방향, peer feature 진입점 계약을 검사한다. 라우터·폼의 구체적인 적용 범위는 [프론트엔드 작업 모듈](../dev-docs/01-architecture.md#프론트엔드-작업-모듈과-상태-소유)을 따른다.

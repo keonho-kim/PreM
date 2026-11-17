@@ -105,7 +105,7 @@ impl Presentations {
             if cancel.is_cancelled() {
                 return Err(Error::Cancelled);
             }
-            model::validate_spec(spec)?;
+            authoring::validate_spec(spec)?;
             let media: Vec<_> = input.media.iter().filter(|m|spec.objects.iter().any(|o| matches!(&o.content, ObjectContent::Image {media_id} if *media_id==m.id))).map(|m| (m.id, &m.hash)).collect();
             let references: Vec<_> = input.references.iter().filter(|m|spec.objects.iter().any(|o| matches!(&o.content, ObjectContent::Reference {reference_id} if *reference_id==m.id))).collect();
             let bytes = serde_json::to_vec(&(

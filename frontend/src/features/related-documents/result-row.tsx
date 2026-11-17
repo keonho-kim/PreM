@@ -4,7 +4,7 @@
 // Related: shared/ui/match-text.tsx, api.ts, features/document-processing public preview.
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 import { FileText, Check, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -82,7 +82,9 @@ export function ResultRow({
         </header>
         <p className="related-source">
           {source.available ? (
-            <Link to={`/studio/${source.project_id}`}>{source.project_name}</Link>
+            <Link to="/studio/$projectId" params={{ projectId: source.project_id }}>
+              {source.project_name}
+            </Link>
           ) : (
             <span>{source.project_name} · 원본에서 제거됨</span>
           )}{' '}
@@ -181,7 +183,9 @@ function OriginDialog({
           <ul className="related-origins">
             {rows.data.map((o) => (
               <li key={o.source_version_id}>
-                <Link to={`/studio/${o.project_id}`}>{o.project_name}</Link>
+                <Link to="/studio/$projectId" params={{ projectId: o.project_id }}>
+                  {o.project_name}
+                </Link>
                 <span>버전 {o.file_version}</span>
                 <Button
                   variant="secondary"

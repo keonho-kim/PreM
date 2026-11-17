@@ -2,15 +2,15 @@
 // Pattern: Real Uppy state with transmission disabled; public UI behavior through shadcn.
 // Usage: Vitest; cross-browser isolation and route continuity are covered by Space E2E.
 // Related: upload-work-panel.tsx, upload-engine.ts, tests/e2e/space.cjs.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
 import { createUploadEngine } from './upload-engine';
 import { useUploadEngine } from './use-upload-engine';
 import { UploadWorkPanel } from './upload-work-panel';
-import { useWorkPanelState } from '@/shared/work-panel-state';
 vi.mock('./use-upload-engine', () => ({ useUploadEngine: vi.fn() }));
 // jsdom has no layout observer; actual arrow positioning is verified in browser E2E.
 beforeEach(() =>
@@ -24,21 +24,20 @@ beforeEach(() =>
   ),
 );
 const engines: ReturnType<typeof createUploadEngine>[] = [];
-function mount() {
+async function mount() {
   const engine = createUploadEngine(vi.fn());
   engine.uppy.setOptions({ autoProceed: false });
   engines.push(engine);
   vi.mocked(useUploadEngine).mockReturnValue(engine);
-  const view = render(
-    <MemoryRouter>
+  const view = await render(
+    <RouterTestHarness>
       <UploadWorkPanel />
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
   return { engine, ...view };
 }
 afterEach(() => {
   cleanup();
-  useWorkPanelState.setState(useWorkPanelState.getInitialState(), true);
   engines.splice(0).forEach((engine) => {
     engine.dispose();
   });
@@ -47,7 +46,7 @@ afterEach(() => {
 });
 it('keeps the work queue alive through collapse, close, reopen and completion', async () => {
   const user = userEvent.setup();
-  const { engine } = mount();
+  const { engine } = await mount();
   expect(screen.queryByRole('region', { name: '작업 진행 상황' })).not.toBeInTheDocument();
   act(() => engine.add([new File(['data'], 'own.pdf')], 'references', '', []));
   expect(screen.getByText('own.pdf')).toBeVisible();
@@ -74,10 +73,10 @@ it('keeps the work queue alive through collapse, close, reopen and completion', 
   expect(screen.queryByRole('region', { name: '작업 진행 상황' })).not.toBeInTheDocument();
 });
 it('does not display another uploader instance files in an empty tab', async () => {
-  const first = mount();
+  const first = await mount();
   act(() => first.engine.add([new File(['data'], 'other-tab.pdf')], 'references', '', []));
   first.unmount();
-  mount();
+  await mount();
   expect(screen.queryByRole('region', { name: '작업 진행 상황' })).not.toBeInTheDocument();
   expect(screen.queryByText('other-tab.pdf')).not.toBeInTheDocument();
   expect(first.engine.uppy.getFiles()).toHaveLength(1);

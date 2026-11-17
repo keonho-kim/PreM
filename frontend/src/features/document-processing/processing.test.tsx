@@ -2,11 +2,12 @@
 // Pattern: Real shadcn views with Query-owned fixture responses and explicit API mocks.
 // Usage: Vitest; server/browser suites cover actual tools, shared writes and persistence.
 // Related: processing-dialog.tsx, status.tsx, backend/tests/document_processing.rs.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProcessingDialog } from './processing-dialog';
 import { ProcessingStatus } from './status';
@@ -46,20 +47,20 @@ const detail: Detail = {
   template_bundle: null,
 };
 const clients: QueryClient[] = [];
-function mount(data: Detail) {
+async function mount(data: Detail) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   clients.push(client);
   vi.mocked(getDetail).mockResolvedValue(data);
   vi.mocked(getBlocks).mockResolvedValue([]);
-  render(
-    <MemoryRouter basename="/home" initialEntries={['/home/space']}>
+  await render(
+    <RouterTestHarness basepath="/home" initialEntries={['/home/space']}>
       <QueryClientProvider client={client}>
         <ProcessingDialog
           item={{ id, kind: data.job.kind, title: '검증 자료', version: 1, file_version: 1 }}
           onClose={vi.fn()}
         />
       </QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
 }
 afterEach(() => {
@@ -70,12 +71,12 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 it('shows reference content without internal classification diagnostics', async () => {
-  mount(detail);
+  await mount(detail);
   await screen.findByRole('tab', { name: '내용' });
   expect(screen.queryByText(/판정|체크포인트|템플릿 추출 가능/)).not.toBeInTheDocument();
 });
 it('previews template slides and never displays structure or queries document blocks', async () => {
-  mount({
+  await mount({
     ...detail,
     job: { ...job, kind: 'templates', extraction_id: null, config_id: null },
     template_extractable: false,
@@ -106,14 +107,14 @@ it('previews template slides and never displays structure or queries document bl
   );
   expect(screen.getByRole('button', { name: '다음 슬라이드' })).toBeDisabled();
 });
-it('uses observed block counts only and does not fabricate extraction percentages', () => {
-  const view = render(<ProcessingStatus job={{ ...job, status: 'extracting' }} />);
+it('uses observed block counts only and does not fabricate extraction percentages', async () => {
+  const view = await render(<ProcessingStatus job={{ ...job, status: 'extracting' }} />);
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   view.rerender(<ProcessingStatus job={{ ...job, status: 'classifying', completed_blocks: 1 }} />);
   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
 });
 it('preserves the conditional cancel target and displays conflicts without automatic retries', async () => {
-  mount({ ...detail, job: { ...job, status: 'classifying', completed_blocks: 0 } });
+  await mount({ ...detail, job: { ...job, status: 'classifying', completed_blocks: 0 } });
   vi.mocked(command).mockRejectedValue(
     new ApiError(409, 'revision_conflict', '다른 작업이 상태를 변경했습니다.'),
   );
@@ -126,7 +127,7 @@ it('preserves the conditional cancel target and displays conflicts without autom
 });
 
 it('keeps configuration details out of shared asset previews', async () => {
-  mount({ ...detail, job: { ...job, status: 'waiting_configuration' } });
+  await mount({ ...detail, job: { ...job, status: 'waiting_configuration' } });
   await screen.findByText('자료 준비가 잠시 대기 중입니다');
   expect(screen.queryByRole('link', { name: /Admin/ })).not.toBeInTheDocument();
 });

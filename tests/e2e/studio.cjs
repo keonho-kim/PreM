@@ -1,12 +1,13 @@
 // Purpose: Verify real Studio originals, project isolation, page previews, confirmation and guide persistence.
 // Pattern: Two browser contexts and restartable compiled server with disposable QA storage.
-// Usage: Run after pnpm build; captures belong under mock/captures/folio.
+// Usage: Run after pnpm build; captures belong under tests/.artifacts/captures/folio.
 // Related: backend/tests/studio_sources.rs, space-checks.cjs, home-checks.cjs.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
+const { configureDocuments } = require('./configure-documents.cjs');
 const { setDate } = require('./home-checks.cjs');
 const { notifications } = require('./space-checks.cjs');
 async function upload(page, files, title) {
@@ -30,15 +31,16 @@ async function capture(page, name) {
     timeout: 10000,
   });
   await page.screenshot({
-    path: path.join(projectRoot, 'mock/captures/folio', name),
+    path: path.join(projectRoot, 'tests/.artifacts/captures/folio', name),
     fullPage: (page.viewport()?.width ?? 1440) > 640,
   });
 }
 (async () => {
   const server = await createServer('studio-browser-');
-  let session;
+  let session, fixture;
   try {
     await server.start();
+    fixture = await configureDocuments(server.base);
     session = await openBrowser('studio-production');
     const a = await (await session.browser.createBrowserContext()).newPage(),
       b = await (await session.browser.createBrowserContext()).newPage();
@@ -149,6 +151,7 @@ async function capture(page, name) {
   } finally {
     if (session) await session.close();
     await server.close();
+    if (fixture) await fixture.close();
   }
 })().catch((error) => {
   console.error(error);

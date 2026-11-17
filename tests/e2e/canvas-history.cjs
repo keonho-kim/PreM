@@ -1,10 +1,10 @@
 // Purpose: Verify actual pointer/keyboard hold comparison at the central slide controls.
 // Pattern: Real browser input and preloaded native previews; every release returns to current output.
 // Usage: slide-chat.cjs invokes before and after committing its proposal.
-// Related: comparison-button.tsx, canvas-toolbar.tsx, mock/captures/folio/.
+// Related: comparison-button.tsx, canvas-toolbar.tsx, tests/.artifacts/captures/folio/.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { projectRoot } = require('../../mock/helpers/browser.cjs');
+const { projectRoot } = require('../helpers/browser.cjs');
 async function state(page, kind) {
   await page.waitForFunction(
     (kind) => {
@@ -35,7 +35,9 @@ async function compare(page, kind, capture) {
   await page.mouse.down();
   await state(page, 'before');
   if (capture)
-    await page.screenshot({ path: path.join(projectRoot, `mock/captures/folio/${capture}.png`) });
+    await page.screenshot({
+      path: path.join(projectRoot, `tests/.artifacts/captures/folio/${capture}.png`),
+    });
   await page.mouse.move(rect.x - 80, rect.y + 60);
   await state(page, 'before');
   await page.mouse.up();

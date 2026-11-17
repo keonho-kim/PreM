@@ -1,5 +1,5 @@
 // Purpose: Run real current-slide conversation through a bounded proposal/approval workflow.
-// Pattern: Official shadcn AI compositions; Query owns messages and Zustand owns scoped drafts.
+// Pattern: Official shadcn AI compositions; Query owns messages and Redux owns scoped drafts.
 // Usage: Right inspector AI tab; no model execution occurs on typing or component selection.
 // Related: edit-api.ts, edit-proposal.tsx, backend/modules/presentations/edits.rs.
 import { useRef } from 'react';
@@ -26,7 +26,7 @@ import {
 import { errorMessage } from '@/shared/api/http';
 import { presentationKeys, type Run, type Slide } from './api';
 import { sendEdit, editCommand, editKeys, type Edit, type EditRequest } from './edit-api';
-import { useChatDrafts, emptyChatDraft } from './chat-drafts';
+import { useChatDraft } from './chat-state';
 import type { EditThread } from './use-edit-thread';
 import { EditProposal } from './edit-proposal';
 import './slide-chat.css';
@@ -56,8 +56,7 @@ export function SlideChat({
   const targets = targetSlides?.length ? targetSlides : [slide];
   const selectedObjects = targets.length === 1 ? objectIds : [];
   const scopeKey = `${project}:${run.id}:${slide.id}`;
-  const draft = useChatDrafts((state) => state.drafts[scopeKey] ?? emptyChatDraft),
-    update = useChatDrafts((state) => state.update);
+  const { draft, update, current } = useChatDraft(scopeKey);
   const form = useRef<HTMLFormElement>(null),
     field = useRef<HTMLTextAreaElement>(null);
   const receipt = useRef<{ stamp: string; key: string } | null>(null),
@@ -78,8 +77,7 @@ export function SlideChat({
     retry: false,
     onSuccess: (_e, input) => {
       receipt.current = null;
-      if (useChatDrafts.getState().drafts[scopeKey]?.prompt === input.prompt)
-        update(scopeKey, { prompt: '' });
+      if (current().prompt === input.prompt) update(scopeKey, { prompt: '' });
       refresh();
     },
     onError: () => {

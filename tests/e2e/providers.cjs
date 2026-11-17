@@ -7,7 +7,7 @@ const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const http = require('node:http');
 const path = require('node:path');
 const { once } = require('node:events');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 const { adminNavigation } = require('./admin-navigation.cjs');
 async function click(page, name, role = 'button') {
@@ -156,7 +156,7 @@ async function openOptions(page) {
     await field(a, 'timeout_seconds', '600');
     await a.$eval('input[name="max_output_tokens"]', (n) => n.scrollIntoView({ block: 'center' }));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/output-budget-admin.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/output-budget-admin.png'),
     });
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
@@ -218,12 +218,15 @@ async function openOptions(page) {
     await a.waitForSelector('.provider-result');
     await adminNavigation(a, first.id, server.unlock);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-providers-production.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/admin-providers-production.png',
+      ),
       fullPage: true,
     });
     await a.setViewport({ width: 390, height: 844 });
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-providers-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-providers-phone.png'),
       fullPage: true,
     });
     assert.equal(
@@ -285,7 +288,7 @@ async function openOptions(page) {
     );
     await a.setViewport({ width: 1440, height: 1000 });
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-decision-settings.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-decision-settings.png'),
       fullPage: true,
     });
     assert.ok(inventoryCalls >= 4);

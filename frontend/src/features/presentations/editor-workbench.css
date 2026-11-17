@@ -2,7 +2,7 @@
 /* Purpose: Match the mock's workbench while preserving real output colors and readable content.
  * Pattern: Named grid areas, independently collapsible columns and mobile reading order.
  * Usage: deck-preview.tsx; panel triggers remain outside hidden content.
- * Related: mock/styles/editor-workbench.css, studio/use-studio-chrome.ts. */
+ * Related: design.md, studio/use-studio-chrome.ts. */
 .presentation-deck {
   --slide-rail: 176px;
   --inspector: 300px;

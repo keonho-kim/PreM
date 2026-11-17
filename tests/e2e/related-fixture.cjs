@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
-const { projectRoot } = require('../../mock/helpers/browser.cjs');
+const { projectRoot } = require('../helpers/browser.cjs');
 async function model() {
   const state = { calls: 0, plannerCalls: 0 };
   const server = http.createServer(async (req, res) => {
@@ -138,7 +138,7 @@ async function upload(base, p, name, bytes, target) {
 async function ready(base, p, item) {
   for (let i = 0; i < 600; i++) {
     const d = await json(base, `/api/v1/projects/${p}/files/${item.id}/processing`);
-    if (d.job.extraction_id) return;
+    if (d.job.status === 'succeeded') return;
     assert.notEqual(d.job.status, 'failed', JSON.stringify(d));
     await new Promise((r) => setTimeout(r, 100));
   }

@@ -2,12 +2,13 @@
 // Pattern: Real controls with synthetic read-only evidence and platform scroll spies.
 // Usage: Vitest; real-server browser tests own responsive sizing and CSS visibility.
 // Related: evidence-workbench.tsx, tests/e2e/related-exploration.cjs.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, it, expect, vi } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
 import { EvidenceWorkbench } from './evidence-workbench';
 import type { RelatedItem } from './api';
 vi.mock('./api', async (original) => ({
@@ -72,8 +73,8 @@ it('returns to the title and saved scroll position without changing reference se
   Object.defineProperty(HTMLElement.prototype, 'scrollTo', { configurable: true, value: vi.fn() });
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   const select = vi.fn();
-  render(
-    <MemoryRouter>
+  await render(
+    <RouterTestHarness>
       <QueryClientProvider client={client}>
         <EvidenceWorkbench
           project="current"
@@ -86,7 +87,7 @@ it('returns to the title and saved scroll position without changing reference se
           onSelect={select}
         />
       </QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
   const title = screen.getByRole('button', { name: '업무 보고서' });
   await userEvent.click(title);

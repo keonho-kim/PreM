@@ -22,7 +22,7 @@ impl Diagnostics {
         version: i64,
         kind: TestKind,
     ) -> Result<ExecutionResult, Error> {
-        let input=CompletionInput{system:"This is a connectivity diagnostic. Answer directly without reasoning.".into(),prompt:match kind {TestKind::Text=>"Reply with only: PreM connection OK",TestKind::Structured=>r#"Return exactly the JSON object {"status":"ok"}."#}.into(),schema:matches!(kind,TestKind::Structured).then(||serde_json::json!({"type":"object","properties":{"status":{"type":"string","enum":["ok"]}},"required":["status"],"additionalProperties":false})),max_tokens:256};
+        let input=CompletionInput{system:crate::prompts::diagnostics::SYSTEM.into(),prompt:match kind {TestKind::Text=>crate::prompts::diagnostics::TEXT,TestKind::Structured=>crate::prompts::diagnostics::STRUCTURED}.into(),schema:matches!(kind,TestKind::Structured).then(||serde_json::json!({"type":"object","properties":{"status":{"type":"string","enum":["ok"]}},"required":["status"],"additionalProperties":false})),max_tokens:256};
         self.0
             .execute(id, version, input, move |value| {
                 if matches!(kind, TestKind::Text) && value.text.trim() != "PreM connection OK" {

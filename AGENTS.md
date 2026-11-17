@@ -12,7 +12,7 @@ This file was adapted from a copy of `/Users/khkim/dev/m.e.ca/AGENTS.md`, as req
 - Read [blueprint/README.md](blueprint/README.md) for the product and architecture contract. Keep the blueprint collection at **ten files or fewer**. Update the owning document instead of adding overlapping specifications.
 - Build an enterprise document analysis and editable presentation platform, rather than an RFP-specific application.
 - The production stack is Rust, Axum, Tokio, SQLite, refinery, and React with TypeScript and shadcn/ui. Keep one Rust application and one deployment unit, with the frontend embedded for release.
-- The current priority is production implementation in paired backend/frontend feature slices. Use the existing mock as the interaction and design reference; do not mistake mock behavior for production functionality.
+- The current priority is production implementation in paired backend/frontend feature slices. Use the production React UI and design documentation as the interaction reference; distinguish implemented behavior from simulations.
 - The authorized GitHub repository is `https://github.com/keonho-kim/PreM`, with `main` as the primary branch. Commit and push when requested; do not change repository visibility, rewrite remote history, or add Git/release automation without an explicit request. Keep application data, credentials, installed runtimes, build output and disposable QA artifacts out of Git. Preserve dependency manifests and lockfiles needed to reproduce the source build.
 
 ### Paired feature delivery
@@ -53,32 +53,28 @@ Never treat a scaffold or mock as proof that planned backend capabilities are im
 
 All paths below are relative to **this repository root**. `./data/` never means the filesystem root `/data`.
 
-| Location                   | Responsibility                                                                                |
-| -------------------------- | --------------------------------------------------------------------------------------------- |
-| `AGENTS.md`                | English repository development rules                                                          |
-| `design/`                  | Canonical Folio token source                                                                  |
-| `dev-docs/`                | Current implementation, development, verification, and operational readiness documentation    |
-| `blueprint/`               | Product, architecture, API, data, workflow, UI, and operations requirements                   |
-| `backend/src/app/`         | Current application startup, composition, shutdown, and configuration                         |
-| `backend/src/adapters/`    | Current HTTP, SQLite and filesystem implementations                                           |
-| `backend/src/modules/`     | Implemented feature domains and consumer-owned persistence ports                              |
-| `backend/src/domain/`      | Project, document, guide, outline, library, presentation, and slide decisions                 |
-| `backend/src/database/`    | SQLite connections, models, and repositories                                                  |
-| `backend/src/workflows/`   | Durable execution, scheduling, node state, checkpoints, and recovery                          |
-| `backend/src/llm/`         | Provider gateway, routing, configuration versions, and protocol adapters                      |
-| `backend/src/tools/`       | Explicit external-process adapters                                                            |
-| `backend/src/storage/`     | Blob and artifact ownership, paths, and library storage                                       |
-| `backend/migrations/`      | Embedded, append-only refinery migrations once implemented                                    |
-| `frontend/src/`            | Production React app, feature UI, state, and API integration                                  |
-| `mock/`                    | Standalone HTML, CSS, and JavaScript prototype and local assets                               |
-| `mock/helpers/`            | Mock development tools: Swift, Node, Python, capture scripts, test fixtures, and QA helpers   |
-| `mock/helpers/.artifacts/` | Disposable browser profiles, compiler caches, temporary files, QA reports, and test downloads |
-| `mock/captures/`           | All UI screenshot images, contact sheets, and capture indexes                                 |
-| `mock/captures/archive/`   | Clearly labeled historical screenshots, including the retired dark mock                       |
-| `data/`                    | Application-owned runtime data only                                                           |
-| `runtime/`                 | Packaged runtime tools and models; no development-tool installations                          |
-| `scripts/`                 | Product development, build, quality, packaging, and smoke entry points                        |
-| `tests/`                   | Product fixtures and suites; disposable product test output belongs in `tests/.artifacts/`    |
+| Location                 | Responsibility                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| `AGENTS.md`              | English repository development rules                                                       |
+| `design/`                | Canonical Folio token source                                                               |
+| `dev-docs/`              | Current implementation, development, verification, and operational readiness documentation |
+| `blueprint/`             | Product, architecture, API, data, workflow, UI, and operations requirements                |
+| `backend/src/app/`       | Current application startup, composition, shutdown, and configuration                      |
+| `backend/src/adapters/`  | Current HTTP, SQLite and filesystem implementations                                        |
+| `backend/src/modules/`   | Implemented feature domains and consumer-owned persistence ports                           |
+| `backend/src/domain/`    | Project, document, guide, outline, library, presentation, and slide decisions              |
+| `backend/src/database/`  | SQLite connections, models, and repositories                                               |
+| `backend/src/workflows/` | Durable execution, scheduling, node state, checkpoints, and recovery                       |
+| `backend/src/llm/`       | Provider gateway, routing, configuration versions, and protocol adapters                   |
+| `backend/src/tools/`     | Explicit external-process adapters                                                         |
+| `backend/src/storage/`   | Blob and artifact ownership, paths, and library storage                                    |
+| `backend/migrations/`    | Embedded, append-only refinery migrations once implemented                                 |
+| `frontend/src/`          | Production React app, feature UI, state, and API integration                               |
+| `data/`                  | Application-owned runtime data only                                                        |
+| `runtime/`               | Packaged runtime tools and models; no development-tool installations                       |
+| `scripts/`               | Product development, build, quality, packaging, and smoke entry points                     |
+| `tests/helpers/`         | Product browser adapter, fixtures tooling and QA helpers                                   |
+| `tests/`                 | Product fixtures and suites; disposable product test output belongs in `tests/.artifacts/` |
 
 ### Approved source architecture
 
@@ -100,23 +96,21 @@ All paths below are relative to **this repository root**. `./data/` never means 
 - Use an owned thread for a long-lived synchronous SQLite writer. Bound short blocking work, and supervise external processes explicitly; aborting an already running blocking task is not a process cancellation strategy.
 - The frontend target is `app -> pages -> features -> shared`; downward imports may skip a layer without forwarding wrappers. Feature `index.ts` files define public entry points. Do not deep-import peer implementations or move business data into generic UI/shared folders.
 - Keep remote state in Query, URL state in Router, and drafts and editing transitions in the owning feature. Scope caches and edit sessions by project, resource, revision, and relevant filters.
-- The mock target separates core Store/routing/lifetime, feature read models and commands, sample services, and UI adapters. Views must not mutate canonical state, and feature factories must receive narrow capabilities rather than the entire mutable context.
-- Keep direct file opening and classic deferred registration in the mock. Do not add a framework or production API coupling to enforce the target layout.
 - Create target folders, ports, and abstractions when implementing their first real use case. Migrate one cohesive slice, update its callers and checks, and remove the superseded owner in the same change. Do not multiply empty directories or bulk-rearrange the scaffold to imitate a finished architecture.
 
 ### Shared design source
 
 - `design/refract.tokens.json` is the single source for the service's colors, signature, paper surfaces, contrast roles, and accessibility overrides. The historical filename does not imply the retired Refract appearance.
-- `scripts/generate-design-tokens.mjs` generates `mock/theme.generated.css` and `frontend/src/app/styles/theme.generated.css`. Run `pnpm tokens` after changing the source; never hand-edit generated output.
+- `scripts/generate-design-tokens.mjs` generates `frontend/src/app/styles/theme.generated.css`. Run `pnpm tokens` after changing the source; never hand-edit generated output.
 - `pnpm tokens:check` belongs to quality and build verification. Runtime startup never invokes the generator, downloads packages, or reads development tooling.
-- Runtime font loading, layout, component bindings, and interaction state remain with their actual UI owner. Shared production build tooling belongs in `scripts/`; mock-only tooling belongs in `mock/helpers/`.
+- Runtime font loading, layout, component bindings, and interaction state remain with their actual UI owner. Shared production build tooling belongs in `scripts/`; product QA tooling belongs in `tests/helpers/`.
 
 ### Application data
 
 - The development default is `<repository-root>/data/`, resolved to an absolute path when starting the backend. Optional development instances use named subdirectories under this root.
 - Only application-owned databases, uploaded documents, blobs, artifacts, project workspaces, configuration and keys, libraries, work files, logs, backups, and runtime temporary files belong in `data/`.
-- Do not store screenshots, contact sheets, helper source, mock fixtures, browser profiles, QA reports, test downloads, compiler caches, design notes, or copied reference documents there.
-- Write mock helper source to `mock/helpers/` and screenshot output to `mock/captures/`. Keep disposable helper runtime files under `mock/helpers/.artifacts/` and clean them after verification.
+- Do not store screenshots, contact sheets, helper source, test fixtures, browser profiles, QA reports, test downloads, compiler caches, design notes, or copied reference documents there.
+- Write product QA helper source to `tests/helpers/` and screenshot output to `tests/.artifacts/captures/`. Keep disposable helper runtime files under `tests/.artifacts/` and clean them after verification.
 - Preserve actual application data during cleanup. Move only positively identified development artifacts and update callers and documentation. Do not silently redirect an invalid application storage path.
 
 ## 5. Mandatory UI reference: Modern Web Guidance
@@ -143,20 +137,20 @@ Do not run a broad legacy scan unless the user asks for a broad modernization or
 - Keep one sticky global navigation: **Home**, **Studio**, **Space**, and **Admin** when its production feature is implemented; production navigation has no user-role gate. Home owns project discovery; Studio owns presentation creation; Space owns shared template/reference assets; Admin owns model and system settings. Keep one semantic link tree across screen sizes, with visible current-page/focus indicators. Do not add a global left sidebar; Admin has its own collapsible local side navigation.
 - Place the project switcher and review stepper inside Studio, below global navigation. Keep the stepper visible while scrolling in every Studio stage, with all six compact markers visible on phones. Render the stepper as connected circular timeline markers with labels beneath, never boxed step cards. Mark the current step with a ring/underline and completed steps with checks; emphasize a connecting segment only when both adjacent steps are complete. Steps are source registration, guide, outline/content, evidence, template, and generation/editing. Visiting a step does not complete it; explicit confirmations refer to saved input versions and become stale after changes. Do not advance past unsaved guide edits.
 - Project creation or source upload opens Studio's source step. Space uploads remain separate from project originals and must not silently register material in a project.
-- Production Space uses shadcn/ui Progress with accessible labels and text for processing, pause, cancellation and completion; the framework-free mock may use native progress bars; it does not use Studio's review stepper. Keep simulation timers owned and cancellable on reset/page exit. Unknown real progress must not receive a fabricated percentage.
-- Account previews in the mock are in-memory UI roles, not authentication or a security boundary. Hide Admin and reject its mock route for member previews. These mock role previews do not carry into production. The product has no general user login or per-user role layer. The explicitly requested CLI-token Admin gate is separate from these mock previews; further access-control changes require an explicit requirement.
-- Guide authoring uses optional Do/Don't fields. Preserve legacy revisions; saving must not regenerate prior results. Space search uses news-style rows with a thumbnail, title, excerpt and literal query highlights. Studio evidence uses a compact candidate list beside a dedicated source/comparison reader; do not expand full source bodies inside every result row. The editor Reference tab uses visual cards scoped to the current slide. Keep preview and selection separate; pin selected image/chart/whole-slide source versions into generation plans. Real extraction and native PPTX insertion remain unimplemented in the mock.
+- Production Space uses shadcn/ui Progress with accessible labels and text for processing, pause, cancellation and completion; it does not use Studio's review stepper. Keep simulation timers owned and cancellable on reset/page exit. Unknown real progress must not receive a fabricated percentage.
+- The product has no general user login or per-user role layer. Admin requires the explicitly requested CLI token; further access-control changes require an explicit requirement.
+- Guide authoring uses optional Do/Don't fields. Preserve legacy revisions; saving must not regenerate prior results. Space search uses news-style rows with a thumbnail, title, excerpt and literal query highlights. Studio evidence uses a compact candidate list beside a dedicated source/comparison reader; do not expand full source bodies inside every result row. The editor Reference tab uses visual cards scoped to the current slide. Keep preview and selection separate; pin selected image/chart/whole-slide source versions into generation plans.
 - Let each route own its task layout: document-page gallery, wide guide form with revision disclosure below, horizontal outline selection above content/evidence panes, canvas with a left vertical slide thumbnail list and a right task inspector containing AI conversation and Reference tabs, and an Admin-only side navigation with feature-specific horizontal tabs.
-- Hydrate document-gallery previews only when they approach the viewport. Reserve page aspect ratios, retain immediately usable page buttons, and own observer/fallback event cleanup on rerender, route leave, and page exit. The mock hydrates sample preview bodies only; real PDF rendering and network pagination remain production work.
+- Hydrate document-gallery previews only when they approach the viewport. Reserve page aspect ratios, retain immediately usable page buttons, and own observer/fallback event cleanup on rerender, route leave, and page exit.
 - Preserve route destinations, form labels, revision behavior, and working controls during visual changes. Do not add decorative controls that imply unavailable functionality.
 - Use actual buttons for document addition, wired directly to the existing upload dialog. On project overview it is a visible secondary paper button beside the presentation action; on the documents screen it is the primary action. Command buttons use the shared 8px control radius and a 44px minimum target, increased to 48px for coarse pointers.
 - Give data areas loading, empty, error, and normal states where applicable. Label sample data and simulated work accurately. Keep state text or icon cues alongside color.
 - Prefer official shadcn/ui components and compositions for production controls: Button, Input, Field/Label, Select or Native Select, Calendar/Date Picker, Dialog, Alert Dialog, Dropdown Menu, Context Menu, Tabs, Tooltip, Progress and Pagination. Use existing shared components before adding new ones. Custom native controls are a fallback only when no suitable shadcn/ui component meets a concrete requirement; record the reason in the owning design document.
-- Let the selected shadcn/ui primitive own focus, dismissal, keyboard navigation, portals and modal behavior. Do not add a second focus trap, competing menu key handlers, duplicate ARIA, or manual scroll locking around it. Preserve semantic HTML, labels, visible focus, IME handling, reduced motion and forced colors. The plain HTML/CSS/JS mock may retain native controls and dialogs; this exception does not determine production component choices.
+- Let the selected shadcn/ui primitive own focus, dismissal, keyboard navigation, portals and modal behavior. Do not add a second focus trap, competing menu key handlers, duplicate ARIA, or manual scroll locking around it. Preserve semantic HTML, labels, visible focus, IME handling, reduced motion and forced colors.
 - Use semantic tables with captions and headers. Name keyboard-scrollable regions and keep row actions visible on narrow screens.
 - Use Grid/Flexbox, shrinkable tracks, logical sizing, and bounded scrolling. Keep visual and DOM reading order aligned and do not mask layout defects with root `overflow: hidden`.
 - Preserve visible keyboard focus, reduced motion, readable mobile controls, and usable panel stacking.
-- Capture current Folio screens under `mock/captures/folio/`. Earlier captures are historical evidence, not the current design target.
+- Capture current Folio screens under `tests/.artifacts/captures/folio/`. Earlier captures are historical evidence, not the current design target.
 
 ### Production component source and AI UI
 
@@ -170,20 +164,12 @@ Do not run a broad legacy scan unless the user asks for a broad modernization or
 - AI output must use safe text/Markdown rendering and validated evidence links. Show only backend-approved progress summaries and tool results; never fabricate progress or expose hidden model reasoning. A Confirmation UI does not authorize an action without server validation.
 - Component replacement preserves existing API, persistence, due-date semantics, immutable revisions and user flows. Verify forms, focus return, menus, keyboard/IME, responsive layout, contrast and real-server behavior for each migrated feature. Do not claim that a policy update migrated the existing Home or implemented live AI.
 
-### Mock runtime
-
-- Use plain HTML, CSS, and JavaScript. No React, bundler, application server, or new UI dependency is required for the mock.
-- Keep fonts and icons local with their licenses. The mock must work through a simple static server and direct `file://` opening.
-- Keep sample state in browser memory. Refresh resets it. Do not persist document bodies, credentials, or mock changes to localStorage, IndexedDB, production APIs, or `data/`.
-- File selection may inspect name and size only unless requested otherwise. Explain simulated OCR, LLM, rendering, and generation behavior. JSON export is not PPTX generation.
-- Escape user content before HTML interpolation. Never evaluate document instructions as code, shell commands, SQL, or privileged tool requests.
-
 ## 6. Files, headers, and dependencies
 
 - Keep authored code and script files at **350 physical lines or fewer**; review structure at 280 lines. Split along an actual responsibility rather than arbitrary line ranges.
 - When changing an oversized file's behavior or rendering, split touched responsibilities coherently. Cohesive generated icon data, declarative dictionaries, and fixtures may remain intact with a documented exemption.
 - Begin authored code and scripts that support comments with a short four-to-eight-line header containing `Purpose`, `Pattern`, `Usage`, and `Related`. Keep shebangs first. For CSS, retain the Hallmark stamp first, then the header. Generated data and commentless formats are exempt.
-- Production TypeScript uses configured aliases where available. The standalone mock uses explicit local deferred scripts so direct file opening works; document their order and shared application boundary.
+- Production TypeScript uses configured aliases where available.
 - Actively adopt suitable local open-source dependencies by default; the user has authorized this direction. Exclude paid-only requirements and code without permission for our intended internal use. A paid commercial option does not disqualify an otherwise usable free/open-source path. Do not repeatedly request approval merely because a dependency uses GPL/MPL/AGPL or is third-party code.
 - Prefer maintained open-source implementations for specialized capabilities when they can run locally and be included in our internal build/deployment. Reuse upload engines, format detectors, archive/XML/CFB parsers, image codecs and document renderers instead of recreating them. Keep standard language features for simple glue and product-owned domain rules.
 - Pin dependencies and review upstream identity, maintenance, license and transitive obligations, peer/MSRV/ABI compatibility, runtime cost and actual consumers. More installed packages is not a completion metric; avoid overlapping libraries and unused dependency exceptions.
@@ -205,27 +191,26 @@ Do not run a broad legacy scan unless the user asks for a broad modernization or
 - Separate deterministic decisions from file, network, process, clock, and random APIs when tests need control. Reject stale revisions and late results at commit.
 - Validate file types, sizes, paths, containment, archive expansion, and tool inputs at boundaries. A working directory or string prefix is not a security boundary.
 - Invoke subprocesses with explicit arguments, not interpolated shell strings. Limit resource use and clean up descendants and temporary output.
-- Keep secrets out of UI responses, prompts, logs, screenshots, test reports, and command output. Production credentials follow the encryption design; mock inputs never retain actual keys.
+- Keep secrets out of UI responses, prompts, logs, screenshots, test reports, and command output. Production credentials follow the encryption design; test inputs never retain actual keys.
 - Treat document and reference content as untrusted data. LLM tools use allowlisted operations and validated schemas.
 - Measure bottlenecks before adding caches, concurrency, virtualization, or dependencies. Give caches a key, capacity, invalidation rule, and release point.
-- In production React, keep canonical server data in TanStack Query, URL state in Router, upload tasks in Uppy, and shared transient UI state in Zustand. Keep simple component-local state in React hooks. Use selectors and avoid browser persistence or duplicated server/upload state.
+- In production React, keep canonical server data in TanStack Query, URL state in Router, upload tasks in Uppy, and shared transient UI state in Redux Toolkit. Keep simple component-local state in React hooks. Use selectors and avoid browser persistence or duplicated server/upload state.
 - Use the shared Axios transport for JSON API calls, preserving AbortSignal, bounded timeouts, public errors, Zod validation, idempotency keys and conditional versions. Uppy retains its upload transport. Do not introduce transport-level automatic mutation retries.
-- Use the currently installed React, TanStack Query, Zustand and Uppy hooks. Do not add general-purpose hook collections such as usehooks-ts or ahooks. React Hook Form and resolvers are not installed or approved additions in the current dependency scope. Do not replace useState mechanically, duplicate Query with another request hook library, or move DOM focus/ref ownership into Zustand. Feature hooks compose product-specific rules and explicit resource lifetimes.
+- Use the currently installed React, TanStack Query, Redux Toolkit and Uppy hooks. Do not add general-purpose hook collections such as usehooks-ts or ahooks. React Hook Form and resolvers are not installed or approved additions in the current dependency scope. Do not replace useState mechanically, duplicate Query with another request hook library, or move DOM focus/ref ownership into Redux Toolkit. Feature hooks compose product-specific rules and explicit resource lifetimes.
 
 ## 9. Verification and completion
 
 Run checks appropriate to the changed boundary and report only observed results. A successful build alone does not prove working behavior.
 
-| Change                  | Relevant checks                                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rules and documentation | English-only AGENTS check, path and link consistency, source-reference checksum                                                                   |
-| Mock UI                 | Formatting, JS syntax, browser interactions, keyboard and native dialogs, contrast, responsive layout, direct file opening, and fresh screenshots |
-| Rust                    | Formatting, relevant tests, and Clippy with the project's configured options                                                                      |
-| Production frontend     | Existing lint, type checks, relevant tests, and frontend build                                                                                    |
-| Shared design           | `pnpm tokens:check`, both UI builds, composite contrast and fallback checks                                                                       |
-| Shared build or runtime | `pnpm check`, `pnpm build`, and the relevant smoke path                                                                                           |
+| Change                  | Relevant checks                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| Rules and documentation | English-only AGENTS check, path and link consistency, source-reference checksum |
+| Rust                    | Formatting, relevant tests, and Clippy with the project's configured options    |
+| Production frontend     | Existing lint, type checks, relevant tests, and frontend build                  |
+| Shared design           | `pnpm tokens:check`, both UI builds, composite contrast and fallback checks     |
+| Shared build or runtime | `pnpm check`, `pnpm build`, and the relevant smoke path                         |
 
-- Reuse project commands rather than inventing parallel quality workflows. Keep meaningful mock QA and capture helpers in `mock/helpers/`.
+- Reuse project commands rather than inventing parallel quality workflows. Keep meaningful product QA and capture helpers in `tests/helpers/`.
 - Test observable behavior and important failure paths. Avoid tests that mirror implementation or unrelated expansion for mechanical changes.
 - Compare identical inputs and environments for performance claims. Distinguish build success, browser coverage, simulations, and unverified platforms.
 - After relevant checks pass, repeat them only for new edits, failures, or unresolved concerns.
@@ -241,9 +226,7 @@ Run checks appropriate to the changed boundary and report only observed results.
 
 - Prefer local Lucide icon buttons for repeated secondary editor commands; preserve visible labels for primary workflows and selection choices. Every icon-only control needs an accessible name, title and visible keyboard focus.
 - Slide insertion belongs in the left list header. Slide context menus provide duplicate/delete and accessible movement alternatives. Gaps and empty list space expose insertion markers; pointer dragging commits once on drop and Escape cancels.
-- The mock now supports plain-text canvas edits, text boxes, local images, a rectangle, geometry changes, basic object-level text formatting, layer order, zoom and bounded undo/redo. Do not claim complete PowerPoint/Keynote parity or native PPTX compatibility.
-- Explicit image insertion may read PNG/JPEG/WebP contents into browser memory only, at most 2 MiB and 16 million pixels per image. Other document/Space uploads remain metadata-only. Reject stale image completion after navigation or revision changes; do not fetch external image URLs. Mock JSON export includes inserted image data and geometry.
-- Undo/redo restores content as new immutable revisions; never decrement version counters or remove historical revisions. Keep draft text when another canvas command commits. Generated local icon dictionaries in icons.js and editor-icons.js share the existing Lucide license and are exempt from authored-code line limits.
+- Undo/redo restores content as new immutable revisions; never decrement version counters or remove historical revisions. Keep draft text when another canvas command commits.
 
 - Keep the AI tab as a conversation with inline proposals and a bottom composer; properties belong to the canvas toolbar and source evidence to Reference. Ctrl/Command-click toggles multiple editable components. Chat requests pin selection keys, slide identity and the deck revision; selection changes never retarget existing proposals. Reject stale proposals and preserve unselected components.
 - Keep chat messages and drafts isolated per deck and slide in memory. Enter sends and Shift+Enter inserts a line; guard IME composition, including the Safari keyCode 229 fallback. Clearly label deterministic sample responses. Multi-selection currently scopes chat edits; do not claim group transforms or multi-object toolbar operations.
@@ -251,18 +234,14 @@ Run checks appropriate to the changed boundary and report only observed results.
 - Keep dependency versions and enabled features owned by manifests and lockfiles. Use dev-docs/08-dependencies.md for installed foundations and deferred candidates. Verify refinery/rusqlite share a native SQLite driver; keep JSON Schema remote/file retrieval disabled. Package availability is not feature completion.
 
 - Use Biome for JS/TS/JSX/TSX/JSON/CSS formatting and production React/Node linting; TypeScript owns type checking and Knip owns dependency usage checks. Prettier is scoped to Markdown/HTML/YAML only. Keep these formatter scopes disjoint and preserve browser QA for behavior and accessibility.
-- Use official React Developer Tools browser extensions for Components/Profiler inspection of the React app. Do not add standalone DevTools or debug script injection as implicit dependencies. The vanilla mock is not a React profiling target.
+- Use official React Developer Tools browser extensions for Components/Profiler inspection of the React app. Do not add standalone DevTools or debug script injection as implicit dependencies.
 
 - React Compiler is explicitly enabled for the production frontend through the official Vite reactCompilerPreset targeting React 19. Keep compiler packages as development dependencies and use React's built-in compiler runtime. Preserve source-level tests and verify compiled behavior separately; do not infer measured performance gains from successful compilation.
 
 - Pin development CLI versions in scripts/dev-tools.json. pnpm tools:install is the explicit setup boundary; application startup never installs tools. Keep cargo-machete free of speculative ignore entries and connect dependencies only when a product or test consumer exists.
 - pnpm check includes nextest, Cargo doctests, cargo-deny and npm advisory checks. Keep duplicate dependency warnings visible; do not silence advisories to obtain a passing result. Coverage is a separate report command with outputs under tests/.artifacts/coverage, not application data. Use the pinned rustup compiler and matching LLVM tools for Rust coverage.
 
-- Mock Home uses a three-column project card gallery on desktop, two columns at intermediate widths and one on phones, with six projects per page. Cards show status, document/deck counts, guide revision, end date, D-Day and last update; primary navigation links and overflow actions remain separate controls.
-- Project registration in the mock requires a native calendar end-date input. Store it as a date-only YYYY-MM-DD value, calculate D-Day by calendar days and keep card dates read-only. Date-range filters use end dates inclusively and reset pagination. These mock fields do not imply production API/schema support.
 - Project right-click and overflow menus share stable-ID commands, keyboard access and lifecycle cleanup. Confirm deletion, cancel only the removed project's sample work and preserve the empty-gallery creation path.
-
-- Mock Home exposes project creation as a labeled header command and in background/card context menus. Reuse the existing required end-date registration form and preserve native context menus on inputs and unrelated controls.
 
 - Production Home uses the approved three/two/one-column gallery with six records per server page, a labeled header creation command, and card/background context menus. Keep committed filters and pagination in the URL; keep unsaved form values local to their dialog.
 - Require a calendar end date when creating a production project. Preserve legacy null dates and display them as unspecified. Store date-only values without timezone conversion. Use version-checked lifecycle commands and preserve logical deletion tombstones and creation receipts.
@@ -290,7 +269,7 @@ Run checks appropriate to the changed boundary and report only observed results.
 
 - Work progress belongs to the initiating browser tab, not a user account. Use the existing Uppy queue in a global bottom-right shadcn Collapsible panel; do not duplicate or broadcast task state. Collapse/close never cancel work; a compact launcher reopens hidden tasks. New uploads reveal the panel without stealing focus. Registered assets remain shared, and refresh clears the in-memory queue.
 
-- Brief notifications use one light-only shadcn Sonner host at bottom-right, above the measured work panel. Defer new toasts during modal input, keep authoritative outcomes in the task panel or inline UI, and avoid enter/exit motion that covers task controls. The standalone mock uses a local native-popover/fixed fallback toast owner with equivalent placement and explicit simulation labels.
+- Brief notifications use one light-only shadcn Sonner host at bottom-right, above the measured work panel. Defer new toasts during modal input, keep authoritative outcomes in the task panel or inline UI, and avoid enter/exit motion that covers task controls.
 
 - Production Admin uses model_registry for immutable provider settings and model_execution for pinned requests and sanitized history, with separate inference and decisions consumers. Provider adapters use native OpenAI Responses, Claude Messages, Gemini generateContent, LM Studio Chat, llama.cpp completion and SGLang generate; vLLM/LiteLLM use their official OpenAI-compatible interfaces. Routing, streaming, Vision and Tool Calling remain separate work; documents consumes the independent decisions facade. Never silently fall back from a native protocol to a compatible one. Preserve legacy lm_studio config revisions and explicitly create a new revision for native transitions. Do not claim model discovery proves those capabilities.
 - Keep API Key plaintext out of provider DTOs and logs. Preserve the original encryption key during migrations and backups; missing or invalid keys must fail startup instead of regenerating credentials. Endpoint changes require explicit key replacement or clearing when an existing key is present.
@@ -428,7 +407,7 @@ Run checks appropriate to the changed boundary and report only observed results.
 - Keep ordinary Studio authoring available without Admin access through `/api/v1/models/authoring`, which exposes only enabled writing model IDs, names, model identifiers and configuration version numbers. Never reuse protected provider DTOs or caches for public choices.
 - Tests authenticate protected feature setup with the actual per-instance token. Dedicated access tests use unmodified routers/fetch and verify unauthorized requests, independent browser contexts, public flows and restart rotation. Never disable the production gate for testing.
 
-- The production presentation workbench follows the mock's left slide list, central paper and right task inspector. Collapse each side independently with always-visible shadcn disclosure triggers, preserve selection/tab state, and let the canvas use released width. The right-panel tabs show real AI conversation, content/notes and references. Keep creation inline in the Studio generation body without a separate settings trigger or disclosure. Put the current workbench before additional creation when output exists; keep generation inputs in one body without AI/manual tabs, and focus the inline form for an explicit new-version command. Put quiet gray Lucide pencil/plus commands beside outline headings; edit names/order or add a child through the version-pinned outline editor. A child starts with its existing branch source IDs; never copy source text or claim that inherited context is a new model assessment.
+- The production presentation workbench uses a left slide list, central paper and right task inspector. Collapse each side independently with always-visible shadcn disclosure triggers, preserve selection/tab state, and let the canvas use released width. The right-panel tabs show real AI conversation, content/notes and references. Keep creation inline in the Studio generation body without a separate settings trigger or disclosure. Put the current workbench before additional creation when output exists; keep generation inputs in one body without AI/manual tabs, and focus the inline form for an explicit new-version command. Put quiet gray Lucide pencil/plus commands beside outline headings; edit names/order or add a child through the version-pinned outline editor. A child starts with its existing branch source IDs; never copy source text or claim that inherited context is a new model assessment.
 
 ### Scoped presentation conversation
 

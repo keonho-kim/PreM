@@ -1,6 +1,6 @@
 // Purpose: Verify Studio's complete path from source upload to a real editable PPTX download.
 // Pattern: Isolated product server, synthetic local model and independent browser contexts.
-// Usage: After pnpm build; captures under mock/captures/folio and no real data mutations.
+// Usage: After pnpm build; captures under tests/.artifacts/captures/folio and no real data mutations.
 // Related: outline-fixture.cjs, backend/tests/presentations.rs.
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
@@ -9,7 +9,7 @@ const fs = require('node:fs/promises');
 const { randomUUID } = require('node:crypto');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { notifications } = require('./space-checks.cjs');
 async function click(page, name, role = 'button') {
   const target = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
@@ -45,7 +45,8 @@ async function click(page, name, role = 'button') {
       name: '분기 실행 계획',
       due_date: '2030-01-01',
     });
-    await json(server.base, `/api/v1/admin/llm/providers/${randomUUID()}`, 'PUT', {
+    const author = randomUUID();
+    await json(server.base, `/api/v1/admin/llm/providers/${author}`, 'PUT', {
       expected_version: 0,
       name: '발표 작성 AI',
       provider_type: 'openai_compatible',
@@ -53,6 +54,10 @@ async function click(page, name, role = 'button') {
       model_identifier: 'outline-fixture',
       timeout_seconds: 30,
       enabled: true,
+    });
+    await json(server.base, '/api/v1/admin/document-processing/settings', 'PUT', {
+      expected_version: 0,
+      connection_id: author,
     });
     const rotation = await fetch(server.base + '/api/v1/admin/general', {
       method: 'PUT',
@@ -96,7 +101,7 @@ async function click(page, name, role = 'button') {
     await click(a, '근거 확인하고 계속');
     await a.waitForSelector('.presentation-template-grid', { visible: true });
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-templates.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/presentation-templates.png'),
       fullPage: true,
     });
     await a.waitForFunction(
@@ -162,7 +167,10 @@ async function click(page, name, role = 'button') {
     assert.ok((await canvasWidth()) > originalWidth + 300);
     assert.equal(await a.$eval('.presentation-inspector', (n) => n.hidden), true);
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-panels-collapsed.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/presentation-panels-collapsed.png',
+      ),
     });
     await click(a, '슬라이드 목록 펼치기');
     assert.equal(
@@ -177,7 +185,7 @@ async function click(page, name, role = 'button') {
     await click(a, '이전 슬라이드');
     await a.$eval('.presentation-run-status', (n) => n.scrollIntoView({ block: 'start' }));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-generated.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/presentation-generated.png'),
     });
     const download = await a.waitForSelector('a[href$="/download"]', { visible: true });
     const url = await download.evaluate((n) => n.href);
@@ -201,7 +209,10 @@ async function click(page, name, role = 'button') {
       '참고 자료',
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-reference-panel.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/presentation-reference-panel.png',
+      ),
     });
 
     await click(a, '원문 보기');
@@ -230,7 +241,10 @@ async function click(page, name, role = 'button') {
       await b.setViewport({ width, height: 844 });
       if (!(await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth)))
         await b.screenshot({
-          path: path.join(projectRoot, 'mock/captures/folio/presentation-mobile-overflow.png'),
+          path: path.join(
+            projectRoot,
+            'tests/.artifacts/captures/folio/presentation-mobile-overflow.png',
+          ),
         });
       assert.equal(
         await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
@@ -256,7 +270,10 @@ async function click(page, name, role = 'button') {
     await b.setViewport({ width: 390, height: 844 });
     await b.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await b.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/presentation-generated-phone.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/presentation-generated-phone.png',
+      ),
     });
     const currentMarker = await b.$eval('.studio-stepper [aria-current="step"]', (n) => {
       const r = n.getBoundingClientRect();

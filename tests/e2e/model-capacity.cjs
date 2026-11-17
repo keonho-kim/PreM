@@ -10,7 +10,7 @@ const { randomUUID } = require('node:crypto');
 const { once } = require('node:events');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function waitFor(check) {
   const until = Date.now() + 10000;
   while (!(await check())) {
@@ -113,39 +113,19 @@ async function save(page) {
     await a.goto(url, { waitUntil: 'networkidle0' });
     await server.unlock(a);
     await a.waitForSelector('.provider-capacity input');
-    const firstTab = '.provider-family-tabs [data-family="llm"]';
-    const secondTab = '.provider-family-tabs [data-family="system"]';
     await a.bringToFront();
-    await a.focus(firstTab);
-    await a.keyboard.press('ArrowRight');
+    await a.click('.admin-sidebar a[href*="section=decision"]');
     await a.waitForFunction(
-      (selector) => document.querySelector(selector) === document.activeElement,
-      {},
-      secondTab,
+      () => new URL(location.href).searchParams.get('section') === 'decision',
     );
-    assert.equal(new URL(a.url()).searchParams.get('provider'), ids[0]);
-    await a.keyboard.press('Enter');
-    await a.waitForFunction(
-      (id) => new URL(location.href).searchParams.get('provider') === id,
-      {},
-      ids[1],
-    );
-    await a.waitForFunction(
-      (selector) => document.querySelector(selector)?.getAttribute('aria-selected') === 'true',
-      {},
-      secondTab,
-    );
+    await a.waitForSelector('.processing-settings');
     await a.goBack();
     await a.waitForFunction(
       (id) => new URL(location.href).searchParams.get('provider') === id,
       {},
       ids[0],
     );
-    await a.waitForFunction(
-      (selector) => document.querySelector(selector)?.getAttribute('aria-selected') === 'true',
-      {},
-      firstTab,
-    );
+    await a.waitForSelector('.provider-capacity input');
     assert.equal(new URL(a.url()).searchParams.get('tab'), 'capacity');
 
     await fill(a, 'max_parallel', 1);
@@ -193,7 +173,7 @@ async function save(page) {
       window.scrollTo(0, 0);
     });
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-capacity-production.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-capacity-production.png'),
       fullPage: true,
     });
     // Independent native decision connection still admits a request while the LLM queue is full.
@@ -219,7 +199,7 @@ async function save(page) {
     for (const response of await Promise.all([first, second, native]))
       assert.equal(response.status, 200);
     await waitFor(async () => (await get(ids[0])).active === 0);
-    await a.goto(`${server.base}/home/admin?provider=${ids[1]}&tab=capacity`, {
+    await a.goto(`${server.base}/home/admin?section=decision&provider=${ids[1]}&tab=capacity`, {
       waitUntil: 'networkidle0',
     });
     await server.unlock(a);
@@ -245,8 +225,8 @@ async function save(page) {
     await click(a, '처리 설정', 'tab');
     await a.setViewport({ width: 390, height: 844 });
     await a.waitForFunction(() => {
-      const list = document.querySelector('.provider-family-tabs');
-      const selected = list?.querySelector('[aria-selected="true"]');
+      const list = document.querySelector('.admin-sidebar nav');
+      const selected = list?.querySelector('[aria-current="page"]');
       if (!list || !selected) return false;
       const bounds = list.getBoundingClientRect(),
         item = selected.getBoundingClientRect();
@@ -257,7 +237,7 @@ async function save(page) {
       true,
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-capacity-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-capacity-phone.png'),
       fullPage: true,
     });
     const sent = calls;

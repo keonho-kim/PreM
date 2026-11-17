@@ -2,7 +2,7 @@
 // Pattern: URL-owned filters, Query-owned canonical assets and one Uppy-owned upload queue.
 // Usage: SpacePage is the route adapter; this feature does not depend on project state.
 // Related: api.ts, upload-engine.ts, asset-card.tsx, space.css.
-import { Link } from 'react-router';
+import { Link } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, FolderOpen, RefreshCw } from 'lucide-react';

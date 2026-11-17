@@ -15,6 +15,7 @@ use uuid::Uuid;
 #[derive(Default)]
 pub struct Model {
     pub budgets: std::sync::Mutex<Vec<u64>>,
+    pub requests: std::sync::Mutex<Vec<Value>>,
     pub calls: AtomicUsize,
     pub maps: AtomicUsize,
     pub slides: AtomicUsize,
@@ -62,6 +63,7 @@ async fn complete(
             .collect::<serde_json::Map<_, _>>();
         return Json(json!({"choices":[{"finish_reason":"stop","message":{"content":json!({"answers":answers}).to_string()}}]})).into_response();
     }
+    m.requests.lock().unwrap().push(input.clone());
     m.budgets
         .lock()
         .unwrap()

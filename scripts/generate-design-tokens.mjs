@@ -1,7 +1,7 @@
-// Purpose: Generate both UI themes from the single Folio design source.
+// Purpose: Generate the production UI theme from the single Folio design source.
 // Pattern: Build-time adapter with deterministic output and a read-only check mode.
 // Usage: pnpm tokens or pnpm tokens:check from the repository root.
-// Related: design/refract.tokens.json, mock/theme.generated.css, frontend/src/app/styles/theme.generated.css.
+// Related: design/refract.tokens.json, frontend/src/app/styles/theme.generated.css.
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -66,10 +66,7 @@ const output = execFileSync(process.execPath, [biome, 'format', '--stdin-file-pa
   input: css,
   encoding: 'utf8',
 });
-const targets = [
-  ['mock/theme.generated.css', output],
-  ['frontend/src/app/styles/theme.generated.css', output],
-];
+const targets = [['frontend/src/app/styles/theme.generated.css', output]];
 const check = values.check;
 for (const [target, content] of targets) {
   const location = new URL(target, root);
@@ -82,5 +79,5 @@ for (const [target, content] of targets) {
   }
 }
 console.log(
-  check ? 'Shared Folio tokens are current.' : 'Generated Folio tokens for mock and frontend.',
+  check ? 'Shared Folio tokens are current.' : 'Generated Folio tokens for the frontend.',
 );

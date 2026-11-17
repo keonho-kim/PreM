@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { createServer } = require('./server.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 (async () => {
   const server = await createServer('admin-access-');
   let session;
@@ -29,13 +29,15 @@ const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
     await a.waitForSelector('[role=alert]');
     await a.$eval('#admin-token', (n) => n.select());
     await a.keyboard.press('Backspace');
-    await a.screenshot({ path: path.join(projectRoot, 'mock/captures/folio/admin-token.png') });
+    await a.screenshot({
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-token.png'),
+    });
     await server.unlock(a);
     assert.ok(a.url().includes('section=processing'));
     await b.goto(url, { waitUntil: 'networkidle0' });
     await b.waitForSelector('#admin-token');
     assert.equal(await b.$('.admin-layout'), null);
-    await a.click('a[href="/home"]');
+    await a.click('a[href="/home/"]');
     await a.waitForSelector('.admin-layout', { hidden: true });
     await a.click('a[href="/home/admin"]');
     await a.waitForSelector('#admin-token');
@@ -51,7 +53,9 @@ const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
     await a.type('#admin-repeat-token', replacement);
     await a.click('.admin-general button[type=submit]');
     await a.waitForSelector('[role=alertdialog]');
-    await a.screenshot({ path: path.join(projectRoot, 'mock/captures/folio/admin-general.png') });
+    await a.screenshot({
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-general.png'),
+    });
     await (
       await a.waitForSelector('::-p-aria(확인하고 변경[role="button"])', { visible: true })
     ).click();
@@ -66,16 +70,16 @@ const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
     await server.stop();
     await server.start();
     // An explicit protected request through the real Admin UI detects the replaced server token.
-    await a.click('a[href*="section=providers"]');
+    await a.click('a[href*="section=llm"]');
     await a.waitForSelector('#admin-token', { visible: true, timeout: 20000 });
     await server.unlock(a);
-    await (await a.waitForSelector('.admin-access-bar button', { visible: true })).click();
+    await a.reload({ waitUntil: 'networkidle0' });
     await a.waitForSelector('#admin-token');
     assert.equal(await a.evaluate(() => localStorage.length + sessionStorage.length), 0);
     await a.setViewport({ width: 320, height: 844 });
     assert.ok(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/admin-token-phone.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-token-phone.png'),
     });
     assert.deepEqual(errors, []);
     console.log(

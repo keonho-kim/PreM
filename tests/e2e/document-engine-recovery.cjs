@@ -10,7 +10,7 @@ const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
 const { json } = require('./outline-fixture.cjs');
-const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
+const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 async function poll(read, done) {
   const end = Date.now() + 90000;
   while (Date.now() < end) {
@@ -110,7 +110,10 @@ async function poll(read, done) {
     await a.waitForSelector('.processing-stages [aria-current="step"]');
     assert((await a.$eval('.processing-stages', (n) => n.textContent)).includes('내용 정리'));
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/document-engine-classifying.png'),
+      path: path.join(
+        projectRoot,
+        'tests/.artifacts/captures/folio/document-engine-classifying.png',
+      ),
     });
     await json(
       server.base,
@@ -147,7 +150,7 @@ async function poll(read, done) {
         ),
     );
     await a.screenshot({
-      path: path.join(projectRoot, 'mock/captures/folio/document-engine-recovered.png'),
+      path: path.join(projectRoot, 'tests/.artifacts/captures/folio/document-engine-recovered.png'),
     });
     const b = await (await browser.browser.createBrowserContext()).newPage();
     await b.goto(server.base + '/home/space/library', { waitUntil: 'networkidle0' });

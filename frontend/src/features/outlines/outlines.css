@@ -2,7 +2,7 @@
 /* Purpose: Focus authoring on one section and its source instead of a long input form.
  * Pattern: Quiet ruled navigation, an opaque source paper and on-demand editing.
  * Usage: OutlineWorkspace and its feature-owned dialogs.
- * Related: mock/js/views/content.js, editor.tsx, mapping.tsx. */
+ * Related: design.md, editor.tsx, mapping.tsx. */
 .outline-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

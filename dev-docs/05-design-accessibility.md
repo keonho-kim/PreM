@@ -19,7 +19,6 @@ PreM는 라이트 전용 Folio를 사용한다. 문서 종이와 슬라이드의
 
 색상 원본은 [refract.tokens.json](../design/refract.tokens.json)이고 [generate-design-tokens.mjs](../scripts/generate-design-tokens.mjs)가 다음 파일을 생성한다.
 
-- [mock/theme.generated.css](../mock/theme.generated.css)
 - [frontend/src/app/styles/theme.generated.css](../frontend/src/app/styles/theme.generated.css)
 
 `pnpm tokens`로 생성하고 `pnpm tokens:check`로 원본과 출력의 일치를 검사한다. 생성 CSS를 직접 수정하지 않는다. 간격·서체 로딩·배치와 상태별 컨트롤 스타일은 각 UI의 소유다.
@@ -52,11 +51,11 @@ Home의 단일 `due_date`, API mutation 멱등성/충돌 처리, dialog draft, �
 
 ## 현재 구현의 입력·접근성 동작
 
-아래는 제품 Home과 별도 정적 목업의 현재 동작을 구분한다.
+아래는 제품의 입력·접근성 동작이다.
 
 | 항목             | 구현 방식                                                       |
 | ---------------- | --------------------------------------------------------------- |
-| 대화상자         | 제품 Home: shadcn Dialog/Alert Dialog; 목업: native dialog      |
+| 대화상자         | 제품 Home: shadcn Dialog/Alert Dialog                           |
 | 슬라이드 메뉴    | Popover API, 미지원 환경의 표시 fallback, 키보드 메뉴           |
 | AI·Reference 탭  | ARIA tab 관계, 좌우/Home/End 이동                               |
 | 패널 표시        | `hidden`, `aria-controls`, `aria-expanded` 동기화               |
@@ -72,7 +71,7 @@ Home의 단일 `due_date`, API mutation 멱등성/충돌 처리, dialog draft, �
 
 ## 검증 범위
 
-[theme-check.cjs](../mock/helpers/theme-check.cjs)는 실제 UI의 색 조합을 검사하고, [capture.cjs](../mock/helpers/capture.cjs)는 화면·반응형·포커스 관련 상태와 캡처를 수집한다. 편집기 대화와 선택 동작은 [editor-chat.cjs](../mock/helpers/editor-chat.cjs)가 담당한다.
+제품 UI 검증은 [브라우저 어댑터](../tests/helpers/browser.cjs)를 사용하는 [E2E 테스트](../tests/e2e/)가 담당한다. 화면·반응형·키보드·포커스와 실제 서버 동작을 기능별로 검사하며 캡처는 `tests/.artifacts/captures/folio/`에 저장한다.
 
 현재 브라우저 자동화는 로컬 Chrome/Chromium 기반이다. fallback 코드의 존재는 Safari·Firefox·스크린리더에서의 검증을 의미하지 않는다. 접근성 적합성 인증, 전 기능 키보드 조작, 모바일 네이티브 입력기와 보조기기 조합은 운영 수용 검증 대상으로 남는다.
 
@@ -80,9 +79,9 @@ Home의 단일 `due_date`, API mutation 멱등성/충돌 처리, dialog draft, �
 
 Home 상단에는 프로젝트 제목·설명과 생성 버튼을 배치한다. 별도의 공유 표제나 하단 공유·서버 상태 안내는 표시하지 않는다. 마감일 검색 필터는 입력란 클릭 또는 아래 방향키로 달력을 열고 날짜 직접 입력도 지원한다. 강제 색상 모드에서도 입력란의 키보드 초점 테두리를 표시한다.
 
-실제 Home은 shadcn Card를 semantic `<article>`로 조정하고 독립 메뉴 버튼을 둔다. 아직 없는 Studio 목적지 링크를 만들지 않는다. Dropdown Menu/Context Menu는 같은 명령을 사용하며 방향키·Esc·위치 계산은 Radix가 담당한다. Shift+F10의 진입만 Context Menu trigger로 연결하고 입력 컨트롤의 브라우저 우클릭은 보존한다. 날짜 타이머와 feature 상태는 화면 이탈 시 정리한다. 마감일은 라벨이 있는 Input과 Calendar/Popover를 제공하고 필수·달력 날짜 검증을 유지한다.
+실제 Home은 shadcn Card를 semantic `<article>`로 조정하고 독립 메뉴 버튼을 둔다. 프로젝트 링크는 실제 Studio 목적지로 연결한다. Dropdown Menu/Context Menu는 같은 명령을 사용하며 방향키·Esc·위치 계산은 Radix가 담당한다. Shift+F10의 진입만 Context Menu trigger로 연결하고 입력 컨트롤의 브라우저 우클릭은 보존한다. 날짜 타이머와 feature 상태는 화면 이탈 시 정리한다. 마감일은 라벨이 있는 Input과 Calendar/Popover를 제공하고 필수·달력 날짜 검증을 유지한다.
 
-마감일은 `Temporal.PlainDate`를 우선 사용한다. 미지원 브라우저는 기존 목업과 같은 Gregorian 숫자 ordinal 계산으로 제한된 날짜 차이만 구하며 날짜 문자열을 현지 timestamp로 표시하지 않는다. 서버도 동일 범위의 달력 날짜를 검증한다. 제품의 `data/`와 개발용 캡처 저장소는 분리한다.
+마감일은 `Temporal.PlainDate`를 우선 사용한다. 미지원 브라우저는 Gregorian 숫자 ordinal 계산으로 제한된 날짜 차이만 구하며 날짜 문자열을 현지 timestamp로 표시하지 않는다. 서버도 동일 범위의 달력 날짜를 검증한다. 제품의 `data/`와 개발용 캡처 저장소는 분리한다.
 
 ## 제품 Space
 
@@ -110,7 +109,7 @@ HTML 업로드의 형식·UTF-8 제한은 파일 선택 입력의 지속적인 �
 
 640px 이하에서 작업 패널은 화면 하단에 붙는 전체 폭 도크로 표시한다. 좌우 safe-area와 하단 홈 인디케이터 여백을 패널 안에 포함하고 내용만 제한 높이에서 스크롤한다. 접기·닫기·재열기는 같은 패널 수명과 키보드 포커스를 유지한다. 데스크톱은 기존 우측 하단 360px 패널이다.
 
-Feedback이 측정된 도크 높이를 문서 하단 padding과 scroll-padding에 반영하여 마지막 본문 버튼이 패널 위까지 스크롤되도록 한다. 패널이 사라지면 예약 여백도 해제한다. Toast는 데스크톱의 외부 간격과 모바일의 하단 밀착 위치를 구분하여 도크 위에 배치한다. 목업도 같은 모바일 규칙과 측정/해제 수명을 따른다. 모바일 고정 패널 캡처는 전체 문서가 아니라 실제 viewport 단위로 기록한다.
+Feedback이 측정된 도크 높이를 문서 하단 padding과 scroll-padding에 반영하여 마지막 본문 버튼이 패널 위까지 스크롤되도록 한다. 패널이 사라지면 예약 여백도 해제한다. Toast는 데스크톱의 외부 간격과 모바일의 하단 밀착 위치를 구분하여 도크 위에 배치한다. 모바일 고정 패널 캡처는 전체 문서가 아니라 실제 viewport 단위로 기록한다.
 
 ## Space 통합 검색 화면
 
@@ -152,7 +151,7 @@ Modern Web Guidance tabs의 “Use selection by activation instead when showing 
 
 Studio Stepper는 모든 단계에서 전역 메뉴 아래에 고정한다. 실제 헤더/Stepper 높이를 측정하고 화면 이탈 시 관찰자를 정리한다. 모바일은 여섯 마커와 짧은 단계 이름을 한 줄에 모두 표시하며 접근성 이름은 원래 단계명을 유지한다. 근거 읽기와 장표 영역은 이 높이만큼 스크롤 여백을 확보한다.
 
-생성 설정은 최초 작성 시 펼쳐져 있고 결과가 생기면 접히며, 사용자가 다시 펼칠 수 있다. 접어도 제목·모델·추가 요청은 유지한다. 장표 작업 영역은 목업의 3단 구성을 따른다. 좌우 패널은 공식 shadcn Collapsible로 독립 제어하고, Trigger는 숨겨지는 패널 밖에 둔다. 선택한 슬라이드·우측 탭을 유지하며 닫힌 패널은 키보드 탐색에서 제외한다. 원문 조회는 해당 슬라이드의 참고 자료 탭이 활성 상태일 때 수행한다. AI와 대화 탭은 텍스트·객체·배치와 여러 장표 수정안을 검토·적용한다. 객체 탭은 로컬 이미지 등록, 실제 차트 수치 입력, 객체 선택을 맡는다. 선택 버튼의 aria-pressed와 장표 수·객체 수를 함께 표시하고 Ctrl/⌘ 없이도 여러 장표를 고를 수 있다. 캔버스 드래그 핸들은 아직 제공하지 않는다.
+생성 범위·제목·추가 요청은 본문에 통합한다. 생성 모델은 저장된 연결에서 서버가 선택한다. 장표 작업 영역은 좌측 목록·중앙 장표·우측 작업 패널 구성을 따른다. 좌우 패널은 공식 shadcn Collapsible로 독립 제어하고, Trigger는 숨겨지는 패널 밖에 둔다. 선택한 슬라이드·우측 탭을 유지하며 닫힌 패널은 키보드 탐색에서 제외한다. 원문 조회는 해당 슬라이드의 참고 자료 탭이 활성 상태일 때 수행한다. AI와 대화 탭은 텍스트·객체·배치와 여러 장표 수정안을 검토·적용한다. 객체 탭은 로컬 이미지 등록, 실제 차트 수치 입력, 객체 선택을 맡는다. 선택 버튼의 aria-pressed와 장표 수·객체 수를 함께 표시하고 Ctrl/⌘ 없이도 여러 장표를 고를 수 있다. 캔버스는 마우스·터치 이동/크기 조절과 숫자 입력 대안을 제공한다.
 
 ### 간결한 모델 연결 편집
 

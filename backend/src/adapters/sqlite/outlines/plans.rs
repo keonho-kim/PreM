@@ -9,7 +9,7 @@ fn aliases(
     run: &Run,
     batch: i64,
 ) -> Result<Vec<(String, Uuid, String)>, Error> {
-    db.prepare("SELECT ordinal,block_id,b.text FROM outline_run_blocks r JOIN content_blocks b ON b.id=r.block_id WHERE run_id=? AND batch=? ORDER BY ordinal").map_err(failure)?.query_map(params![run.id.to_string(),batch],|r|Ok((r.get::<_,i64>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?))).map_err(failure)?.map(|r|{let(i,id,text)=r.map_err(failure)?;let limit=if run.kind=="generate"{240}else{600};let end=text.floor_char_boundary(text.len().min(limit));Ok((format!("b{i}"),uuid(id)?,text[..end].to_owned()))}).collect()
+    db.prepare("SELECT ordinal,block_id,b.text FROM outline_run_blocks r JOIN content_blocks b ON b.id=r.block_id WHERE run_id=? AND batch=? ORDER BY ordinal").map_err(failure)?.query_map(params![run.id.to_string(),batch],|r|Ok((r.get::<_,i64>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?))).map_err(failure)?.map(|r|{let(i,id,text)=r.map_err(failure)?;Ok((format!("b{i}"),uuid(id)?,text))}).collect()
 }
 fn targets(db: &rusqlite::Connection, run: &Run) -> Result<Vec<(String, Node)>, Error> {
     if run.kind == "generate" {
@@ -45,7 +45,16 @@ pub(super) fn next(db: &mut rusqlite::Connection, run: Run) -> Result<Option<Pla
     let guide:Option<(String,String)>=db.query_row("SELECT g.do_text,g.dont_text FROM outline_runs r JOIN project_guide_revisions g ON g.id=r.guide_revision_id WHERE r.id=?",[run.id.to_string()],|r|Ok((r.get(0)?,r.get(1)?))).optional().map_err(failure)?;
     let blocks = aliases(db, &run, batch)?;
     let nodes = targets(db, &run)?;
-    let context = json!({"task":run.kind,"direction":guide.map(|(a,b)|json!({"do":a,"dont":b})),"source_excerpts":blocks.iter().map(|(key,_,text)|json!({"key":key,"text":text})).collect::<Vec<_>>(),"sections":nodes.iter().map(|(key,n)|json!({"key":key,"title":n.title,"description":n.description.chars().take(40).collect::<String>()})).collect::<Vec<_>>()});
+    let mut context = json!({"task":run.kind,"direction":guide.map(|(a,b)|json!({"do":a,"dont":b})),"source_excerpts":blocks.iter().map(|(key,_,text)|json!({"key":key,"text":text})).collect::<Vec<_>>(),"sections":nodes.iter().map(|(key,n)|json!({"key":key,"title":n.title,"description":n.description})).collect::<Vec<_>>()});
+    let total: i64 = db
+        .query_row(
+            "SELECT count(*) FROM outline_run_blocks WHERE run_id=?",
+            [run.id.to_string()],
+            |r| r.get(0),
+        )
+        .map_err(failure)?;
+    context["source_coverage"] = json!({"provided_blocks":blocks.len(),"total_blocks":total,"selection":if run.kind=="generate" {"up to 48 source-balanced blocks, headings first"} else {"current mapping batch"}});
+
     Ok(Some(Plan {
         batch,
         context,

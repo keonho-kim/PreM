@@ -2,13 +2,14 @@
 // Pattern: Real shadcn views with feature API mocks; backend tests cover persistence and scope.
 // Usage: Vitest; real-server journeys cover upload and page previews.
 // Related: studio-workspace.tsx, direction.tsx, backend/tests/studio_sources.rs.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, it, expect, vi } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
-import { StudioWorkspace } from './studio-workspace';
+import { RouterTestHarness } from '@/test/router';
+import { StudioWorkspace } from './workspace';
 import { Direction } from './direction';
 import { StudioStepper } from './stepper';
 import { getReview, confirmSources, getGuide, saveGuide } from './api';
@@ -37,15 +38,15 @@ vi.mock('@/features/space', async (original) => ({
   useUploadEngine: () => ({}),
 }));
 const clients: QueryClient[] = [];
-function mount(view: React.ReactNode) {
+async function mount(view: React.ReactNode) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   });
   clients.push(client);
-  render(
-    <MemoryRouter>
+  await render(
+    <RouterTestHarness>
       <QueryClientProvider client={client}>{view}</QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
 }
 afterEach(() => {
@@ -63,7 +64,7 @@ it('does not complete a source step by visiting it or allow empty confirmation',
     confirmed: false,
     count: 0,
   });
-  mount(<StudioWorkspace projectId="p" />);
+  await mount(<StudioWorkspace projectId="p" />);
   expect(await screen.findByText('첫 원본 문서를 추가하세요')).toBeVisible();
   expect(screen.getByRole('button', { name: '원본 확인하고 계속' })).toBeDisabled();
   expect(screen.getByRole('button', { name: '작성 방향' })).toBeDisabled();
@@ -83,7 +84,7 @@ it('pins the displayed snapshot on explicit confirmation and opens direction', a
     count: 1,
   });
   vi.mocked(getGuide).mockResolvedValue({ version: 0, do_text: '', dont_text: '' });
-  mount(<StudioWorkspace projectId="p" />);
+  await mount(<StudioWorkspace projectId="p" />);
   await userEvent.click(await screen.findByRole('button', { name: '원본 확인하고 계속' }));
   await waitFor(() => expect(confirmSources).toHaveBeenCalledWith('p', 'version-one'));
   expect(await screen.findByRole('textbox', { name: 'Do · 이렇게 해주세요' })).toBeVisible();
@@ -94,7 +95,7 @@ it('preserves direction input after a shared revision conflict', async () => {
   vi.mocked(saveGuide).mockRejectedValue(
     new ApiError(409, 'revision_conflict', '다른 접속자가 수정했습니다.'),
   );
-  mount(<Direction project="p" editable />);
+  await mount(<Direction project="p" editable />);
   const field = await screen.findByRole('textbox', { name: 'Do · 이렇게 해주세요' });
   await userEvent.clear(field);
   await userEvent.type(field, '새 강조사항');
@@ -119,7 +120,7 @@ it('blocks advancing past unsaved guidance and continues only after a successful
   });
   vi.mocked(getGuide).mockResolvedValue({ version: 1, do_text: '기존 방향', dont_text: '' });
   vi.mocked(saveGuide).mockResolvedValue({ version: 2, do_text: '기존 방향 추가', dont_text: '' });
-  mount(<StudioWorkspace projectId="p" />);
+  await mount(<StudioWorkspace projectId="p" />);
   await userEvent.click(await screen.findByRole('button', { name: '작성 방향' }));
   await userEvent.type(
     await screen.findByRole('textbox', { name: 'Do · 이렇게 해주세요' }),
@@ -153,7 +154,7 @@ it('exposes evidence as a real step without completing it and guards unsaved out
       onSelect={select}
     />
   );
-  const rendered = render(view(true));
+  const rendered = await render(view(true));
   expect(screen.getByRole('button', { name: '근거' })).toBeDisabled();
   rendered.rerender(view(false));
   await userEvent.click(screen.getByRole('button', { name: '근거' }));

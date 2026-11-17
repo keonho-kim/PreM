@@ -1,7 +1,7 @@
 // Purpose: Supply original-document fixtures and reusable Space browser operations.
 // Pattern: Real files in disposable QA storage; interact through visible application controls.
 // Usage: space.cjs owns server/browser lifetime and passes its fixture directory.
-// Related: space.cjs, backend/tests/space_support/, mock/helpers/browser.cjs.
+// Related: space.cjs, backend/tests/space_support/, tests/helpers/browser.cjs.
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');

@@ -207,7 +207,7 @@ impl Presentations {
         reference_ids: Vec<Uuid>,
         whole_slide: bool,
     ) -> Result<InsertedSpec, Error> {
-        super::model::validate_spec(&spec)?;
+        super::authoring::validate_spec(&spec)?;
         let blob = self
             .assets
             .publish(

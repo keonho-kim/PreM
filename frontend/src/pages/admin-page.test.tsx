@@ -2,12 +2,13 @@
 // Pattern: Real Admin composition and shadcn tabs with controlled feature APIs.
 // Usage: Vitest; browser E2E covers side navigation, keyboard, reload and viewport changes.
 // Related: admin-page.tsx, features/providers/provider-checks.tsx, tests/e2e/admin-navigation.cjs.
+import { renderRouted as render } from '@/test/render-routed';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { RouterTestHarness } from '@/test/router';
 import { AdminPage } from './admin-page';
 import { grantAdminAccess } from '@/shared/api/admin-credential';
 beforeEach(() => grantAdminAccess('synthetic-admin-token'));
@@ -63,12 +64,12 @@ it('does not query hidden history and keeps a running test alive when switching 
       finish = resolve;
     });
   });
-  render(
-    <MemoryRouter initialEntries={['/admin']}>
+  await render(
+    <RouterTestHarness initialEntries={['/admin']}>
       <QueryClientProvider client={client}>
         <AdminPage />
       </QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
   await screen.findByRole('tab', { name: '연결 설정' });
   expect(getHistory).not.toHaveBeenCalled();
@@ -106,12 +107,12 @@ it('blocks setup until the server catalog loads and offers an explicit retry aft
   vi.mocked(getProviderCatalog)
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValueOnce(catalogFixture);
-  render(
-    <MemoryRouter>
+  await render(
+    <RouterTestHarness>
       <QueryClientProvider client={client}>
         <AdminPage />
       </QueryClientProvider>
-    </MemoryRouter>,
+    </RouterTestHarness>,
   );
   await screen.findByRole('button', { name: '다시 시도' });
   expect(screen.queryByRole('combobox', { name: 'Provider' })).not.toBeInTheDocument();

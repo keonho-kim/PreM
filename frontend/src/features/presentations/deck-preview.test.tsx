@@ -7,6 +7,7 @@ import { it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { UiTestProvider } from '@/test/state';
 import { DeckPreview } from './deck-preview';
 import type { Run } from './api';
 vi.mock('./use-editor-session', () => ({
@@ -63,9 +64,11 @@ it('keeps panels mounted and restores the selected slide and reference tab when 
   vi.stubGlobal('matchMedia', () => ({ matches: false }));
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   render(
-    <QueryClientProvider client={client}>
-      <DeckPreview project="project" run={run} active canEdit onResult={() => {}} />
-    </QueryClientProvider>,
+    <UiTestProvider>
+      <QueryClientProvider client={client}>
+        <DeckPreview project="project" run={run} active canEdit onResult={() => {}} />
+      </QueryClientProvider>
+    </UiTestProvider>,
   );
   await screen.findByRole('button', { name: '슬라이드 1: 슬라이드 제목 1' });
   await userEvent.click(screen.getByRole('button', { name: '다음 슬라이드' }));
@@ -97,9 +100,17 @@ it('waits for a published run before requesting reused slide previews', async ()
   vi.stubGlobal('matchMedia', () => ({ matches: false }));
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   const view = (status: Run['status']) => (
-    <QueryClientProvider client={client}>
-      <DeckPreview project="project" run={{ ...run, status }} active canEdit onResult={() => {}} />
-    </QueryClientProvider>
+    <UiTestProvider>
+      <QueryClientProvider client={client}>
+        <DeckPreview
+          project="project"
+          run={{ ...run, status }}
+          active
+          canEdit
+          onResult={() => {}}
+        />
+      </QueryClientProvider>
+    </UiTestProvider>
   );
   const { container, rerender } = render(view('running'));
   await screen.findByRole('button', { name: '슬라이드 1: 슬라이드 제목 1' });
