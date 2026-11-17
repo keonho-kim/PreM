@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Purpose: Apply identical source, runtime and complete test gates locally and on native CI runners.
+# Purpose: Check source, runtime, dependencies and integration behavior during development.
 # Pattern: Pinned project dependencies; no development CLI installation during verification.
-# Usage: pnpm check:core after runtime:install; release matrix invokes this same command.
+# Usage: pnpm check:core after runtime:install for development quality verification.
 # Related: quality-check.sh, .github/workflows/release.yml, tests/helpers/.
 set -euo pipefail
 cd "$(dirname -- "${BASH_SOURCE[0]}")/.."

@@ -9,7 +9,7 @@
 | `pnpm dev`                      | Rust와 Vite, 기본 `data/`                      |
 | `pnpm dev sandbox`              | 이름 있는 별도 개발 데이터 경로                |
 | `pnpm build`                    | frontend를 포함한 `target/release/PreM`        |
-| `pnpm check:core`               | 로컬/네이티브 CI 공통 검증                     |
+| `pnpm check:core`               | 전체 개발 품질 검증                            |
 | `pnpm check`                    | 공통 검증 + Rust 개발 도구/의존성 정책         |
 | `pnpm test:e2e`                 | 전체 실제 서버·브라우저 여정, 실패를 모아 보고 |
 | `pnpm audit:parsing`            | 고정 문서 corpus의 추출 품질 검사              |
@@ -66,7 +66,7 @@ Vite는 `127.0.0.1:5173/home/`, API는 `127.0.0.1:8000`이다. Rust 변경 후 �
 
 소스 제품 버전 `YYYY.MM.DD`와 태그 `vYYYYMMDD`를 맞춘다. 이미 게시된 태그는 덮어쓰지 않으며, 같은 날짜에 게시한 뒤 수정했다면 다음 날짜 릴리스로 제공한다. draft만 파일·설명·대상 커밋을 갱신한다.
 
-Release workflow는 Linux arm64/amd64와 macOS arm64 네이티브 환경에서 `pnpm check:core`, 빌드·스모크·패키지 재배치 검증을 실행한다. CI는 Rust 빌드 동시 작업을 2개로 제한하고 dev/test 디버그 심볼과 incremental 산출물을 비활성화하여 테스트 실행 파일의 저장 공간을 제한한다. 검사 범위는 동일하다. 검사와 빌드 후 실행 파일만 보존하고 Cargo 중간 산출물을 지워 패키지 재배치에 필요한 공간을 확보한다. 별도 브라우저 job은 전체 E2E를 실행한다. 모든 job과 파일 6개(압축 3개·SHA-256 3개)를 확인한 뒤 게시한다. Linux는 최소 Ubuntu 24.04에서 네트워크 없이 번들을 재검사한다.
+Release workflow는 Linux arm64/amd64와 macOS arm64에서 빌드, lint, 프론트엔드 테스트, Rust 라이브러리 테스트, 실행 파일 스모크 테스트를 수행한다. 세 플랫폼에서 패키지 재배치와 실행을 검증하고 Linux는 최소 Ubuntu 24.04에서 네트워크 없이 다시 검사한다. 압축 3개와 SHA-256 파일 3개를 확인한 뒤 게시한다. 전체 개발 의존성 감사와 Rust 통합 테스트는 `pnpm check`, 브라우저 여정은 `pnpm test:e2e`로 실행한다.
 
 번들은 Node·Python·문서 도구·OCR·폰트·고지와 유지보수 도구를 포함한다. Linux glibc 2.39+, macOS 14+가 필요하며 OS 자체와 외부 LLM 추론 서비스는 호스트가 제공한다. macOS 공증은 미적용이다.
 

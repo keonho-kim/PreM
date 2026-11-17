@@ -94,4 +94,4 @@ Studio의 **직접 작성**은 원본 분석이나 AI 연결 없이 선택한 �
 
 문서 런타임은 Kordoc 4.24.83과 포함된 hayro PDF WASM을 사용한다. 한국어 인쇄체 OCR·PDFium 미리보기와 함께 오프라인으로 실행하며 버전·WASM·모델 해시를 런타임 manifest에서 검증한다.
 
-검증은 로컬/네이티브 CI 공통 `pnpm check:core`와 실제 서버 `pnpm test:e2e`가 담당한다. 원문 충실도 감사의 확인된 미통과 항목은 [품질 문서](07-quality-readiness.md#파싱-감사의-확인된-미통과-항목)에 공개하며 기본 기능 검증과 구분한다. 전체 저장소 백업·새 경로 복원은 [오프라인 운영 절차](06-development-operations.md#오프라인-백업과-복원)를 따른다.
+검증은 개발 품질 검사 `pnpm check:core`와 실제 서버 `pnpm test:e2e`가 담당한다. 원문 충실도 감사의 확인된 미통과 항목은 [품질 문서](07-quality-readiness.md#파싱-감사의-확인된-미통과-항목)에 공개하며 기본 기능 검증과 구분한다. 전체 저장소 백업·새 경로 복원은 [오프라인 운영 절차](06-development-operations.md#오프라인-백업과-복원)를 따른다.

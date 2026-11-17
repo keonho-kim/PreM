@@ -192,7 +192,7 @@ CLI 인자는 대응 환경변수보다 우선합니다. Rust 서버는 `.env` �
 | `pnpm coverage`                      | Rust·React 커버리지, `tests/.artifacts/coverage/`에 저장               |
 | `pnpm tokens` / `pnpm tokens:check`  | 공유 디자인 토큰 생성 / 일치 여부 확인                                 |
 
-Rust 통합 검사는 설치된 문서 런타임을 사용합니다. 토큰 생성 원본은 `design/refract.tokens.json`이며 생성된 CSS는 직접 수정하지 않습니다. `pnpm check:core`는 네이티브 CI와 같은 게이트이며 `pnpm check`는 개발 CLI/의존성 정책 검사도 포함합니다. 취약점 조회 등은 네트워크를 사용할 수 있습니다. E2E·Smoke·실모델 검사는 각각 별도 실행 항목입니다.
+Rust 통합 검사는 설치된 문서 런타임을 사용합니다. 토큰 생성 원본은 `design/refract.tokens.json`이며 생성된 CSS는 직접 수정하지 않습니다. `pnpm check:core`는 전체 개발 품질 검사이며 `pnpm check`는 개발 CLI/의존성 정책 검사도 포함합니다. 취약점 조회 등은 네트워크를 사용할 수 있습니다. E2E·Smoke·실모델 검사는 각각 별도 실행 항목입니다.
 
 ### 브라우저 E2E 준비
 
