@@ -244,17 +244,32 @@ const { poll, click, fill, capture, resizeSelected } = require('./canvas-browser
       timeout_seconds: 60,
       enabled: true,
     });
-    await a.click('.presentation-slide-thumb');
+    await a.locator('.presentation-slide-thumb').click();
+    const firstSlide = (await slides(run))[0];
+    await a.waitForFunction(
+      (id) => document.querySelector('.presentation-output')?.src.includes(`/slides/${id}/`),
+      {},
+      firstSlide.id,
+    );
     await enabled('도형 추가');
     const shapeHandle = await a.waitForSelector('::-p-aria(도형 선택[role="button"])', {
       visible: true,
     });
-    await shapeHandle.evaluate((n) => n.scrollIntoView({ block: 'center' }));
-    const shapeRect = await shapeHandle.boundingBox();
-    await a.mouse.click(shapeRect.x + shapeRect.width - 12, shapeRect.y + shapeRect.height / 2);
+    // Keyboard selection targets this object even when another object overlaps its artwork.
+    if (await shapeHandle.evaluate((node) => node.getAttribute('aria-pressed') !== 'true')) {
+      await shapeHandle.focus();
+      await a.keyboard.press('Space');
+    }
+    await a.waitForSelector('button[aria-label="도형 선택"][aria-pressed="true"]');
     await click(a, 'AI와 대화', 'tab');
     await a.type('#slide-edit-prompt', '선택한 도형의 위치를 오른쪽으로 옮겨주세요.');
-    await click(a, '수정 요청 보내기');
+    const [editRequest] = await Promise.all([
+      a.waitForRequest(
+        (request) => request.method() === 'POST' && request.url().endsWith('/edits'),
+      ),
+      click(a, '수정 요청 보내기'),
+    ]);
+    assert.deepEqual(JSON.parse(editRequest.postData()).object_ids, [shape.id]);
     await poll(
       () =>
         a
@@ -266,7 +281,9 @@ const { poll, click, fill, capture, resizeSelected } = require('./canvas-browser
     run = await saved(14);
     assert.equal(fixture.calls(), 1);
     const finalSlide = (await slides(run))[0];
-    assert.equal(finalSlide.spec.objects.find((o) => o.id === shape.id).frame.x, 50);
+    const movedShape = finalSlide.spec.objects.find((object) => object.id === shape.id);
+    assert(movedShape, 'Object-scoped AI edit preserves the selected shape identity');
+    assert.equal(movedShape.frame.x, 50);
     assert.equal(
       finalSlide.spec.objects.find((o) => o.content.kind === 'text').content.text,
       '근거를 바탕으로 직접 작성',
