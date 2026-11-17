@@ -2,6 +2,7 @@
 // Pattern: Filesystem boundary with a process-lifetime lock guard.
 // Usage: Acquired by app before opening the database.
 // Related: storage.rs, app/mod.rs.
+mod durability;
 mod storage;
 pub(crate) use storage::Storage;
 

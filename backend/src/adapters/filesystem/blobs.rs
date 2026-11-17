@@ -234,12 +234,7 @@ impl UploadSink for Staged {
                     PathBuf::from("sha256"),
                     PathBuf::from("."),
                 ] {
-                    self.root
-                        .open_dir(directory)
-                        .map_err(io_error)?
-                        .into_std_file()
-                        .sync_all()
-                        .map_err(io_error)?;
+                    super::durability::sync_directory(&self.root, &directory).map_err(io_error)?;
                 }
                 Ok(Blob {
                     sha256: hash,

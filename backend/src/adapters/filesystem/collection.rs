@@ -49,13 +49,11 @@ impl CollectionFiles {
             Ok(metadata) => {
                 verify_existing(&self.0, &path, hash, metadata.len())?;
                 self.0.remove_file(&path)?;
-                self.0
-                    .open_dir(
-                        path.parent()
-                            .ok_or_else(|| anyhow::anyhow!("invalid Blob path"))?,
-                    )?
-                    .into_std_file()
-                    .sync_all()?;
+                super::durability::sync_directory(
+                    &self.0,
+                    path.parent()
+                        .ok_or_else(|| anyhow::anyhow!("invalid Blob path"))?,
+                )?;
                 Ok(metadata.len())
             }
         }

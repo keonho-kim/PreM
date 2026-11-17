@@ -70,11 +70,7 @@ pub(super) async fn publish(
             Path::new("sha256").to_path_buf(),
             Path::new(".").to_path_buf(),
         ] {
-            root.open_dir(p)
-                .map_err(|_| Error::Storage)?
-                .into_std_file()
-                .sync_all()
-                .map_err(|_| Error::Storage)?;
+            super::durability::sync_directory(&root, &p).map_err(|_| Error::Storage)?;
         }
         Ok(DerivedBlob {
             sha256: hash,
