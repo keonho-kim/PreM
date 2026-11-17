@@ -28,6 +28,8 @@ for source in files:
         link = unquote(match[1].strip('<>'))
         if re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:',link): continue
         path, _, fragment = link.partition('#')
+        # Absolute skill links are host-local agent configuration, not repository artifacts.
+        if Path(path).is_absolute(): continue
         target = (source.parent/path).resolve() if path else source
         if not target.exists(): errors.append(f'{source.relative_to(ROOT)}: missing {link}')
         elif fragment and target.is_file() and target.suffix=='.md' and fragment not in anchors(target):
