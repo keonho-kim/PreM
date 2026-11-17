@@ -2,7 +2,7 @@
 // Pattern: Stable shell outside route rendering; simulated tasks remain owned by their features.
 // Usage: app.js supplies read-only task projections; no files or state are persisted.
 // Related: mock/styles/feedback.css, space.js, workflow.js, app-events.js.
-window.PuPuTyXModules.feedback = (capabilities) => {
+window.PreMModules.feedback = (capabilities) => {
   'use strict';
   const { $, esc, icon, readAssets, readRuns } = capabilities;
   const readTasks = () => [

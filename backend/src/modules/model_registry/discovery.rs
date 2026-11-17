@@ -65,6 +65,7 @@ impl Registry {
             token,
             model_identifier: String::new(),
             timeout_seconds: 30,
+            max_output_tokens: None,
         })
     }
 }

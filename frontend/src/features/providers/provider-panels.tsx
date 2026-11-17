@@ -12,6 +12,7 @@ import { ProviderChecks } from './provider-checks';
 import { ProviderHistory } from './provider-history';
 export type ProviderTab = 'settings' | 'capacity' | 'tests' | 'decision' | 'history';
 export function ProviderPanels({
+  decision,
   provider,
   option,
   tab,
@@ -19,6 +20,7 @@ export function ProviderPanels({
   catalog,
   onSaved,
 }: {
+  decision: boolean;
   provider: Provider;
   option: ProviderOption;
   tab: ProviderTab;
@@ -37,17 +39,13 @@ export function ProviderPanels({
         <TabsTrigger value="settings">연결 설정</TabsTrigger>
         <TabsTrigger value="capacity">처리 설정</TabsTrigger>
         <TabsTrigger value="tests">연결 테스트</TabsTrigger>
-        <TabsTrigger value="decision">판정 테스트</TabsTrigger>
+        {decision && <TabsTrigger value="decision">판정 테스트</TabsTrigger>}
         <TabsTrigger value="history">요청 이력</TabsTrigger>
       </TabsList>
       <TabsContent value="settings" forceMount hidden={tab !== 'settings'}>
         <section className="provider-summary" aria-label="선택한 연결 설정">
           <div>
             <h2>{provider.name}</h2>
-            <p>
-              {option.category === 'system' ? 'System One' : 'LLM'} · {option.label} ·{' '}
-              {option.protocol} · v{provider.version}
-            </p>
           </div>
         </section>
         <ProviderForm provider={provider} catalog={catalog} onSaved={onSaved} />
@@ -59,7 +57,9 @@ export function ProviderPanels({
         <ProviderChecks key={provider.config_id} provider={provider} option={option} />
       </TabsContent>
       <TabsContent value="decision" forceMount hidden={tab !== 'decision'}>
-        <DecisionChecks key={provider.config_id} provider={provider} option={option} />
+        {decision && (
+          <DecisionChecks key={provider.config_id} provider={provider} option={option} />
+        )}
       </TabsContent>
       <TabsContent value="history" forceMount hidden={tab !== 'history'}>
         <ProviderHistory providerId={provider.id} active={tab === 'history'} />

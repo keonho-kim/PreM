@@ -26,11 +26,17 @@ pub(crate) struct Design {
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Generate {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node_ids: Option<Vec<Uuid>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub materials: Vec<super::MaterialChoice>,
     pub design_id: Uuid,
     pub title: String,
     pub instructions: String,
-    pub connection_id: Uuid,
-    pub model_version: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub connection_id: Option<Uuid>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model_version: Option<i64>,
     pub presentation_id: Option<Uuid>,
     pub expected_version: i64,
 }
@@ -49,8 +55,11 @@ pub(crate) struct Run {
     pub total: i64,
     pub error_code: Option<String>,
     pub created_at: i64,
+    pub steps: Vec<crate::workflows::engine::Stage>,
+    pub quality: Vec<super::SlideQuality>,
     #[serde(skip)]
-    pub config_id: Uuid,
+    pub config_id: Option<Uuid>,
+    pub manual: bool,
     #[serde(skip)]
     pub lease: Option<String>,
     #[serde(skip)]
@@ -59,13 +68,22 @@ pub(crate) struct Run {
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct SlideSpec {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design: Option<super::SlideDesign>,
     pub schema_version: i64,
     pub title: String,
     pub bullets: Vec<String>,
     pub notes: String,
     pub block_ids: Vec<Uuid>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub objects: Vec<super::SlideObject>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout: Option<super::Layout>,
 }
 pub(crate) struct Plan {
+    pub layouts: Vec<super::CanvasLayout>,
+    pub materials: Vec<super::ImportedMaterial>,
+    pub first: bool,
     pub slide_id: Uuid,
     pub context: serde_json::Value,
     pub block_ids: Vec<Uuid>,
@@ -78,8 +96,13 @@ pub(crate) struct Slide {
     pub preview: bool,
 }
 pub(crate) struct RenderInput {
+    pub typography: Option<super::Typography>,
+    pub repair: bool,
+    pub offset: usize,
     pub specs: Vec<(Uuid, SlideSpec)>,
     pub template_sha256: Option<String>,
+    pub media: Vec<super::Media>,
+    pub references: Vec<super::ImportedMaterial>,
 }
 pub(crate) struct Rendered {
     pub output: crate::modules::assets::DerivedBlob,
@@ -97,6 +120,22 @@ pub(crate) enum Error {
     Invalid,
     #[error("수정 요청은 2,000자 이내로 입력하고 수정할 범위를 선택하세요.")]
     EditInvalid,
+    #[error(
+        "5 MiB 이하의 PNG·JPEG·WebP 이미지를 선택하세요. 최대 1,600만 화소이며 움직이는 이미지는 지원하지 않습니다."
+    )]
+    ImageInvalid,
+    #[error(
+        "이 발표자료에 연결된 LLM을 사용할 수 없습니다. Admin에서 해당 LLM 연결을 확인해 주세요."
+    )]
+    EditModelUnavailable,
+    #[error("발표자료를 작성할 AI가 준비되지 않았습니다. 관리자에게 연결 설정을 확인해 주세요.")]
+    WritingModelUnavailable,
+    #[error("편집 세션이 끝났거나 다른 변경이 저장되어 되돌릴 이전 상태가 없습니다.")]
+    HistoryUnavailable,
+    #[error(
+        "한 프로젝트에서 사용할 수 있는 레퍼런스 자료는 최대 500개입니다. 새 프로젝트로 나누어 준비하세요."
+    )]
+    ReferenceLimit,
     #[error("현재 생성 중인 작업이 있습니다. 완료하거나 취소한 뒤 다시 시도하세요.")]
     Busy,
     #[error("같은 요청에 다른 내용이 전달되었습니다.")]
@@ -107,6 +146,8 @@ pub(crate) enum Error {
     Storage,
     #[error("발표자료를 만들지 못했습니다. 완료한 내용은 보존됩니다.")]
     Processing(&'static str),
+    #[error("일부 장표의 글자나 배치를 확인해야 합니다. 완료한 장표는 보존했습니다.")]
+    Quality(super::QualityReport),
 }
 pub(crate) fn now() -> i64 {
     crate::modules::documents::now()

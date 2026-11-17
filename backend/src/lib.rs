@@ -5,3 +5,5 @@
 mod adapters;
 pub mod app;
 mod modules;
+
+mod workflows;

@@ -2,7 +2,7 @@
 // Pattern: Stable project IDs pin commands independently of the currently open project.
 // Usage: Projects view composes this feature; forms and the action dispatcher call its facade.
 // Related: project-menu.js, forms.js, views/projects.js.
-window.PuPuTyXModules.projectManagement = ({
+window.PreMModules.projectManagement = ({
   readProjects,
   readRuns,
   readSelectedId,

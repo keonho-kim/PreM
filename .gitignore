@@ -1,42 +1,129 @@
-# Application data and local credentials
+# Purpose: Keep local state and generated output out of the PreM source repository.
+# Pattern: Ignore owned output locations; retain reproducible inputs and reviewed fixtures.
+# Usage: Verify new paths with git check-ignore; tracked files are not untracked by this file.
+# Related: README.md, AGENTS.md, scripts/setup.sh, scripts/install-document-runtime.mjs.
+
+# Application-owned storage: databases, originals, blobs, secrets, workspaces and backups
 /data/
+/logs/
+/backups/
+
+# Local environment and credentials; only credential-free examples may be tracked
 .env
 .env.*
 !.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+!.env.*.sample
+!.env.*.template
+.envrc
+.direnv/
+/secrets/
+/credentials/
+/credentials.json
+/service-account*.json
 *.key
 *.pem
 *.p12
 *.pfx
+*.jks
+.npmrc.local
+
+# SQLite files and their WAL/shared-memory/rollback journals, including ad-hoc instances
 *.sqlite
+*.sqlite3
 *.sqlite-*
+*.sqlite3-*
 *.db
 *.db-wal
 *.db-shm
+*.db-journal
 
-# Installed dependencies, builds and caches
+# Dependency installations and package-manager caches; manifests and lockfiles stay tracked
 node_modules/
+.pnpm-store/
+.npm/
+
+# Rust, Vite and release output
 /target/
+/backend/target/
 /frontend/dist/
+/dist/
 /release/
-coverage/
+.vite/
+.vite-temp/
 *.tsbuildinfo
+
+# Python helpers and local environments
 __pycache__/
 *.py[cod]
 .venv/
-.DS_Store
-*.log
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Local design state and disposable QA output
-/.hallmark/
+# QA profiles, downloads, reports, coverage and compiler instrumentation
 .artifacts/
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+lcov.info
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+/report.*.json
+
+# Local design metadata and generated screenshots; keep capture documentation
+/.hallmark/
 /mock/captures/**
 !/mock/captures/**/
 !/mock/captures/**/README.md
 
-# Runtime installations are reconstructed from committed inputs
+# Downloaded runtime/tools/models and copied adapters are reconstructed during setup/build
+# Keep these exact npm inputs: the offline runtime installer requires both files
 /runtime/*
 !/runtime/README.md
 !/runtime/kordoc/
 /runtime/kordoc/*
 !/runtime/kordoc/package.json
 !/runtime/kordoc/package-lock.json
+
+# Local IDE state; shared, credential-free VS Code project configuration may be tracked
+.idea/
+*.iml
+**/.vscode/*
+!**/.vscode/extensions.json
+!**/.vscode/settings.json
+!**/.vscode/tasks.json
+!**/.vscode/launch.json
+.history/
+
+# Logs, editor backups, merge leftovers and temporary process files
+*.log
+*.pid
+*.pid.lock
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+*.tmp
+*.temp
+*.bak
+
+# Operating-system metadata
+.DS_Store
+._*
+.AppleDouble/
+Thumbs.db
+Desktop.ini
+
+# Local reference documents are not source or release assets.
+/sample-assets/

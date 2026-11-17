@@ -80,21 +80,11 @@ function start(command, args, env = {}) {
 process.once('SIGINT', () => stop(130));
 process.once('SIGTERM', () => stop(0));
 
-if (!values['backend-only']) console.log('PuPuTyX: http://127.0.0.1:5173/home');
+if (!values['backend-only']) console.log('PreM: http://127.0.0.1:5173/home');
 console.log(`Development storage: ${dataPath}`);
 start(
   'cargo',
-  [
-    'run',
-    '--locked',
-    '-p',
-    'puputyx-backend',
-    '--bin',
-    'PuPuTyX',
-    '--',
-    '--data-storage-path',
-    dataPath,
-  ],
+  ['run', '--locked', '-p', 'prem-backend', '--bin', 'PreM', '--', '--data-storage-path', dataPath],
   {
     APP_LISTEN_ADDRESS: '127.0.0.1',
     APP_PORT: '8000',

@@ -3,15 +3,12 @@
 // Usage: SlideChat and proposal review; all transport stays with Rust's existing model gateway.
 // Related: backend/modules/presentations/edits.rs, chat-drafts.ts.
 import { z } from 'zod';
+import { qualitySchema } from './quality-schema';
+import { slideSpecSchema as spec } from './slide-spec';
 import { request } from '@/shared/api/http';
-const spec = z.object({
-  schema_version: z.number(),
-  title: z.string(),
-  bullets: z.array(z.string()),
-  notes: z.string(),
-  block_ids: z.array(z.uuid()),
-});
 const edit = z.object({
+  quality: qualitySchema.optional(),
+  steps: z.array(z.object({ key: z.string(), state: z.string(), attempt: z.number() })).optional(),
   id: z.uuid(),
   project_id: z.uuid(),
   presentation_id: z.uuid(),
@@ -37,16 +34,37 @@ const edit = z.object({
   applied_run_id: z.uuid().nullable(),
   render_status: z.string().nullable(),
   created_at: z.number(),
+  preview: z.boolean().default(false),
   before: spec,
   proposal: spec.nullable(),
+  targets: z
+    .array(
+      z.object({
+        slide_id: z.uuid(),
+        position: z.number(),
+        completed: z.boolean(),
+        object_ids: z.array(z.string()),
+      }),
+    )
+    .optional(),
+  slides: z
+    .array(
+      z.object({
+        slide_id: z.uuid(),
+        position: z.number(),
+        before: spec,
+        proposal: spec.nullable(),
+      }),
+    )
+    .optional(),
 });
 export type Edit = z.infer<typeof edit>;
 export type EditRequest = {
   expected_version: number;
-  connection_id: string;
-  model_version: number;
   prompt: string;
   fields: string[];
+  slide_ids?: string[];
+  object_ids?: string[];
 };
 export const editKeys = {
   all: ['presentation-edits'] as const,
@@ -67,9 +85,10 @@ export const editCommand = (
   e: Edit,
   action: 'apply' | 'reject' | 'retry' | 'cancel',
   key: string,
+  session?: string | null,
 ) =>
   request(`/api/v1/projects/${p}/slide-edits/${e.id}/${action}`, edit, {
     method: 'POST',
     headers: { 'Idempotency-Key': key },
-    body: JSON.stringify({ expected_version: e.version }),
+    body: JSON.stringify({ expected_version: e.version, editor_session_id: session ?? undefined }),
   });

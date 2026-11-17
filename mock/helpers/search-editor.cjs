@@ -15,7 +15,7 @@ const fs = require('node:fs');
     await page.goto(baseURL + '#view=references&project=platform', { waitUntil: 'networkidle0' });
     await page.type('#search-input', '근거');
     await page.click('form[data-form="search"] button');
-    assert.ok(await page.evaluate(() => CSS.highlights.get('puputyx-search').size > 0));
+    assert.ok(await page.evaluate(() => CSS.highlights.get('prem-search').size > 0));
     await page.screenshot({
       path: projectRoot + '/mock/captures/folio/search-matches.png',
       fullPage: true,
@@ -25,7 +25,7 @@ const fs = require('node:fs');
     assert.equal(await page.$('.search-results img'), null);
     await page.evaluate(() => (location.hash = 'view=editor&project=platform&deck=deck1'));
     await page.waitForSelector('#edit-instruction');
-    assert.equal(await page.evaluate(() => CSS.highlights.has('puputyx-search')), false);
+    assert.equal(await page.evaluate(() => CSS.highlights.has('prem-search')), false);
     await page.type('#edit-instruction', '보존할 수정 지시');
     await page.focus('#editor-chat-tab');
     await page.keyboard.press('ArrowRight');
@@ -43,7 +43,7 @@ const fs = require('node:fs');
     const first = await candidates();
     assert.ok(first.length);
     await page.click('[data-action="attach-page-reference"]');
-    const snap = await page.evaluate(() => PuPuTyXMock.snapshot().projects[0].decks[0]);
+    const snap = await page.evaluate(() => PreMMock.snapshot().projects[0].decks[0]);
     assert.equal(snap.slides[0].sourceInsertions.length, 1);
     assert.equal(snap.version, 2);
     assert.equal(snap.revisions[0].slides[0].sourceInsertions, undefined);
@@ -55,7 +55,7 @@ const fs = require('node:fs');
     assert.notDeepEqual(await candidates(), first);
     assert.equal(
       await page.evaluate(
-        () => PuPuTyXMock.snapshot().projects[0].decks[0].slides[1].sourceInsertions,
+        () => PreMMock.snapshot().projects[0].decks[0].slides[1].sourceInsertions,
       ),
       undefined,
     );

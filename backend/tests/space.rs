@@ -13,7 +13,7 @@ mod space_support;
 #[path = "space_support/validation.rs"]
 mod validation;
 use axum::http::StatusCode;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::Connection;
 use serde_json::json;
 use space_support::{download, upload};

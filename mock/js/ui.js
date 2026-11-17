@@ -2,7 +2,7 @@
 // Pattern: Feature factory with an explicit application context.
 // Usage: Registered before mock/app.js by mock/index.html.
 // Related: mock/app.js, mock/index.html.
-window.PuPuTyXModules.ui = (context) => {
+window.PreMModules.ui = (context) => {
   'use strict';
   const { $, $$, esc, icon, button, formatDate, ui } = context;
   let resizeObserver;
@@ -30,7 +30,7 @@ window.PuPuTyXModules.ui = (context) => {
           `<div class="slide-object" data-object-id="${esc(o.id)}" style="left:${Number(o.x) || 0}px;top:${Number(o.y) || 0}px;width:${Number(o.w) || 100}px;height:${Number(o.h) || 80}px">${o.type === 'shape' ? '<div class="canvas-shape"></div>' : o.type === 'image' && /^data:image\/(png|jpeg|webp);base64,/.test(o.src) ? `<img src="${esc(o.src)}" alt="${esc(o.alt)}" draggable="false" />` : `<div data-object-text="${esc(o.id)}" style="${/^#[0-9a-f]{6}$/i.test(o.color ?? '') ? 'color:' + o.color + ';' : ''}font-size:${Math.max(12, Math.min(96, o.fontSize ?? 28))}px;font-weight:${o.bold ? 600 : 400};font-style:${o.italic ? 'italic' : 'normal'};text-align:${['left', 'center', 'right'].includes(o.align) ? o.align : 'left'}">${esc(o.text ?? '')}</div>`}<span data-object-move aria-hidden="true">${icon('GripVertical')}</span><span data-object-resize aria-hidden="true"></span></div>`,
       )
       .join('');
-    return `<div class="slide-fit" data-slide-fit><article data-slide-id="${esc(slide.id ?? '')}" class="slide-sheet ${slide.layout === 'cover' ? 'cover' : ''} ${theme}" aria-label="슬라이드 미리보기"><div class="slide-brand">PuPuTyX</div><h2 data-edit-field="title"${styleAttr('title')}>${esc(slide.title)}</h2>${
+    return `<div class="slide-fit" data-slide-fit><article data-slide-id="${esc(slide.id ?? '')}" class="slide-sheet ${slide.layout === 'cover' ? 'cover' : ''} ${theme}" aria-label="슬라이드 미리보기"><div class="slide-brand">PreM</div><h2 data-edit-field="title"${styleAttr('title')}>${esc(slide.title)}</h2>${
       slide.layout === 'cover'
         ? `<p data-edit-field="0"${styleAttr(0)}>${esc(slide.body[0] ?? '')}</p>`
         : slide.layout === 'process'

@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const { once } = require('node:events');
 const { randomUUID } = require('node:crypto');
-async function model() {
+async function model(options = {}) {
   let calls = 0;
   const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
@@ -21,17 +21,20 @@ async function model() {
     const input = JSON.parse(body);
     const context = JSON.parse(input.messages[1].content);
     calls++;
+    await options.beforeCall?.(context, input);
     const source = context.source_excerpts;
     let output;
     if (context.task === 'slide_edit') {
       const changes = {};
+      const visual = /차트|도형|객체|이미지/.test(context.user_request);
       for (const field of context.selected_fields)
-        changes[field] =
-          field === 'title'
+        changes[field] = visual
+          ? ['objects', 'layout'].includes(field)
+            ? require('./object-fixture.cjs')(context)[field]
+            : null
+          : field === 'title'
             ? '검증 완료'
-            : field === 'bullets'
-              ? ['검토한 본문']
-              : '검토한 발표 메모';
+            : null;
       output = { tool: 'propose_slide_patch', message: '선택한 내용을 수정했습니다.', changes };
     } else if (context.task === 'presentation_slide')
       output = {
@@ -77,6 +80,10 @@ async function model() {
               : [context.sections[i % context.sections.length].key],
         })),
       };
+    if (context.task === 'presentation_slide' && context.template?.layouts?.length) {
+      output.schema_version = 4;
+      output.design = { layout_key: context.template.layouts[0].key, authored: false, objects: [] };
+    }
     res.end(
       JSON.stringify({
         choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(output) } }],

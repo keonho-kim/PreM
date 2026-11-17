@@ -107,7 +107,7 @@ async fn generate(
     let content = if schema.is_some() {
         "{\"status\":\"ok\"}"
     } else {
-        "PuPuTyX connection OK"
+        "PreM connection OK"
     };
     let failure = path.starts_with("bad/");
     Json(match kind.as_str() {

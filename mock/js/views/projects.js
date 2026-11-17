@@ -2,7 +2,7 @@
 // Pattern: Feature factory with an explicit application context.
 // Usage: Registered before mock/app.js by mock/index.html.
 // Related: mock/app.js, mock/index.html.
-window.PuPuTyXModules.projects = (context) => {
+window.PreMModules.projects = (context) => {
   'use strict';
   const {
     esc,
@@ -20,7 +20,7 @@ window.PuPuTyXModules.projects = (context) => {
     renderSlide,
     activityList,
   } = context;
-  const gallery = window.PuPuTyXModules.projectGallery({
+  const gallery = window.PreMModules.projectGallery({
     readProjects: () => context.store.projects,
     ui,
     esc,
@@ -29,12 +29,12 @@ window.PuPuTyXModules.projects = (context) => {
     render: context.render,
     announce: context.announce,
   });
-  const menu = window.PuPuTyXModules.projectMenu({
+  const menu = window.PreMModules.projectMenu({
     icon,
     esc,
     readProjects: () => context.store.projects,
   });
-  const management = window.PuPuTyXModules.projectManagement({
+  const management = window.PreMModules.projectManagement({
     readProjects: () => context.store.projects,
     readRuns: () => context.store.runs,
     readSelectedId: () => ui.projectId,

@@ -80,8 +80,6 @@ async function click(page, name, role = 'button') {
     await a.waitForSelector('#guide-do', { visible: true });
     await a.type('#guide-do', '실행 계획을 간결하게');
     await click(a, '저장하고 목차로');
-    await click(a, '작성에 사용할 AI', 'combobox');
-    await click(a, '발표 작성 AI', 'option');
     await click(a, '목차 만들기');
     await a.waitForFunction(() =>
       document.querySelector('.outline-save')?.textContent.includes('저장된 버전 1'),
@@ -115,11 +113,25 @@ async function click(page, name, role = 'button') {
     await click(a, '이 템플릿 선택');
     await click(a, '기본 디자인 선택');
     await click(a, '이 디자인으로 계속');
-    await a.waitForSelector('#presentation-model', { visible: true });
-    await click(a, '작성에 사용할 AI', 'combobox');
-    await click(a, '발표 작성 AI', 'option');
+    await a.waitForSelector('#presentation-title', { visible: true });
+    assert.equal(await a.$('#presentation-model'), null);
     await click(a, 'PPT 만들기');
     await a.waitForSelector('.presentation-output', { visible: true, timeout: 90000 });
+    await a.waitForFunction(
+      () => document.querySelectorAll('.presentation-workflow-status li').length === 3,
+    );
+    assert(
+      (await a.$eval('.presentation-workflow-status', (n) => n.textContent)).includes(
+        '파일 생성·검사',
+      ),
+    );
+    assert.equal(
+      await a.$$eval(
+        '.presentation-workflow-status li',
+        (nodes) => nodes.filter((n) => n.textContent.includes('완료')).length,
+      ),
+      3,
+    );
     assert.equal(await a.$eval('button[aria-label="템플릿"]', (n) => n.disabled), false);
     await a.$eval('.presentation-run-status', (n) => n.scrollIntoView({ block: 'start' }));
     const chrome = await a.evaluate(() => ({

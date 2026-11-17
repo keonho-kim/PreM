@@ -3,6 +3,11 @@
  * Pattern: Shared component adaptation; Radix owns interaction and overlay behavior.
  * Usage: Imported by the application stylesheet after its base component rules.
  * Related: components/ui/, design/refract.tokens.json, frontend/components.sources.json. */
+.field-hint {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
 .ui-button {
   cursor: pointer;
   font-family: var(--font-body);

@@ -61,6 +61,7 @@ impl IntoResponse for ApiError {
             Error::NotFound => (StatusCode::NOT_FOUND, "not_found"),
             Error::Conflict => (StatusCode::CONFLICT, "revision_conflict"),
             Error::Idempotency => (StatusCode::CONFLICT, "idempotency_conflict"),
+            Error::MissingModel => (StatusCode::UNPROCESSABLE_ENTITY, "decision_model_required"),
             Error::Invalid | Error::NotReady | Error::SourceLimit | Error::SelectionLimit => {
                 (StatusCode::UNPROCESSABLE_ENTITY, "invalid_search")
             }

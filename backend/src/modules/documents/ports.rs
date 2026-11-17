@@ -6,6 +6,10 @@ use super::*;
 use std::{future::Future, pin::Pin};
 pub(crate) type Work<T> = Pin<Box<dyn Future<Output = Result<T, Error>> + Send>>;
 pub(crate) trait Store: Send + Sync {
+    fn current_job(&self, id: Uuid) -> Work<Job>;
+    fn begin_node(&self, j: Job, n: crate::workflows::engine::Node) -> Work<bool>;
+    fn finish_node(&self, j: Job, n: crate::workflows::engine::Node) -> Work<()>;
+
     fn enqueue(
         &self,
         kind: String,

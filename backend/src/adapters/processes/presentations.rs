@@ -5,21 +5,16 @@
 use super::*;
 use crate::modules::{
     assets::{DerivedBlob, DerivedFormat},
-    presentations::{self, RenderInput, Rendered, Work},
+    presentations::{self, QualityReport, RenderInput, Rendered, SlideOutput, Work},
 };
 impl presentations::Renderer for Runtime {
-    fn profile(&self) -> String {
-        let mut h = Sha256::new();
-        h.update(self.profile.as_bytes());
-        h.update(include_bytes!("../../../tools/presentation-render.py"));
-        h.update(include_bytes!("../../../tools/presentation-validate.mjs"));
-        h.update(include_bytes!("../../../../scripts/runtime-python.lock"));
-        hex::encode(h.finalize())
+    fn layouts(&self, template: Option<String>) -> Work<Vec<presentations::CanvasLayout>> {
+        self.canvas_layouts(template)
     }
-    fn render(&self, input: RenderInput, cancel: CancellationToken) -> Work<Rendered> {
+    fn assemble(&self, parts: Vec<DerivedBlob>, cancel: CancellationToken) -> Work<DerivedBlob> {
         let this = self.clone();
         Box::pin(async move {
-            this.render_presentation(input, cancel)
+            this.assemble_presentation(parts, cancel)
                 .await
                 .map_err(|e| match e {
                     Error::Cancelled => presentations::Error::Cancelled,
@@ -28,21 +23,91 @@ impl presentations::Renderer for Runtime {
                 })
         })
     }
+    fn image(&self, bytes: Vec<u8>) -> Work<presentations::NormalizedImage> {
+        let this = self.clone();
+        Box::pin(async move { this.normalize_image(bytes).await })
+    }
+    fn profile(&self) -> String {
+        let mut h = Sha256::new();
+        h.update(self.profile.as_bytes());
+        h.update(include_bytes!("../../../tools/presentation-render.py"));
+        h.update(include_bytes!("../../../tools/presentation-canvas.py"));
+        h.update(include_bytes!("../../../tools/presentation-layers.py"));
+        h.update(include_bytes!("../../../tools/presentation-previews.mjs"));
+        h.update(include_bytes!("../../../tools/presentation-objects.py"));
+        h.update(include_bytes!("../../../tools/presentation-quality.py"));
+        h.update(include_bytes!("../../../tools/presentation-assemble.py"));
+        h.update(include_bytes!("../../../tools/presentation-references.py"));
+        h.update(include_bytes!("../../../tools/presentation-validate.mjs"));
+        h.update(include_bytes!("../../../../scripts/runtime-python.lock"));
+        hex::encode(h.finalize())
+    }
+    fn render(&self, input: RenderInput, cancel: CancellationToken) -> Work<SlideOutput> {
+        let this = self.clone();
+        Box::pin(async move {
+            match this.render_presentation(input, cancel).await {
+                Ok((Some(rendered), report, layers)) => Ok(SlideOutput {
+                    rendered,
+                    report,
+                    layers,
+                }),
+                Ok((None, report, _)) => Err(presentations::Error::Quality(report)),
+                Err(Error::Cancelled) => Err(presentations::Error::Cancelled),
+                Err(Error::Processing(c)) => Err(presentations::Error::Processing(c)),
+                Err(_) => Err(presentations::Error::Storage),
+            }
+        })
+    }
 }
 impl Runtime {
     async fn render_presentation(
         &self,
         input: RenderInput,
         cancel: CancellationToken,
-    ) -> Result<Rendered, Error> {
+    ) -> Result<
+        (
+            Option<Rendered>,
+            QualityReport,
+            Vec<presentations::CanvasLayer>,
+        ),
+        Error,
+    > {
         let manifest = self
             .manifest
             .as_ref()
             .ok_or(Error::Processing("runtime_missing"))?;
         for (name, expected) in [
             (
+                "presentation-layers.py",
+                include_bytes!("../../../tools/presentation-layers.py").as_slice(),
+            ),
+            (
+                "presentation-previews.mjs",
+                include_bytes!("../../../tools/presentation-previews.mjs").as_slice(),
+            ),
+            (
+                "presentation-canvas.py",
+                include_bytes!("../../../tools/presentation-canvas.py").as_slice(),
+            ),
+            (
+                "presentation-quality.py",
+                include_bytes!("../../../tools/presentation-quality.py").as_slice(),
+            ),
+            (
+                "presentation-assemble.py",
+                include_bytes!("../../../tools/presentation-assemble.py").as_slice(),
+            ),
+            (
+                "presentation-references.py",
+                include_bytes!("../../../tools/presentation-references.py").as_slice(),
+            ),
+            (
                 "presentation-render.py",
                 include_bytes!("../../../tools/presentation-render.py").as_slice(),
+            ),
+            (
+                "presentation-objects.py",
+                include_bytes!("../../../tools/presentation-objects.py").as_slice(),
             ),
             (
                 "presentation-validate.mjs",
@@ -57,26 +122,10 @@ impl Runtime {
             }
         }
         let dir = tempfile::Builder::new()
-            .prefix(".puputyx-process-")
+            .prefix(".prem-process-")
             .tempdir_in(&self.work)
             .map_err(|_| Error::Storage)?;
-        if let Some(hash) = input.template_sha256 {
-            let bytes = self
-                .assets
-                .bytes(hash, 50 * 1024 * 1024)
-                .await
-                .map_err(|_| Error::Storage)?;
-            tokio::fs::write(dir.path().join("template.pptx"), bytes)
-                .await
-                .map_err(|_| Error::Storage)?;
-        }
-        let specs: Vec<_> = input.specs.iter().map(|(_, s)| s).collect();
-        tokio::fs::write(
-            dir.path().join("specs.json"),
-            serde_json::to_vec(&specs).map_err(|_| Error::Storage)?,
-        )
-        .await
-        .map_err(|_| Error::Storage)?;
+        self.presentation_inputs(dir.path(), &input).await?;
         let mut cmd = Command::new(&manifest.python);
         cmd.arg(self.root.join("presentation-render.py"))
             .arg(&self.root)
@@ -84,10 +133,15 @@ impl Runtime {
             .current_dir(dir.path())
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .env("TMPDIR", dir.path());
-        self.run(cmd, cancel.clone()).await.map_err(|e| match e {
-            Error::Cancelled => e,
-            _ => Error::Processing("presentation_render_failed"),
-        })?;
+        let result = self.run(cmd, cancel.clone()).await;
+        if matches!(result, Err(Error::Cancelled)) {
+            return Err(Error::Cancelled);
+        }
+        let report: QualityReport = Self::json(&dir.path().join("quality.json")).await?;
+        if !report.passed {
+            return Ok((None, report, vec![]));
+        }
+        result.map_err(|_| Error::Processing("presentation_render_failed"))?;
         let mut verify = Command::new(&manifest.node);
         verify
             .arg("--max-old-space-size=512")
@@ -101,12 +155,18 @@ impl Runtime {
             .arg(dir.path())
             .current_dir(dir.path())
             .env("KORDOC_OFFLINE", "1");
-        self.run(verify, cancel.clone())
-            .await
-            .map_err(|e| match e {
-                Error::Cancelled => e,
-                _ => Error::Processing("presentation_validation_failed"),
-            })?;
+        if let Err(e) = self.run(verify, cancel.clone()).await {
+            if matches!(e, Error::Cancelled) {
+                return Err(e);
+            }
+            let mut report = report;
+            report.passed = false;
+            report.issues.push(presentations::QualityIssue {
+                code: "output_text_missing".into(),
+                severity: "error".into(),
+            });
+            return Ok((None, report, vec![]));
+        }
         let mut preview = Command::new(&manifest.python);
         preview
             .arg(self.root.join("template-extract.py"))
@@ -117,6 +177,14 @@ impl Runtime {
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .env("TMPDIR", dir.path());
         self.run(preview, cancel.clone()).await?;
+        let mut layers = Command::new(&manifest.python);
+        layers
+            .arg(self.root.join("presentation-layers.py"))
+            .arg(&self.root)
+            .arg(dir.path())
+            .current_dir(dir.path())
+            .env("PYTHONDONTWRITEBYTECODE", "1");
+        self.run(layers, cancel.clone()).await?;
         let mut raster = Command::new(&manifest.node);
         raster
             .arg("--max-old-space-size=512")
@@ -126,7 +194,7 @@ impl Runtime {
             .arg(format!("--allow-fs-read={}", self.root.display()))
             .arg(format!("--allow-fs-read={}", dir.path().display()))
             .arg(format!("--allow-fs-write={}", dir.path().display()))
-            .arg(self.root.join("template-previews.mjs"))
+            .arg(self.root.join("presentation-previews.mjs"))
             .arg(&self.root)
             .arg(dir.path())
             .current_dir(dir.path());
@@ -149,9 +217,28 @@ impl Runtime {
                 DerivedFormat::Binary,
             )
             .await?;
-        Ok(Rendered { output, previews })
+        let layer_data: Vec<super::presentation_layers::LayerFile> =
+            Self::json(&dir.path().join("layers.json")).await?;
+        let mut layers = vec![];
+        for (n, row) in layer_data.into_iter().enumerate() {
+            if row.file != format!("layer-{n}.png") {
+                return Err(Error::Processing("invalid_layer"));
+            }
+            layers.push(presentations::CanvasLayer {
+                id: row.id,
+                frame: row.frame,
+                blob: self
+                    .presentation_blob(
+                        &dir.path().join(row.file),
+                        4 * 1024 * 1024,
+                        DerivedFormat::Png,
+                    )
+                    .await?,
+            });
+        }
+        Ok((Some(Rendered { output, previews }), report, layers))
     }
-    async fn presentation_blob(
+    pub(super) async fn presentation_blob(
         &self,
         path: &Path,
         limit: u64,

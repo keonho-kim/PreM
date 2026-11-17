@@ -3,21 +3,11 @@
 // Usage: OutlineEditor disables commands while local changes are unsaved.
 // Related: api.ts, features/providers public facade, workspace.tsx.
 import { useRef, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { WandSparkles, ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-import { listAuthoringModels, authoringModelsKey } from '@/features/providers';
+import { WorkflowStatus } from './workflow-status';
 import { errorMessage } from '@/shared/api/http';
 import { createRun, commandRun, outlineKeys, type OutlineState, type Generate } from './api';
 export function Generation({
@@ -31,27 +21,17 @@ export function Generation({
   disabled: boolean;
   selected: string;
 }) {
-  const [model, setModel] = useState('');
   const [expanded, setExpanded] = useState(!state.version);
   const client = useQueryClient();
   const receipt = useRef<{ stamp: string; key: string } | null>(null);
-  const providers = useQuery({
-    queryKey: authoringModelsKey,
-    queryFn: ({ signal }) => listAuthoringModels(signal),
-  });
-  const options = providers.data ?? [];
-  const provider = options.find((p) => p.id === model);
   const running = !!state.run && ['queued', 'running'].includes(state.run.status);
   const refresh = () => void client.invalidateQueries({ queryKey: outlineKeys.all });
   const generate = useMutation({
     mutationFn: async ({ kind, all = false }: { kind: 'generate' | 'map'; all?: boolean }) => {
-      if (!provider) throw Error('목차 작성에 사용할 AI를 선택하세요.');
       const input: Generate = {
         expected_version: state.version,
         source_snapshot: state.source_snapshot,
         guide_version: state.guide_version,
-        connection_id: provider.id,
-        model_version: provider.version,
         kind,
         node_ids: kind === 'map' && selected && !all ? [selected] : [],
       };
@@ -67,7 +47,6 @@ export function Generation({
     },
     onError: () => {
       refresh();
-      void providers.refetch();
     },
   });
   const commandReceipt = useRef<{ stamp: string; key: string } | null>(null);
@@ -95,23 +74,8 @@ export function Generation({
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="outline-generation-controls">
-          <div>
-            <Label htmlFor="outline-model">작성에 사용할 AI</Label>
-            <Select value={model} onValueChange={setModel} disabled={running}>
-              <SelectTrigger id="outline-model">
-                <SelectValue placeholder="사용할 AI 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <Button
-            disabled={busy || !provider || !state.ready}
+            disabled={busy || !state.ready}
             onClick={() => generate.mutate({ kind: 'generate' })}
           >
             <WandSparkles aria-hidden="true" />
@@ -120,7 +84,7 @@ export function Generation({
           {state.version > 0 && (
             <Button
               variant="secondary"
-              disabled={busy || !provider || state.stale}
+              disabled={busy || state.stale}
               onClick={() => generate.mutate({ kind: 'map', all: true })}
             >
               전체 내용 자동 연결
@@ -129,49 +93,29 @@ export function Generation({
           {state.version > 0 && (
             <Button
               variant="secondary"
-              disabled={busy || !provider || state.stale}
+              disabled={busy || state.stale}
               onClick={() => generate.mutate({ kind: 'map' })}
             >
               {selected ? '선택 목차 자동 연결' : '내용 자동 연결'}
             </Button>
-          )}
-          {!options.length && !providers.isPending && (
-            <p>
-              <Link to="/admin?section=providers">모델 연결</Link>에서 AI를 등록하거나 아래에서 직접
-              작성할 수 있습니다.
-            </p>
-          )}
-          {providers.isError && (
-            <p role="alert">
-              AI 목록을 불러오지 못했습니다.{' '}
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  void providers.refetch();
-                }}
-              >
-                다시 불러오기
-              </Button>
-            </p>
           )}
         </CollapsibleContent>
       </Collapsible>
       {(generate.isError || control.isError) && (
         <p role="alert">{errorMessage(generate.error ?? control.error)}</p>
       )}
+      {state.run && <WorkflowStatus run={state.run} />}
       {state.run && state.run.status !== 'succeeded' && (
         <div className="outline-run" role="status">
           {running ? (
             <>
               <p>
-                {state.run.kind === 'generate'
-                  ? '목차를 구성하고 있습니다.'
-                  : '원문 내용을 연결하고 있습니다.'}
+                {state.run.status === 'queued'
+                  ? '시작을 기다리고 있습니다.'
+                  : state.run.kind === 'generate'
+                    ? '목차를 구성하고 있습니다.'
+                    : '원문 내용을 연결하고 있습니다.'}
               </p>
-              <Progress
-                aria-label="구성 진행률"
-                value={state.run.total ? (state.run.completed / state.run.total) * 100 : undefined}
-              />
               <Button
                 variant="ghost"
                 disabled={control.isPending}
@@ -183,11 +127,15 @@ export function Generation({
           ) : state.run.status === 'failed' ? (
             <>
               <p>
-                {state.run.error_code === 'inputs_changed'
-                  ? '원본·작성 방향 또는 목차가 바뀌어 결과를 적용하지 않았습니다. 최신 내용으로 다시 시작하세요.'
-                  : '자동 구성을 완료하지 못했습니다. 기존 목차와 입력은 유지됩니다.'}
+                {state.run.error_code === 'workflow_incompatible'
+                  ? '이 작업을 이어갈 수 없는 상태입니다. 기존 목차는 유지됩니다. 관리자에게 확인을 요청하세요.'
+                  : state.run.error_code === 'inputs_changed'
+                    ? '원본·작성 방향 또는 목차가 바뀌어 결과를 적용하지 않았습니다. 최신 내용으로 다시 시작하세요.'
+                    : '자동 구성을 완료하지 못했습니다. 기존 목차와 입력은 유지됩니다.'}
               </p>
-              {state.run.error_code !== 'inputs_changed' && (
+              {!['inputs_changed', 'workflow_incompatible'].includes(
+                state.run.error_code ?? '',
+              ) && (
                 <Button
                   variant="secondary"
                   disabled={disabled || control.isPending}

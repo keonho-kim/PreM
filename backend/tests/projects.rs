@@ -4,7 +4,7 @@
 // Related: common/mod.rs, modules/projects/, adapters/sqlite/projects.rs.
 mod common;
 use axum::http::StatusCode;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::json;
 use uuid::Uuid;
 #[tokio::test]

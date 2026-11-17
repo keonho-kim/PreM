@@ -84,7 +84,7 @@ fn verify_writes(directory: &Path) -> anyhow::Result<()> {
             .write(true)
             .create_new(true)
             .open(&source)?;
-        file.write_all(b"PuPuTyX storage probe")?;
+        file.write_all(b"PreM storage probe")?;
         file.sync_all()?;
         drop(file);
         fs::rename(&source, &destination)?;

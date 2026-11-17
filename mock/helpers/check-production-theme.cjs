@@ -23,7 +23,7 @@ async function stop(child) {
   }
 }
 (async () => {
-  const binary = path.join(projectRoot, 'target/release/PuPuTyX');
+  const binary = path.join(projectRoot, 'target/release/PreM');
   assert.ok(fs.existsSync(binary), 'Run pnpm build first.');
   const testRoot = path.join(projectRoot, 'tests/.artifacts');
   fs.mkdirSync(testRoot, { recursive: true });
@@ -56,7 +56,7 @@ async function stop(child) {
       assert.equal(child.exitCode, null, log);
       try {
         const response = await fetch(base + '/healthz', { signal: AbortSignal.timeout(500) });
-        ready = response.ok && (await response.json()).service === 'PuPuTyX';
+        ready = response.ok && (await response.json()).service === 'PreM';
       } catch {}
       if (ready) break;
       await delay(100);

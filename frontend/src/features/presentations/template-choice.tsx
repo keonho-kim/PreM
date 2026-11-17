@@ -60,7 +60,7 @@ export function TemplateChoice({
       <div className="presentation-template-grid">
         <article className="presentation-template" data-selected={selection === null}>
           <div className="presentation-template-paper">
-            <span>PuPuTyX</span>
+            <span>PreM</span>
             <strong>
               명확한 제목,
               <br />

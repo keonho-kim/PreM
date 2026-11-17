@@ -45,7 +45,7 @@ it('keeps Admin unmounted until verification and purges sensitive data on lock/e
   expect(readAdminToken()).toBe('test-token');
   client.setQueryData(['providers'], [{ base_url: 'private' }]);
   client.setQueryData(['authoring-models'], []);
-  await userEvent.click(screen.getByRole('button', { name: 'Admin 잠그기' }));
+  act(() => window.dispatchEvent(new Event('pagehide')));
   expect(readAdminToken()).toBeNull();
   expect(client.getQueryData(['providers'])).toBeUndefined();
   expect(client.getQueryData(['authoring-models'])).toEqual([]);

@@ -1,0 +1,92 @@
+/* Hallmark · Folio: quiet outline rows and explicit generation scope. */
+/* Purpose: Keep hierarchical selection readable and keyboard-scrollable at every width.
+ * Pattern: Ruled rows, shrinkable labels and large targets; no nested cards.
+ * Usage: generation-scope.tsx inside presentation-form.
+ * Related: design/refract.tokens.json, presentations.css. */
+.generation-scope-area {
+  align-self: start;
+  min-inline-size: 0;
+}
+.generation-scope,
+.generation-scope-branch {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+.generation-scope > legend {
+  margin-block-end: 8px;
+  font-weight: 600;
+}
+.generation-scope > p {
+  margin-block: 0 8px;
+}
+.generation-scope-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.generation-scope-summary output {
+  color: var(--color-ink-2);
+  font-size: 0.875rem;
+}
+.generation-scope-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-block-size: 44px;
+  cursor: pointer;
+}
+.generation-scope-row > span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.generation-scope-list {
+  max-block-size: 320px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  border-block: 1px solid var(--color-rule);
+}
+.generation-scope-branch {
+  padding-block: 4px 8px;
+}
+.generation-scope-branch > legend {
+  inline-size: 100%;
+  font-weight: 500;
+}
+.generation-scope-child {
+  padding-inline-start: 28px;
+}
+@media (pointer: coarse) {
+  .generation-scope-row {
+    min-block-size: 48px;
+  }
+}
+@media (forced-colors: active) {
+  .generation-scope-list {
+    border-color: CanvasText;
+  }
+}
+
+.generation-scope-entry {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-inline-size: 0;
+}
+.generation-scope-entry > label {
+  min-inline-size: 0;
+}
+.generation-outline-action {
+  color: var(--color-muted);
+  flex: none;
+}
+.generation-outline-action svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+.generation-scope-entry > label > span {
+  overflow-wrap: anywhere;
+}

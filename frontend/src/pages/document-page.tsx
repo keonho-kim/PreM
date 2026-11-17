@@ -38,7 +38,7 @@ export function DocumentPage() {
     : '/space';
   return (
     <main ref={main} className="container workspace document-workspace">
-      <title>{resource.data?.title ?? '자료'} | PuPuTyX</title>
+      <title>{resource.data?.title ?? '자료'} | PreM</title>
       <Button variant="ghost" asChild>
         <Link to={destination}>
           <ArrowLeft aria-hidden="true" />

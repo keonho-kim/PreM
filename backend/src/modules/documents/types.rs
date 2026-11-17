@@ -34,6 +34,8 @@ pub(crate) enum Error {
     Processing(&'static str),
     #[error("작업이 중단되었습니다.")]
     Cancelled,
+    #[error("문서 처리 설정을 기다리고 있습니다.")]
+    WaitingConfiguration,
 }
 #[derive(Clone, Debug, Serialize)]
 pub(crate) struct Job {
@@ -56,6 +58,7 @@ pub(crate) struct Job {
     pub updated_at: i64,
     pub total_blocks: i64,
     pub completed_blocks: i64,
+    pub steps: Vec<crate::workflows::engine::Stage>,
 }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]

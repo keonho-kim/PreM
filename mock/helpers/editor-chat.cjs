@@ -1,6 +1,6 @@
 // Purpose: Verify chat scope, multi-selection and immutable application in a browser.
 // Pattern: Actual input journeys plus observable exported state assertions.
-// Usage: node mock/helpers/editor-chat.cjs with PUPUTYX_BROWSER_TOOLS.
+// Usage: node mock/helpers/editor-chat.cjs with PREM_BROWSER_TOOLS.
 // Related: editor-chat.js, editor-selection.js, chat-patch.js.
 const assert = require('node:assert/strict');
 const { pathToFileURL } = require('node:url');
@@ -15,7 +15,7 @@ const { openBrowser, baseURL, projectRoot } = require('./browser.cjs');
     await p.goto(baseURL + '#view=editor&project=platform&deck=deck1', {
       waitUntil: 'networkidle0',
     });
-    const state = () => p.evaluate(() => PuPuTyXMock.snapshot().projects[0].decks[0]);
+    const state = () => p.evaluate(() => PreMMock.snapshot().projects[0].decks[0]);
     const select = async (field, mod) => {
       if (mod) await p.keyboard.down(mod);
       await p.click('.editor-stage [data-edit-field="' + field + '"]');

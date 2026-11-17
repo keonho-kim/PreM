@@ -9,7 +9,7 @@ const { setTimeout: delay } = require('node:timers/promises');
 const { upload, notifications, action } = require('./space-checks.cjs');
 async function htmlChecks(a, b, server, fixtureRoot, captures) {
   const source = Buffer.from(
-    '<!DOCTYPE html><html lang="ko"><meta charset="utf-8"><h1>팀 웹 문서</h1><script>window.puputyxHtmlExecuted=true</script><img src="https://html-fixture.invalid/tracker"></html>',
+    '<!DOCTYPE html><html lang="ko"><meta charset="utf-8"><h1>팀 웹 문서</h1><script>window.premHtmlExecuted=true</script><img src="https://html-fixture.invalid/tracker"></html>',
   );
   const filename = '팀 웹 문서.html';
   const original = path.join(fixtureRoot, filename);
@@ -30,7 +30,7 @@ async function htmlChecks(a, b, server, fixtureRoot, captures) {
     await upload(a, [original], '팀 웹 문서');
     await a.waitForSelector('.space-asset');
     assert.match(await a.$eval('.space-asset', (n) => n.textContent), /HTML/);
-    assert.equal(await a.evaluate(() => window.puputyxHtmlExecuted), undefined);
+    assert.equal(await a.evaluate(() => window.premHtmlExecuted), undefined);
     assert.equal(await a.$('main iframe'), null);
     await b.goto(server.base + '/home/space?tab=references&q=' + encodeURIComponent('웹 문서'), {
       waitUntil: 'networkidle0',
@@ -53,7 +53,7 @@ async function htmlChecks(a, b, server, fixtureRoot, captures) {
     for (let attempt = 0; attempt < 100 && !fs.existsSync(saved); attempt++) await delay(50);
     assert.deepEqual(fs.readFileSync(saved), source);
     assert.equal(a.url(), url);
-    assert.equal(await a.evaluate(() => window.puputyxHtmlExecuted), undefined);
+    assert.equal(await a.evaluate(() => window.premHtmlExecuted), undefined);
     await action(a, '새 파일 버전');
     const input = await a.$('.space-dialog input[type="file"]');
     assert.match(await input.evaluate((n) => n.accept), /\.html,\.htm/);

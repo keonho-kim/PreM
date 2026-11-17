@@ -7,7 +7,7 @@ use chacha20poly1305::{
     KeyInit, XChaCha20Poly1305,
     aead::{Aead, Payload},
 };
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::{Connection, params};
 use uuid::Uuid;
 mod embedded {
@@ -114,7 +114,7 @@ async fn verify_migration(version: i32) {
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |r| r.get::<_, i32>(0))
             .unwrap(),
-        20
+        32
     );
     assert_eq!(
         db.query_row(

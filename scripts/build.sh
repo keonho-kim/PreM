@@ -4,9 +4,9 @@
 # Usage: Invoked by the corresponding pnpm script.
 # Related: scripts/generate-design-tokens.mjs, backend/Cargo.toml.
 set -euo pipefail
-PUPUTYX_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PUPUTYX_ROOT"
+PREM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PREM_ROOT"
 pnpm tokens:check
 node scripts/prepare-document-runtime.mjs
-pnpm --filter @puputyx/frontend build
+pnpm --filter @prem/frontend build
 cargo build --workspace --release --locked --features embedded-ui

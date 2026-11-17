@@ -2,7 +2,7 @@
 // Pattern: Immutable slide snapshots with bounded per-deck interaction history.
 // Usage: Composed once by app.js, shared by forms, menus and canvas adapters.
 // Related: mock/js/slide-list.js, mock/js/canvas-editor.js, mock/app.js.
-window.PuPuTyXModules.slideCommands = ({
+window.PreMModules.slideCommands = ({
   deck,
   ui,
   clone,

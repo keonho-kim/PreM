@@ -16,7 +16,7 @@ const assert = require('node:assert/strict'),
     await p.goto(baseURL + '#view=editor&project=platform&deck=deck1', {
       waitUntil: 'networkidle0',
     });
-    const state = () => p.evaluate(() => PuPuTyXMock.snapshot().projects[0].decks[0]);
+    const state = () => p.evaluate(() => PreMMock.snapshot().projects[0].decks[0]);
     const original = await state();
     await p.click('.editor-stage [data-edit-field="title"]');
     await p.keyboard.type('cancel this');

@@ -2,10 +2,31 @@
 // Pattern: Consumer-owned persistence and renderer ports; model execution stays in inference.
 // Usage: App composes one service/worker and HTTP exposes explicit commands.
 // Related: types.rs, worker.rs, model.rs, adapters/sqlite/presentations/.
+mod canvas;
+mod layers;
+pub(crate) use canvas::*;
+pub(crate) use layers::*;
+mod edit_execution;
+mod execution;
+mod references;
+pub(crate) use references::*;
+mod history;
+pub(crate) use history::*;
+mod media;
+mod preview;
+mod quality;
+pub(crate) use media::*;
+pub(crate) use quality::*;
+mod object_schema;
+mod objects;
+pub(crate) use objects::*;
 mod edit_model;
 mod edit_types;
 mod edits;
 mod model;
+mod selection;
+pub(crate) use selection::{GenerationScope, GenerationSection, resolve_scope};
+mod template_authoring;
 pub(crate) use edit_types::*;
 mod types;
 mod worker;
@@ -26,7 +47,48 @@ pub(crate) struct File {
     pub size: u64,
     pub mime: &'static str,
 }
-pub(crate) trait Store: Send + Sync {
+pub(crate) trait Store: LayerStore + CanvasStore + QualityStore + Send + Sync {
+    fn generation_scope(&self, p: Uuid, design: Uuid) -> Work<GenerationScope>;
+    fn material_sources(&self, p: Uuid, r: Uuid, s: Uuid) -> Work<Vec<MaterialSource>>;
+    fn edit_begin_node(&self, e: Edit, n: crate::workflows::engine::Node) -> Work<bool>;
+    fn edit_finish_node(&self, e: Edit, n: crate::workflows::engine::Node) -> Work<()>;
+    fn generation_materials(&self, r: Run) -> Work<Vec<ImportedMaterial>>;
+    fn generation_imports(&self, r: Run) -> Work<Option<(String, Vec<ImportedMaterial>)>>;
+    fn apply_generation_imports(&self, r: Run, specs: Vec<InsertedSpec>) -> Work<()>;
+    fn imports(&self, p: Uuid) -> Work<Vec<ImportedMaterial>>;
+    fn insertion_plan(
+        &self,
+        p: Uuid,
+        r: Uuid,
+        key: Uuid,
+        i: &InsertMaterials,
+    ) -> Work<InsertionPlan>;
+    fn insert_materials(&self, commit: InsertionCommit) -> Work<Run>;
+    fn begin_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<bool>;
+    fn finish_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<()>;
+    fn store_render(&self, r: Run, o: Rendered) -> Work<()>;
+    fn rendered(&self, r: Run) -> Work<Option<Rendered>>;
+
+    fn history(&self, p: Uuid, run: Uuid, session: Option<Uuid>) -> Work<History>;
+    fn undo(&self, p: Uuid, run: Uuid, key: Uuid, version: i64, session: Uuid) -> Work<Run>;
+    fn open_editor(&self, p: Uuid, run: Uuid, id: Uuid) -> Work<Uuid>;
+    fn touch_editor(&self, p: Uuid, id: Uuid) -> Work<()>;
+    fn close_editor(&self, p: Uuid, id: Uuid) -> Work<()>;
+    fn expire_editors(&self, all: bool) -> Work<()>;
+    fn edit_render_source(&self, e: Edit) -> Work<(Vec<StoredSlide>, Option<String>)>;
+    fn edit_render_ready(&self, e: Edit, r: Rendered) -> Work<()>;
+    fn edit_preview(&self, p: Uuid, id: Uuid, slide: Uuid) -> Work<File>;
+    fn cached_render(&self, r: Run) -> Work<Option<Rendered>>;
+
+    fn media(&self, p: Uuid) -> Work<Vec<Media>>;
+    fn register_media(
+        &self,
+        p: Uuid,
+        key: Uuid,
+        name: String,
+        original: DerivedBlob,
+        image: NormalizedImage,
+    ) -> Work<Media>;
     fn create_edit(
         &self,
         p: Uuid,
@@ -44,11 +106,20 @@ pub(crate) trait Store: Send + Sync {
         key: Uuid,
         version: i64,
         action: String,
+        session: Option<Uuid>,
     ) -> Work<Edit>;
     fn claim_edit(&self) -> Work<Option<Edit>>;
     fn edit_heartbeat(&self, e: Edit) -> Work<bool>;
     fn edit_context(&self, e: Edit) -> Work<serde_json::Value>;
-    fn edit_ready(&self, e: Edit, blob: DerivedBlob, message: String, request: Uuid) -> Work<()>;
+    fn edit_ready(
+        &self,
+        e: Edit,
+        target: Uuid,
+        blob: DerivedBlob,
+        message: String,
+        request: Uuid,
+        assets: UsedAssets,
+    ) -> Work<()>;
     fn edit_fail(&self, e: Edit, code: String) -> Work<()>;
 
     fn citations(&self, p: Uuid, id: Uuid, slide: Uuid) -> Work<Vec<Citation>>;
@@ -70,14 +141,18 @@ pub(crate) trait Store: Send + Sync {
         spec: DerivedBlob,
         blocks: Vec<Uuid>,
         request: Uuid,
+        references: Vec<Uuid>,
     ) -> Work<()>;
     fn render_source(&self, r: Run) -> Work<Option<String>>;
     fn complete(&self, r: Run, output: Rendered) -> Work<()>;
     fn fail(&self, r: Run, code: String) -> Work<()>;
 }
 pub(crate) trait Renderer: Send + Sync {
+    fn layouts(&self, template: Option<String>) -> Work<Vec<CanvasLayout>>;
+    fn image(&self, bytes: Vec<u8>) -> Work<NormalizedImage>;
     fn profile(&self) -> String;
-    fn render(&self, input: RenderInput, cancel: CancellationToken) -> Work<Rendered>;
+    fn render(&self, input: RenderInput, cancel: CancellationToken) -> Work<SlideOutput>;
+    fn assemble(&self, parts: Vec<DerivedBlob>, cancel: CancellationToken) -> Work<DerivedBlob>;
 }
 #[derive(Clone)]
 pub(crate) struct Presentations {
@@ -117,11 +192,22 @@ impl Presentations {
     }
     pub async fn create(&self, p: Uuid, k: Uuid, mut i: Generate) -> Result<Run, Error> {
         i.title = i.title.trim().into();
+        if let Some(ids) = &mut i.node_ids {
+            if ids.is_empty() || ids.len() > 24 {
+                return Err(Error::Invalid);
+            }
+            ids.sort();
+            if ids.windows(2).any(|p| p[0] == p[1]) {
+                return Err(Error::Invalid);
+            }
+        }
         if i.title.is_empty()
             || i.title.chars().count() > 120
             || i.instructions.chars().count() > 1000
+            || i.materials.len() > 10
             || i.expected_version < 0
-            || i.model_version < 1
+            || i.model_version.is_some_and(|v| v < 1)
+            || i.connection_id.is_some() != i.model_version.is_some()
         {
             return Err(Error::Invalid);
         }

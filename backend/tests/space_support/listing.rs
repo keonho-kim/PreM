@@ -4,7 +4,7 @@
 // Related: adapters/sqlite/libraries/queries.rs, http/space/dto.rs.
 use crate::{common, space_support};
 use axum::http::StatusCode;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::json;
 use uuid::Uuid;
 #[tokio::test]

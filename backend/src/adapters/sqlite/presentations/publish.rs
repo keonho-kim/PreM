@@ -10,15 +10,16 @@ pub(super) fn complete(
 ) -> Result<(), Error> {
     let tx = db.transaction().map_err(failure)?;
     jobs::active(&tx, &r)?;
-    let (base, design, deck): (i64, String, String) = tx
+    let (base, design, deck): (i64, Option<String>, String) = tx
         .query_row(
             "SELECT base_version,design_id,presentation_id FROM presentation_runs WHERE id=?",
             [r.id.to_string()],
             |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
         )
         .map_err(failure)?;
-    if !edits::is_edit(&tx, &r.id.to_string())?
-        && preparation::current(&tx, r.project_id)?.design_id != Some(uuid(design)?)
+    if !canvas::authored(&tx, &r.id.to_string())?
+        && !edits::is_edit(&tx, &r.id.to_string())?
+        && preparation::current(&tx, r.project_id)?.design_id != design.map(uuid).transpose()?
     {
         return Err(Error::Conflict);
     }
@@ -68,8 +69,10 @@ pub(super) fn complete(
         )
         .map_err(failure)?;
     }
+    history::push(&tx, &r)?;
     if tx.execute("UPDATE presentations SET version=version+1,current_revision_id=? WHERE id=? AND version=?",params![r.id.to_string(),deck,base]).map_err(failure)?!=1{return Err(Error::Conflict)}
     tx.execute("UPDATE presentation_runs SET status='succeeded',stage='complete',version=version+1,lease=NULL,lease_until=NULL WHERE id=?",[r.id.to_string()]).map_err(failure)?;
+    execution::publish(&tx, &r)?;
     edits::mark_applied(&tx, &r.id.to_string())?;
     tx.commit().map_err(failure)?;
     Ok(())

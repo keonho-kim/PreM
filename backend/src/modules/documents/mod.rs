@@ -3,8 +3,11 @@
 // Usage: App composes one service for HTTP and the processing worker.
 // Related: ports.rs, types.rs, worker.rs, adapters/http/documents.rs.
 mod materials;
+pub(crate) use materials::NativeLocator;
 mod ports;
 pub(crate) use materials::{Material, MaterialCatalog, NativeMaterial, NativePackage};
+mod classification;
+mod execution;
 mod types;
 mod worker;
 use crate::modules::decisions::Decisions;

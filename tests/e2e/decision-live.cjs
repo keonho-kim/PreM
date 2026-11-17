@@ -1,14 +1,14 @@
 // Purpose: Validate an explicitly selected local LLM as a decision bridge on isolated storage.
 // Pattern: Opt-in real model call; no production settings or cloud credentials are read.
-// Usage: PUPUTYX_LIVE_LLM_URL=http://127.0.0.1:1234/v1 PUPUTYX_LIVE_LLM_MODEL=... node tests/e2e/decision-live.cjs.
+// Usage: PREM_LIVE_LLM_URL=http://127.0.0.1:1234/v1 PREM_LIVE_LLM_MODEL=... node tests/e2e/decision-live.cjs.
 // Related: server.cjs, backend/modules/decisions/, provider-live.cjs.
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const { randomUUID } = require('node:crypto');
 const { createServer } = require('./server.cjs');
 (async () => {
-  const url = process.env.PUPUTYX_LIVE_LLM_URL;
-  const model = process.env.PUPUTYX_LIVE_LLM_MODEL;
+  const url = process.env.PREM_LIVE_LLM_URL;
+  const model = process.env.PREM_LIVE_LLM_MODEL;
   assert.ok(url && model, 'Explicit live URL and model are required');
   assert.ok(
     ['localhost', '127.0.0.1', '[::1]'].includes(new URL(url).hostname),

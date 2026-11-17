@@ -2,7 +2,7 @@
 // Pattern: Rerender-scoped DOM enhancement with feature-detected native APIs.
 // Usage: Called after render; dispose releases listeners and highlight ranges.
 // Related: mock/app.js, mock/js/asset-search.js, mock/styles/search-editor.css.
-window.PuPuTyXModules.editorSupport = ({
+window.PreMModules.editorSupport = ({
   ui,
   fitSlides,
   revealActiveStrips,
@@ -13,10 +13,10 @@ window.PuPuTyXModules.editorSupport = ({
   icon,
   announce,
 }) => {
-  const list = window.PuPuTyXModules.slideList({ ui, deck, commands, icon, announce });
-  const canvas = window.PuPuTyXModules.canvasEditor({ ui, deck, commands, announce, selection });
+  const list = window.PreMModules.slideList({ ui, deck, commands, icon, announce });
+  const canvas = window.PreMModules.canvasEditor({ ui, deck, commands, announce, selection });
   let events;
-  const name = 'puputyx-search';
+  const name = 'prem-search';
   function dispose() {
     events?.abort();
     list.dispose();

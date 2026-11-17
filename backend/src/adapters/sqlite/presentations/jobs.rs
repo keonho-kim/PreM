@@ -18,6 +18,8 @@ pub(super) fn claim(db: &mut rusqlite::Connection) -> Result<Option<Run>, Error>
         tx.commit().map_err(failure)?;
         return Ok(None);
     };
+    super::super::workflows::interrupt(&tx, &id, None, "pending", now())
+        .map_err(|_| Error::Storage)?;
     tx.execute("UPDATE presentation_runs SET status='running',lease=?,lease_until=?,attempt=attempt+1,version=version+1,error_code=NULL WHERE id=?",params![Uuid::new_v4().to_string(),now()+30000,id]).map_err(failure)?;
     let run = queries::run(&tx, uuid(p)?, &id)?;
     tx.commit().map_err(failure)?;
@@ -36,7 +38,18 @@ pub(super) fn heartbeat(db: &mut rusqlite::Connection, r: Run) -> Result<bool, E
         == 1)
 }
 pub(super) fn fail(db: &mut rusqlite::Connection, r: Run, code: String) -> Result<(), Error> {
-    db.execute("UPDATE presentation_runs SET status=CASE WHEN ?1='interrupted' THEN 'queued' ELSE 'failed' END,error_code=?1,lease=NULL,lease_until=NULL,version=version+1 WHERE id=?2 AND lease=?3 AND status='running'",params![code,r.id.to_string(),r.lease]).map_err(failure)?;
+    let tx = db.transaction().map_err(failure)?;
+    execution::interrupt(
+        &tx,
+        &r,
+        if code == "interrupted" {
+            "pending"
+        } else {
+            "failed"
+        },
+    )?;
+    tx.execute("UPDATE presentation_runs SET status=CASE WHEN ?1='interrupted' AND attempt<3 THEN 'queued' ELSE 'failed' END,error_code=?1,lease=NULL,lease_until=NULL,version=version+1 WHERE id=?2 AND lease=?3 AND status='running'",params![code,r.id.to_string(),r.lease]).map_err(failure)?;
+    tx.commit().map_err(failure)?;
     Ok(())
 }
 pub(super) fn command(
@@ -73,7 +86,7 @@ pub(super) fn command(
         _ => return Err(Error::Conflict),
     };
     if status == "queued" {
-        let (base, design, deck): (i64, String, String) = tx
+        let (base, design, deck): (i64, Option<String>, String) = tx
             .query_row(
                 "SELECT base_version,design_id,presentation_id FROM presentation_runs WHERE id=?",
                 [id.to_string()],
@@ -88,8 +101,9 @@ pub(super) fn command(
             )
             .map_err(failure)?;
         if current != base
-            || (!edits::is_edit(&tx, &id.to_string())?
-                && preparation::current(&tx, p)?.design_id != Some(uuid(design)?))
+            || (!canvas::authored(&tx, &id.to_string())?
+                && !edits::is_edit(&tx, &id.to_string())?
+                && preparation::current(&tx, p)?.design_id != design.map(uuid).transpose()?)
         {
             return Err(Error::Conflict);
         }
@@ -97,6 +111,9 @@ pub(super) fn command(
         if busy {
             return Err(Error::Busy);
         }
+    }
+    if status == "cancelled" {
+        execution::interrupt(&tx, &r, "cancelled")?;
     }
     tx.execute(
         "INSERT INTO presentation_commands VALUES(?,?,?,?)",

@@ -1,0 +1,33 @@
+/* Hallmark · Folio: compact real processing state. */
+/* Purpose: Keep committed workflow phases readable next to generation commands.
+ * Pattern: Ruled neutral status row, no fake percentage or animated timer.
+ * Usage: workflow-status.tsx; preserves Studio's separate review stepper.
+ * Related: generation.tsx, app/styles/theme.generated.css. */
+.presentation-workflow-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  padding: 12px 0;
+  margin: 0 0 12px;
+  list-style: none;
+  border-block-end: 1px solid var(--color-rule);
+}
+.presentation-workflow-status li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.presentation-workflow-status svg {
+  inline-size: 16px;
+  block-size: 16px;
+}
+.presentation-workflow-status [aria-current="step"] {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+@media (forced-colors: active) {
+  .presentation-workflow-status {
+    border-color: CanvasText;
+  }
+}

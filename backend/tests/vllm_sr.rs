@@ -11,7 +11,7 @@ use axum::{
     routing::get,
 };
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::json;
 use std::sync::{Arc, Mutex};
 type Calls = Arc<Mutex<Vec<(String, String)>>>;

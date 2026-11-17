@@ -1,6 +1,6 @@
 // Purpose: List enabled writing models without exposing Admin connection configuration.
 // Pattern: Public allowlisted DTO; registry remains the sole configuration owner.
-// Usage: Studio outline and presentation model selectors work without Admin access.
+// Usage: Studio outline authoring choices work without Admin access; PPT generation selects server-side.
 // Related: providers.rs, modules/model_registry/, frontend/features/providers/authoring-api.ts.
 use super::providers::{ApiError, ProviderApi, json};
 use axum::{extract::State, http::StatusCode, response::Response};

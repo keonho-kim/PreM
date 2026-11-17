@@ -7,3 +7,5 @@ export { EvidenceConfirmation } from './evidence-confirmation';
 export { TemplateChoice } from './template-choice';
 export { Generation as PresentationGeneration } from './generation';
 import './presentations.css';
+
+export { BlankForm } from './blank-form';

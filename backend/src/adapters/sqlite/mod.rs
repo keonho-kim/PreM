@@ -3,6 +3,7 @@
 // Usage: app holds storage ownership until close completes; adapters receive a narrow queue.
 // Related: migrations.rs, projects.rs, async-sqlite 0.7, modules/libraries/ports.rs.
 mod collection;
+mod decision_settings;
 mod documents;
 mod guides;
 mod libraries;
@@ -19,6 +20,8 @@ mod search;
 mod source_snapshot;
 mod studio;
 mod templates;
+mod workflows;
+mod writing_model;
 use crate::{
     adapters::filesystem::Storage,
     modules::{libraries::LibraryStore, projects::ProjectStore},

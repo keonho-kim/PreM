@@ -14,14 +14,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
+import { SourceRemoveDialog } from './source-remove-dialog';
 import { getProject, listProjects, defaultFilters } from '@/features/projects';
 import {
   listAssets,
@@ -145,7 +138,7 @@ export function StudioWorkspace({ projectId }: { projectId: string }) {
   const options = choices.data?.items.filter((p) => p.id !== projectId) ?? [];
   return (
     <main className="container workspace studio-workspace" data-step={step}>
-      <title>{project.data.name} · Studio | PuPuTyX</title>
+      <title>{project.data.name} · Studio | PreM</title>
       <header className="studio-heading">
         <div className="sr-only">
           <p className="muted">Studio</p>
@@ -178,12 +171,14 @@ export function StudioWorkspace({ projectId }: { projectId: string }) {
         unsavedOutline={outlineDirty}
         evidence={!!preparation.data?.evidence_review_id}
         template={!!preparation.data?.design_id}
+        manualEntry
         generated={!!preparation.data?.generated}
         onSelect={(value) => setParams(value === 'sources' ? {} : { step: value })}
       />
       <PresentationStages
         project={projectId}
         name={project.data.name}
+        blank={params.get('start') === 'blank'}
         step={step}
         preparation={preparation}
         ready={!!review.data?.ready}
@@ -235,6 +230,12 @@ export function StudioWorkspace({ projectId }: { projectId: string }) {
         ) : (
           <div className="studio-empty">
             <h3>첫 원본 문서를 추가하세요</h3>
+            <Button
+              variant="secondary"
+              onClick={() => setParams({ step: 'generation', start: 'blank' })}
+            >
+              빈 장표로 직접 작성
+            </Button>
             <p>PDF · HWP · HWPX · DOCX · PPTX · XLSX · HTML · Markdown을 사용할 수 있습니다.</p>
             <p className="muted">공용 레퍼런스와 템플릿은 Space에서 관리합니다.</p>
           </div>
@@ -314,32 +315,16 @@ export function StudioWorkspace({ projectId }: { projectId: string }) {
           onClose={() => setSession(null)}
         />
       )}
-      <AlertDialog
+      <SourceRemoveDialog
         open={session?.action === 'remove'}
-        onOpenChange={(open) => {
-          if (!open && !remove.isPending) setSession(null);
+        title={session?.item.title ?? ''}
+        pending={remove.isPending}
+        error={remove.isError ? errorMessage(remove.error) : null}
+        onClose={() => setSession(null)}
+        onRemove={() => {
+          if (session) remove.mutate(session.item);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogTitle>이 문서를 프로젝트에서 제거할까요?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {session?.item.title}을 목록에서 숨깁니다. 이전 원본과 분석 기록은 보존합니다.
-          </AlertDialogDescription>
-          {remove.isError && <p role="alert">{errorMessage(remove.error)}</p>}
-          <div className="dialog-actions">
-            <AlertDialogCancel disabled={remove.isPending}>취소</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={remove.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                if (session) remove.mutate(session.item);
-              }}
-            >
-              제거
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
     </main>
   );
 }

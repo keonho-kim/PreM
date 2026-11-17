@@ -5,60 +5,85 @@
 use super::*;
 use std::time::Duration;
 impl Presentations {
-    pub fn start(&self, stop: CancellationToken) -> tokio::task::JoinHandle<()> {
+    pub fn start(
+        &self,
+        stop: CancellationToken,
+        engine: crate::workflows::engine::Engine,
+    ) -> tokio::task::JoinHandle<()> {
         let this = self.clone();
         tokio::spawn(async move {
+            let maintenance_stop = stop.child_token();
+            let cleanup_stop = maintenance_stop.clone();
+            let store = this.store.clone();
+            let maintenance = tokio::spawn(async move {
+                let mut timer = tokio::time::interval(Duration::from_secs(60));
+                timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+                loop {
+                    tokio::select! {()=cleanup_stop.cancelled()=>break,_=timer.tick()=>{if let Err(e)=store.expire_editors(false).await{tracing::warn!(%e,"editor cache cleanup failed");}}}
+                }
+            });
             loop {
                 if stop.is_cancelled() {
                     break;
                 }
-                this.process_edit(stop.clone()).await;
+                engine
+                    .tick(
+                        super::edit_execution::EditDriver(this.clone()),
+                        stop.clone(),
+                    )
+                    .await;
                 if stop.is_cancelled() {
                     break;
                 }
-                match this.store.claim().await {
-                    Ok(Some(run)) => this.execute(run, stop.clone()).await,
-                    Ok(None) => {}
-                    Err(e) => tracing::warn!(%e,"presentation scheduler failed"),
-                }
+                engine.tick(this.clone(), stop.clone()).await;
                 tokio::select! {()=stop.cancelled()=>break,()=tokio::time::sleep(Duration::from_millis(400))=>{}}
             }
+            maintenance_stop.cancel();
+            let _ = maintenance.await;
         })
     }
-    async fn execute(&self, run: Run, stop: CancellationToken) {
-        let cancel = stop.child_token();
-        let token = cancel.clone();
-        let store = self.store.clone();
-        let watched = run.clone();
-        let monitor = tokio::spawn(async move {
-            loop {
-                tokio::select! {()=token.cancelled()=>break,()=tokio::time::sleep(Duration::from_secs(2))=>{if !matches!(store.heartbeat(watched.clone()).await,Ok(true)){token.cancel();break}}}
-            }
-        });
-        let result = self.generate(&run, cancel.clone()).await;
-        cancel.cancel();
-        let _ = monitor.await;
-        if let Err(e) = result {
-            let code = match e {
-                Error::Cancelled => "interrupted",
-                Error::Conflict => "inputs_changed",
-                Error::Processing(c) => c,
-                _ => "generation_failed",
-            };
-            let _ = self.store.fail(run, code.into()).await;
-        }
-    }
-    async fn generate(&self, r: &Run, cancel: CancellationToken) -> Result<(), Error> {
+    pub(super) async fn write_slides(
+        &self,
+        r: &Run,
+        cancel: CancellationToken,
+    ) -> Result<(), Error> {
         if r.runtime_profile != self.renderer.profile() {
             return Err(Error::Processing("runtime_changed"));
         }
-        while let Some(plan) = self.store.plan(r.clone()).await? {
+        let mut layouts: Option<Vec<CanvasLayout>> = None;
+        while let Some(mut plan) = self.store.plan(r.clone()).await? {
             if cancel.is_cancelled() {
                 return Err(Error::Cancelled);
             }
+            if layouts.is_none() {
+                let hash = self
+                    .store
+                    .canvas_source(r.project_id, None, Some(r.id))
+                    .await?;
+                layouts = Some(if hash.is_some() {
+                    self.renderer.layouts(hash).await?
+                } else {
+                    vec![]
+                });
+            }
+            plan.layouts = layouts.clone().unwrap_or_default();
+            if plan.first && !plan.layouts.is_empty() {
+                plan.materials = self
+                    .store
+                    .generation_materials(r.clone())
+                    .await?
+                    .into_iter()
+                    .filter(|m| !["slide", "page"].contains(&m.kind.as_str()))
+                    .collect();
+            }
+            template_authoring::prepare(&mut plan)?;
             let response = self
                 .inference
-                .pinned_json(r.config_id, model::input(&plan)?, cancel.clone())
+                .pinned_json(
+                    r.config_id.ok_or(Error::NotReady)?,
+                    model::input(&plan)?,
+                    cancel.clone(),
+                )
                 .await
                 .map_err(|e| match e {
                     crate::modules::inference::Error::Cancelled => Error::Cancelled,
@@ -80,8 +105,28 @@ impl Presentations {
                     blob,
                     spec.block_ids,
                     response.record.id,
+                    spec.objects
+                        .iter()
+                        .filter_map(|o| {
+                            if let ObjectContent::Reference { reference_id } = &o.content {
+                                Some(*reference_id)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
                 )
                 .await?;
+        }
+        self.generation_references(r).await
+    }
+    pub(super) async fn render_deck(
+        &self,
+        r: &Run,
+        cancel: CancellationToken,
+    ) -> Result<(), Error> {
+        if let Some(cached) = self.store.cached_render(r.clone()).await? {
+            return self.store.store_render(r.clone(), cached).await;
         }
         let template_sha256 = self.store.render_source(r.clone()).await?;
         let specs = self
@@ -90,12 +135,23 @@ impl Presentations {
             .into_iter()
             .map(|s| s.spec.map(|spec| (s.id, spec)).ok_or(Error::Storage))
             .collect::<Result<Vec<_>, _>>()?;
+        let repair = self.store.render_policy(r.clone()).await?;
         let rendered = self
-            .renderer
-            .render(
+            .render_checked(
+                RenderScope {
+                    project_id: r.project_id,
+                    job_id: r.id,
+                    lease: r.lease.clone().ok_or(Error::Cancelled)?,
+                    editing: false,
+                },
                 RenderInput {
+                    typography: None,
+                    repair,
+                    offset: 0,
                     specs,
                     template_sha256,
+                    references: self.store.imports(r.project_id).await?,
+                    media: self.store.media(r.project_id).await?,
                 },
                 cancel.clone(),
             )
@@ -103,6 +159,6 @@ impl Presentations {
         if cancel.is_cancelled() {
             return Err(Error::Cancelled);
         }
-        self.store.complete(r.clone(), rendered).await
+        self.store.store_render(r.clone(), rendered).await
     }
 }

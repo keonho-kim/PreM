@@ -62,9 +62,7 @@ async fn hold(model: &Model, body: &Value) {
 }
 async fn chat(State(model): State<Model>, Json(body): Json<Value>) -> Json<Value> {
     hold(&model, &body).await;
-    Json(
-        json!({"choices":[{"finish_reason":"stop","message":{"content":"PuPuTyX connection OK"}}]}),
-    )
+    Json(json!({"choices":[{"finish_reason":"stop","message":{"content":"PreM connection OK"}}]}))
 }
 async fn decide(State(model): State<Model>, Json(body): Json<Value>) -> Json<Value> {
     hold(&model, &body).await;

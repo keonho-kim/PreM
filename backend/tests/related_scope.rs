@@ -10,7 +10,7 @@ mod relation_support;
 #[allow(dead_code)]
 mod space_support;
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use relation_support::*;
 use serde_json::{Value, json};
 use std::sync::atomic::Ordering;
@@ -33,6 +33,7 @@ async fn scope_filters_do_not_call_models_and_deleted_sources_keep_only_retained
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
+    register(&app, &f).await;
     let target = setup(&app, 0).await;
     let past = project(&app, "과거 업무").await;
     let item = upload(
@@ -42,7 +43,7 @@ async fn scope_filters_do_not_call_models_and_deleted_sources_keep_only_retained
     )
     .await;
     prepared(&app, &past, &item).await;
-    register(&app, &f).await;
+
     let (s, _) = request(
         &app.router(),
         "PATCH",

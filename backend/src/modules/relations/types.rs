@@ -24,6 +24,7 @@ pub(crate) struct Search {
 }
 #[derive(Clone, Serialize)]
 pub(crate) struct Run {
+    pub steps: Vec<crate::workflows::engine::Stage>,
     pub id: Uuid,
     pub project_id: Uuid,
     pub query: String,
@@ -138,6 +139,8 @@ pub(crate) enum Error {
     SelectionLimit,
     #[error("검색 조건을 확인하세요.")]
     Invalid,
+    #[error("Admin의 Decision Model 연결에서 사용할 판정 모델을 설정하세요.")]
+    MissingModel,
     #[error("자료 찾기를 처리하지 못했습니다. 다시 시도해 주세요.")]
     Storage,
     #[error("작업이 중단되었습니다.")]

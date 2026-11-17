@@ -7,6 +7,11 @@ mod html;
 mod ocr_cache;
 mod packages;
 mod pptx;
+mod presentation_assembly;
+mod presentation_canvas;
+mod presentation_inputs;
+mod presentation_layers;
+mod presentation_media;
 mod presentations;
 mod reference_pptx;
 mod templates;
@@ -43,6 +48,7 @@ pub(crate) struct Runtime {
     assets: AssetService,
     imports: crate::modules::ppt_imports::Imports,
     import_gate: Arc<tokio::sync::Mutex<()>>,
+    media_gate: Arc<tokio::sync::Semaphore>,
 }
 impl Runtime {
     pub fn open(
@@ -70,7 +76,7 @@ impl Runtime {
             let e = entry?;
             if e.file_name()
                 .to_string_lossy()
-                .starts_with(".puputyx-process-")
+                .starts_with(".prem-process-")
             {
                 anyhow::ensure!(
                     e.file_type()?.is_dir(),
@@ -136,6 +142,7 @@ impl Runtime {
             assets,
             imports,
             import_gate: Arc::new(tokio::sync::Mutex::new(())),
+            media_gate: Arc::new(tokio::sync::Semaphore::new(2)),
         })
     }
     async fn workspace(
@@ -144,7 +151,7 @@ impl Runtime {
         format: &str,
     ) -> Result<(tempfile::TempDir, PathBuf), Error> {
         let dir = tempfile::Builder::new()
-            .prefix(".puputyx-process-")
+            .prefix(".prem-process-")
             .tempdir_in(&self.work)
             .map_err(|_| Error::Storage)?;
         let source = dir.path().join(format!("source.{format}"));

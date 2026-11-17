@@ -35,13 +35,10 @@ pub(super) fn create(
     if busy {
         return Err(Error::Busy);
     }
-    let config:Option<(String,String,i64,bool)>=tx.query_row("SELECT v.id,v.provider_type,v.version,v.enabled FROM llm_provider_connections c JOIN llm_provider_config_versions v ON v.id=c.current_config_version_id WHERE c.id=?",[input.connection_id.to_string()],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?))).optional().map_err(failure)?;
-    let (config, kind, model_version, enabled) = config.ok_or(Error::Invalid)?;
-    let kind: crate::modules::model_registry::ProviderKind =
-        kind.parse().map_err(|_| Error::Invalid)?;
-    if kind.is_system() || !enabled || model_version != input.model_version {
-        return Err(Error::Conflict);
-    }
+    let config =
+        super::super::writing_model::resolve(&tx, input.connection_id, input.model_version)
+            .map_err(failure)?
+            .ok_or(Error::Conflict)?;
     let mut scope = input.node_ids;
     if input.kind == "map" {
         let old = queries::draft(&tx, revision.as_deref().ok_or(Error::NotReady)?)?;

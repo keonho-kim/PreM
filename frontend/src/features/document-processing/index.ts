@@ -10,3 +10,5 @@ export { processingLabel } from './status';
 export { ProcessingView } from './processing-view';
 
 export { getDetail, fileUrl } from './api';
+
+export { getMaterials } from './materials-api';

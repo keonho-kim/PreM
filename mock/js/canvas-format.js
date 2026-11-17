@@ -2,7 +2,7 @@
 // Pattern: Small transaction adapter for built-in fields and inserted text boxes.
 // Usage: Instantiated by canvas-editor.js for the current editable slide.
 // Related: mock/js/ui.js, mock/js/slide-commands.js.
-window.PuPuTyXModules.canvasFormat = ({ ui, deck, commands, sheet }) => {
+window.PreMModules.canvasFormat = ({ ui, deck, commands, sheet }) => {
   return function format(command, color) {
     const selected = ui.selectedObject,
       field = ui.selectedText ?? 'title';

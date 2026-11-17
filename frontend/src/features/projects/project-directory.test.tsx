@@ -1,6 +1,6 @@
 // Purpose: Verify project forms use the API safely and retain drafts after conflicts.
 // Pattern: Real feature UI with an isolated Query client and controlled HTTP responses.
-// Usage: pnpm --filter @puputyx/frontend test.
+// Usage: pnpm --filter @prem/frontend test.
 // Related: project-dialog.tsx, api.ts, pages/projects-page.tsx.
 import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it, vi } from 'vitest';

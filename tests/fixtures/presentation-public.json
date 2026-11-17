@@ -1,0 +1,21 @@
+{
+  "purpose": "Opt-in local-model presentation acceptance; downloads stay in ignored QA storage.",
+  "attribution": "W3C. Preserve original bytes, source links and applicable W3C notices. Archived material is test input, not current policy advice.",
+  "policy_url": "https://www.w3.org/policies/document-license/",
+  "files": [
+    {
+      "name": "w3c-accessibility.pdf",
+      "url": "https://www.w3.org/WAI/GL/WD-WAI-PAGEAUTH/wai-pageauth.pdf",
+      "sha256": "646c95bdae4318c882e547102fefec842e083cda59e78f3cde917cd60a25ef86",
+      "bytes": 350016,
+      "magic": "%PDF-"
+    },
+    {
+      "name": "w3c-2025-template.pptx",
+      "url": "https://www.w3.org/Talks/Tools/style-2025/template.pptx",
+      "sha256": "d8d5926ddeed59df2b035cf0193ba3681e7a00f69595ccf4413b701d38c56df6",
+      "bytes": 766375,
+      "magic": "PK"
+    }
+  ]
+}

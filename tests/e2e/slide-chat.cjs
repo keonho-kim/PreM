@@ -1,6 +1,6 @@
 // Purpose: Exercise real slide chat, explicit proposal apply and preserved native PPTX content.
 // Pattern: Isolated app/storage; synthetic initial deck, with opt-in live Ornith editing only.
-// Usage: PUPUTYX_EDIT_MODEL=ornith node tests/e2e/slide-chat.cjs after pnpm build.
+// Usage: PREM_EDIT_MODEL=ornith node tests/e2e/slide-chat.cjs after pnpm build.
 // Related: outline-fixture.cjs, backend/tests/slide_edits.rs, mock/captures/folio/.
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -10,6 +10,7 @@ const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
 const { upload, ready } = require('./related-fixture.cjs');
+const { compare, touchCompare, state: previewState } = require('./canvas-history.cjs');
 const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
 async function poll(read, done, limit = 90000) {
   const end = Date.now() + limit;
@@ -26,7 +27,7 @@ async function click(page, name, role = 'button') {
   await node.click();
 }
 (async () => {
-  const live = process.env.PUPUTYX_EDIT_MODEL === 'ornith';
+  const live = process.env.PREM_EDIT_MODEL === 'ornith';
   const server = await createServer('slide-chat-'),
     fixture = await model();
   let browser;
@@ -107,10 +108,10 @@ async function click(page, name, role = 'button') {
     );
     const original = finished[0],
       before = await json(base, root + `/presentations/${created.id}/slides`);
-    const editor = randomUUID();
+    const editor = author;
     const label = live ? 'Ornith 1.5 35B' : '수정 AI';
     await json(base, `/api/v1/admin/llm/providers/${editor}`, 'PUT', {
-      expected_version: 0,
+      expected_version: 1,
       name: label,
       provider_type: live ? 'lm_studio_native' : 'openai_compatible',
       base_url: live ? 'http://127.0.0.1:1234/api/v1' : fixture.base,
@@ -118,21 +119,19 @@ async function click(page, name, role = 'button') {
       timeout_seconds: 180,
       enabled: true,
     });
+    const priorRequests = new Set(
+      (await json(base, `/api/v1/admin/llm/providers/${editor}/requests`)).map((r) => r.id),
+    );
     browser = await openBrowser(live ? 'ornith-slide-chat' : 'slide-chat');
     const page = await browser.browser.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.setViewport({ width: 1440, height: 1000 });
+    await page.setViewport({ width: 1440, height: 1000, hasTouch: true });
     await page.goto(base + `/home/studio/${p.id}?step=generation`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.presentation-output');
-    await click(page, '수정에 사용할 AI', 'combobox');
-    await click(page, label, 'option');
-    await click(page, '수정 범위', 'combobox');
-    await click(page, '제목만', 'option');
+    assert.equal(await page.$('.slide-chat [role="combobox"]'), null);
     const prompt =
       '제목을 정확히 "검증 완료"로 바꿔주세요. 본문과 발표 메모, 참고 자료는 바꾸지 마세요.';
-    await page.waitForSelector('[role="listbox"]', { hidden: true });
-    await page.waitForFunction(() => document.activeElement?.id === 'slide-edit-scope');
     await page.focus('#slide-edit-prompt');
     await page.waitForFunction(() => document.activeElement?.id === 'slide-edit-prompt');
     await page.type('#slide-edit-prompt', prompt, { delay: 30 });
@@ -157,7 +156,8 @@ async function click(page, name, role = 'button') {
     assert.equal(proposal.proposal.notes, before[0].spec.notes);
     assert.deepEqual(proposal.proposal.block_ids, before[0].spec.block_ids);
     assert.equal((await json(base, root + '/presentations')).length, 1);
-    await page.waitForSelector('.slide-edit-difference');
+    await previewState(page, 'proposal');
+    await compare(page, 'proposal', 'presentation-proposal-before');
     await page.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await page.screenshot({
       path: path.join(
@@ -188,12 +188,13 @@ async function click(page, name, role = 'button') {
     assert.equal(response.status, 200);
     const output = path.join(projectRoot, `tests/.artifacts/${live ? 'ornith-' : ''}edited.pptx`);
     await fs.writeFile(output, Buffer.from(await response.arrayBuffer()));
-    const requests = await json(base, `/api/v1/admin/llm/providers/${editor}/requests`);
+    const requests = (await json(base, `/api/v1/admin/llm/providers/${editor}/requests`)).filter(
+      (r) => !priorRequests.has(r.id),
+    );
     assert.equal(requests.length, 1);
     assert.equal(requests[0].status, 'succeeded');
-    await page.waitForFunction(
-      () => document.querySelector('.presentation-output')?.getAttribute('alt') === '검증 완료',
-    );
+    await previewState(page, 'current');
+    await compare(page, 'current', 'presentation-published-before');
     await page.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await page.waitForFunction(() =>
       [...document.querySelectorAll('.presentation-deck img')].every(
@@ -203,7 +204,8 @@ async function click(page, name, role = 'button') {
     await page.screenshot({
       path: path.join(projectRoot, `mock/captures/folio/${live ? 'ornith-' : ''}slide-edited.png`),
     });
-    await page.setViewport({ width: 390, height: 844 });
+    await page.setViewport({ width: 390, height: 844, hasTouch: true });
+    await touchCompare(page, 'current');
     await page.$eval('.slide-chat', (n) => n.scrollIntoView({ block: 'start' }));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({
@@ -212,6 +214,36 @@ async function click(page, name, role = 'button') {
         `mock/captures/folio/${live ? 'ornith-' : ''}slide-chat-phone.png`,
       ),
     });
+    await page.setViewport({ width: 1440, height: 1000, hasTouch: true });
+    await page.waitForSelector('button[aria-label="이전 상태로 되돌리기"]:not(:disabled)');
+    await click(page, '이전 상태로 되돌리기');
+    const restored = await poll(
+      () => json(base, root + '/presentations'),
+      (rows) => rows[0].id !== next.id && rows[0].presentation_version === 3,
+    );
+    const restoredSlides = await json(base, root + `/presentations/${restored[0].id}/slides`);
+    assert.deepEqual(
+      restoredSlides.map((s) => s.spec),
+      before.map((s) => s.spec),
+    );
+    await page.waitForFunction(
+      () => document.querySelector('.presentation-output')?.getAttribute('alt') === '현황 요약',
+    );
+    assert(await page.$eval('button[aria-label="이전 상태로 되돌리기"]', (n) => n.disabled));
+    await page.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
+    await page.screenshot({
+      path: path.join(projectRoot, 'mock/captures/folio/presentation-undo.png'),
+    });
+    await click(page, 'Home', 'link');
+    await page.waitForSelector('.project-workspace');
+    const { DatabaseSync } = require('node:sqlite');
+    const db = new DatabaseSync(path.join(server.storage, 'db/app.sqlite'), { readOnly: true });
+    await poll(
+      async () => db.prepare('SELECT count(*) AS n FROM presentation_editor_sessions').get().n,
+      (n) => n === 0,
+    );
+    assert.equal(db.prepare('SELECT count(*) AS n FROM presentation_undo_stack').get().n, 0);
+    db.close();
     const report = {
       model: live ? 'ornith-1.5-35b-a3b' : 'synthetic',
       protocol: live ? 'LM Studio Native /api/v1/chat' : 'local contract fixture',

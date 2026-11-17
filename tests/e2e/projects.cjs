@@ -43,6 +43,52 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
       await p.goto(base + '/home', { waitUntil: 'networkidle0' });
     }
     await a.waitForSelector('.projects-empty');
+    assert.equal(await a.$('.projects-heading .workspace-label'), null);
+    assert.equal(await a.$('.projects-footer'), null);
+    const dueInput = '.project-filters input[name="due_date"]';
+    assert.equal(await a.$('.project-filters button[aria-label="마감일 달력 열기"]'), null);
+    const devtools = await a.createCDPSession();
+    await devtools.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'forced-colors', value: 'active' }],
+    });
+    await a.focus(dueInput);
+    assert.equal(await a.$eval(dueInput, (node) => getComputedStyle(node).outlineStyle), 'solid');
+    await devtools.send('Emulation.setEmulatedMedia', { features: [] });
+    await devtools.detach();
+    await a.click(dueInput);
+    await a.waitForSelector('.due-date-calendar');
+    assert.equal(await a.$eval(dueInput, (node) => node === document.activeElement), true);
+    await a.keyboard.type('2030-01-15');
+    await a.keyboard.press('ArrowDown');
+    await a.waitForFunction(() => document.activeElement.closest('[data-slot=calendar]'));
+    await a.keyboard.press('ArrowRight');
+    await a.keyboard.press('Enter');
+    await a.waitForFunction(
+      (selector) => document.querySelector(selector)?.value === '2030-01-16',
+      {},
+      dueInput,
+    );
+    await a.click('.project-filters button[type="submit"]');
+    await a.waitForFunction(
+      () => new URLSearchParams(location.search).get('due_date') === '2030-01-16',
+    );
+    await a.waitForNetworkIdle({ idleTime: 250 });
+    await a.click('.project-filters button[aria-label="검색 조건 초기화"]');
+    await a.waitForFunction(() => !location.search);
+    await a.waitForNetworkIdle({ idleTime: 250 });
+    await a.setViewport({ width: 390, height: 900 });
+    await a.click(dueInput);
+    await a.waitForSelector('.due-date-calendar');
+    assert.equal(
+      await a.$eval('.due-date-calendar', (node) => {
+        const bounds = node.getBoundingClientRect();
+        return bounds.left >= 0 && bounds.right <= innerWidth;
+      }),
+      true,
+    );
+    await a.screenshot({ path: path.join(captures, 'home-due-filter-phone.png'), fullPage: true });
+    await a.keyboard.press('Escape');
+    await a.setViewport({ width: 1440, height: 1000 });
     await a.screenshot({
       path: path.join(captures, 'projects-empty-production.png'),
       fullPage: true,

@@ -1,6 +1,6 @@
 # 데이터 모델과 파일 저장
 
-PuPuTyX 통합 제품·기술 설계서 v2.0. 원문 **6장, 7장**을 수록한다. [문서 색인](README.md)
+PreM 통합 제품·기술 설계서 v2.0. 원문 **6장, 7장**을 수록한다. [문서 색인](README.md)
 
 ## 6.1 설계 규칙
 
@@ -306,3 +306,7 @@ V18의 relation_workspaces, relation_reads, relation_workspace_peers, relation_r
 ### V19 구현의 발표자료 저장 경계
 
 현재 근거 확정·디자인·생성 작업·슬라이드 Spec/근거·출력 리비전은 presentation 계열 테이블로 구현되어 있다. 원문과 모델 설정은 기존 canonical ID를 참조하고 파일 바이트는 공통 Blob으로 유지한다. 상세 실제 컬럼·CAS·lease·멱등 계약은 [V19 데이터/API](../dev-docs/04-data-api.md#v19-발표자료-준비생성)가 소유한다. 앱 내 객체 편집과 변경 슬라이드 버전 재사용은 아직 구현하지 않았다.
+
+## 장표별 렌더링 파생 데이터
+
+현재 구현은 프로젝트별 content key를 갖는 presentation_render_cache와 실행·장표에 연결되는 presentation_quality_checks로 검사 결과를 저장한다. 원문·Spec·차트 데이터는 복사하지 않고 네이티브 PPTX·미리보기 Blob FK와 고정 코드 결과를 참조한다. 장표 위치·템플릿·실제 사용한 원본 버전·런타임이 같을 때만 재사용한다. LRU 캐시는 프로젝트당 512개·512 MiB로 제한하고, 확정 리비전·지속 검사 기록·기존 백업/미참조 Blob 보호 정책과 구분한다. 자세한 현재 필드는 [구현 데이터 계약](../dev-docs/04-data-api.md#v29-per-slide-quality-and-render-cache)을 따른다.

@@ -38,8 +38,10 @@ pub(crate) struct Generate {
     pub expected_version: i64,
     pub source_snapshot: String,
     pub guide_version: i64,
-    pub connection_id: Uuid,
-    pub model_version: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub connection_id: Option<Uuid>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model_version: Option<i64>,
     pub kind: String,
     #[serde(default)]
     pub node_ids: Vec<Uuid>,
@@ -96,6 +98,7 @@ pub(crate) struct Run {
     pub total_blocks: i64,
     pub error_code: Option<String>,
     pub result_revision_id: Option<Uuid>,
+    pub steps: Vec<crate::workflows::engine::Stage>,
     #[serde(skip)]
     pub config_id: Uuid,
     #[serde(skip)]

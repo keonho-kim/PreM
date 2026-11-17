@@ -66,7 +66,7 @@ export function SpaceDirectory({ kind, q, status, offset, onNavigate }: Props) {
   const label = kind === 'all' ? '자료' : kind === 'templates' ? '템플릿' : '레퍼런스';
   return (
     <main className="container workspace space-workspace">
-      <title>자료 관리 · Space | PuPuTyX</title>
+      <title>자료 관리 · Space | PreM</title>
       <Link className="space-search-return" to="/space">
         Space 검색으로
       </Link>

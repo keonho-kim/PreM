@@ -106,6 +106,7 @@ export function ProviderForm({
     'provider_type',
     'model_identifier',
     'timeout_seconds',
+    'max_output_tokens',
     'enabled',
   ];
   const changed =
@@ -156,6 +157,7 @@ export function ProviderForm({
         draft.name !== base.name && '표시 이름',
         draft.provider_type !== base.provider_type && '연결 방식',
         draft.timeout_seconds !== base.timeout_seconds && '응답 제한 시간',
+        draft.max_output_tokens !== base.max_output_tokens && '작성 출력 한도',
         draft.enabled !== base.enabled && '연결 상태',
       ]
         .filter(Boolean)
@@ -202,6 +204,11 @@ export function ProviderForm({
         modelPicker={
           <ModelPicker
             prefix={prefix}
+            kind={
+              catalog.find((c) => c.id === draft.provider_type)?.category === 'system'
+                ? 'Decision'
+                : 'LLM'
+            }
             value={draft.model_identifier}
             {...discovery}
             disabled={pending || keyRequired || addressRequired}
@@ -286,6 +293,7 @@ function emptyDraft(option: ProviderOption): ProviderDraft {
     base_url: option.base,
     model_identifier: '',
     timeout_seconds: 180,
+    max_output_tokens: null,
     enabled: true,
   };
 }

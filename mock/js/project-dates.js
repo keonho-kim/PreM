@@ -2,7 +2,7 @@
 // Pattern: Native Temporal when available, with a narrow UTC calendar-arithmetic fallback.
 // Usage: Shared by project creation, gallery filtering and sample fixtures.
 // Related: data.js, forms.js, project-gallery.js.
-window.PuPuTyXModules.projectDates = (() => {
+window.PreMModules.projectDates = (() => {
   const dayMs = 86_400_000;
   function dayNumber(value) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value ?? '')) return null;

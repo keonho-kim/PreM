@@ -110,19 +110,49 @@ async function capture(page, name) {
     await notifications(a, false);
     await click(a, '프로젝트 가이드 미리보기');
     await stage(a, '자료 준비가 잠시 대기 중입니다');
-    assert.match(await a.$eval('.processing-dialog', (e) => e.textContent), /사업 개요/);
+    assert.doesNotMatch(await a.$eval('.processing-dialog', (e) => e.textContent), /사업 개요/);
     assert.equal(await a.$('.processing-dialog script'), null);
     assert.equal(calls, 0);
+    assert.equal(await a.$$eval('.processing-stages li', (nodes) => nodes.length), 3);
+    assert((await a.$eval('.processing-stages', (n) => n.textContent)).includes('설정 대기'));
+    await capture(a, 'document-engine-waiting.png');
+    const beforeItem = (await (await fetch(server.base + '/api/v1/space/references')).json())
+      .items[0];
+    const processingPath = `${server.base}/api/v1/space/references/${beforeItem.id}/processing`;
+    const extractedBefore = await (await fetch(processingPath)).json();
+    await a.keyboard.press('Escape');
+    await a.waitForSelector('.processing-dialog', { hidden: true });
+    await notifications(a, true);
+    await click(a, '자료 준비 취소');
+    await a.waitForFunction(() =>
+      document.querySelector('.upload-preparation')?.textContent.includes('취소됨'),
+    );
+    await click(a, '자료 준비 다시 시도');
+    await a.waitForFunction(
+      () => document.querySelector('.upload-preparation')?.textContent.includes('설정 대기'),
+      { timeout: 60000 },
+    );
+    const extractedAfter = await (await fetch(processingPath)).json();
+    assert.equal(extractedAfter.job.extraction_id, extractedBefore.job.extraction_id);
+    assert.equal(extractedAfter.job.extraction_id, null);
+    await capture(a, 'document-engine-panel.png');
+    await a.setViewport({ width: 390, height: 844 });
+    assert(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await capture(a, 'document-engine-panel-phone.png');
+    await a.setViewport({ width: 1440, height: 1000 });
+    await notifications(a, false);
+    await click(a, '프로젝트 가이드 미리보기');
+    await stage(a, '자료 준비가 잠시 대기 중입니다');
     assert.doesNotMatch(
       await a.$eval('.processing-dialog', (e) => e.textContent),
-      /체크포인트|판정|PPT Master|Config/,
+      /체크포인트|PPT Master|Config/,
     );
     await a.goto(server.base + '/home/admin?section=processing', { waitUntil: 'networkidle0' });
     await server.unlock(a);
     await a.waitForSelector('.processing-settings');
-    await click(a, '레퍼런스 판정 모델', 'combobox');
+    await click(a, '사용할 판정 연결', 'combobox');
     await click(a, '문서 테스트 · LLM 판정', 'option');
-    await click(a, '설정 저장');
+    await click(a, '판정 연결 적용');
     await a.waitForFunction(() =>
       document
         .querySelector('.processing-settings [role="status"]')
@@ -134,6 +164,13 @@ async function capture(page, name) {
     await a.waitForSelector('.space-asset');
     await click(a, '프로젝트 가이드 미리보기');
     await stage(a, '자료 준비 완료');
+    assert.equal(
+      await a.$$eval(
+        '.processing-stages li',
+        (nodes) => nodes.filter((n) => n.textContent.includes('완료')).length,
+      ),
+      3,
+    );
     await a.type('#block-search', '예산');
     await click(a, '검색');
     await a.waitForFunction(
@@ -173,6 +210,8 @@ async function capture(page, name) {
     await notifications(a, false);
     await click(a, '회사 소개 템플릿 미리보기');
     await stage(a, '템플릿 준비 완료');
+    assert.equal(await a.$$eval('.processing-stages li', (nodes) => nodes.length), 2);
+    assert(!(await a.$eval('.processing-stages', (n) => n.textContent)).includes('내용 정리'));
     await a.waitForFunction(() => {
       const img = document.querySelector('.template-preview-paper img');
       return img?.complete && img.naturalWidth > 0;

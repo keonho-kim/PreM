@@ -3,6 +3,7 @@
 // Usage: The binary calls run; tests open isolated Application instances.
 // Related: config.rs, adapters/sqlite/mod.rs, adapters/http/mod.rs.
 mod config;
+pub(crate) mod outline_authoring;
 use crate::{
     adapters::{
         filesystem::{Blobs, Secrets, Storage},
@@ -24,6 +25,10 @@ impl Drop for ProcessingStop {
     }
 }
 pub struct Application {
+    document_engine: crate::workflows::engine::Engine,
+    relation_engine: crate::workflows::engine::Engine,
+    outline_engine: crate::workflows::engine::Engine,
+    workflow_engine: crate::workflows::engine::Engine,
     admin_access: http::AdminAccess,
     processing_stop: ProcessingStop,
     database: Database,
@@ -125,6 +130,18 @@ impl Application {
         );
         let search = crate::modules::search::Search::new(database.search());
         Ok(Self {
+            relation_engine: crate::workflows::engine::Engine::new(
+                std::num::NonZeroUsize::new(1).unwrap(),
+            ),
+            outline_engine: crate::workflows::engine::Engine::new(
+                std::num::NonZeroUsize::new(1).unwrap(),
+            ),
+            document_engine: crate::workflows::engine::Engine::new(
+                std::num::NonZeroUsize::new(2).unwrap(),
+            ),
+            workflow_engine: crate::workflows::engine::Engine::new(
+                std::num::NonZeroUsize::new(1).unwrap(),
+            ),
             admin_access: http::AdminAccess::new()?,
             presentations,
             presentation_worker: None,
@@ -146,17 +163,28 @@ impl Application {
     }
     pub fn start_processing(&mut self) {
         if self.presentation_worker.is_none() {
-            self.presentation_worker =
-                Some(self.presentations.start(self.processing_stop.0.clone()));
+            self.presentation_worker = Some(
+                self.presentations
+                    .start(self.processing_stop.0.clone(), self.workflow_engine.clone()),
+            );
         }
         if self.outline_worker.is_none() {
-            self.outline_worker = Some(self.outlines.start(self.processing_stop.0.clone()));
+            self.outline_worker = Some(
+                self.outlines
+                    .start(self.processing_stop.0.clone(), self.outline_engine.clone()),
+            );
         }
         if self.relation_worker.is_none() {
-            self.relation_worker = Some(self.relations.start(self.processing_stop.0.clone()));
+            self.relation_worker = Some(
+                self.relations
+                    .start(self.processing_stop.0.clone(), self.relation_engine.clone()),
+            );
         }
         if self.processing_worker.is_none() {
-            self.processing_worker = Some(self.documents.start(self.processing_stop.0.clone()));
+            self.processing_worker = Some(
+                self.documents
+                    .start(self.processing_stop.0.clone(), self.document_engine.clone()),
+            );
         }
     }
     pub fn router(&self) -> Router {
@@ -191,6 +219,7 @@ impl Application {
         if let Some(worker) = self.relation_worker {
             worker.await?;
         }
+        self.presentations.close_editors().await?;
         self.providers.inference.cancel();
         self.space.shutdown().await?;
         self.database.shutdown().await
@@ -208,8 +237,8 @@ pub async fn run() -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind((config.listen_address, config.port))
         .await
         .context("could not bind the HTTP server")?;
-    eprintln!("PuPuTyX Admin token: {}", application.admin_token());
-    tracing::info!(address = %listener.local_addr()?, version = env!("CARGO_PKG_VERSION"), "PuPuTyX server started");
+    eprintln!("PreM Admin token: {}", application.admin_token());
+    tracing::info!(address = %listener.local_addr()?, version = env!("CARGO_PKG_VERSION"), "PreM server started");
     let result = axum::serve(listener, application.router())
         .with_graceful_shutdown({
             let space = application.space.clone();
@@ -244,5 +273,5 @@ async fn shutdown_signal() {
     #[cfg(not(unix))]
     let terminate = std::future::pending::<()>();
     tokio::select! { () = ctrl_c => {}, () = terminate => {} }
-    tracing::info!("PuPuTyX server shutting down");
+    tracing::info!("PreM server shutting down");
 }

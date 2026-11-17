@@ -13,7 +13,7 @@ const { openBrowser, baseURL, projectRoot } = require('./browser.cjs');
     p.on('pageerror', (e) => errors.push(e.message));
     await p.setViewport({ width: 1440, height: 1000 });
     await p.goto(baseURL + '#view=projects', { waitUntil: 'networkidle0' });
-    const state = () => p.evaluate(() => PuPuTyXMock.snapshot());
+    const state = () => p.evaluate(() => PreMMock.snapshot());
     const original = await state(),
       target = original.projects.find((item) => item.id !== 'platform');
     const trigger = `[data-project-menu-trigger="${target.id}"]`,
@@ -118,7 +118,7 @@ const { openBrowser, baseURL, projectRoot } = require('./browser.cjs');
       n.dispatchEvent(new Event('input', { bubbles: true }));
     });
     await p.click('#app-dialog button[type="submit"]');
-    await p.waitForFunction(() => PuPuTyXMock.snapshot().projects.length === 1);
+    await p.waitForFunction(() => PreMMock.snapshot().projects.length === 1);
     // No-native-popover path also works through direct file opening.
     const fallback = await browser.newPage();
     fallback.on('pageerror', (e) => errors.push(e.message));

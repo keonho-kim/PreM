@@ -2,7 +2,7 @@
 // Pattern: Rerender-scoped DOM adapter; commands bubble to the existing action dispatcher.
 // Usage: Enhanced by the projects view after rendering, disposed on rerender and page exit.
 // Related: views/projects.js, project-management.js, styles/project-menu.css.
-window.PuPuTyXModules.projectMenu = ({ icon, esc, readProjects }) => {
+window.PreMModules.projectMenu = ({ icon, esc, readProjects }) => {
   let release = () => {};
   function enhance() {
     release();

@@ -4,7 +4,7 @@
 // Related: adapters/sqlite/collection.rs, adapters/filesystem/collection.rs.
 #[allow(dead_code)]
 mod common;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::{Connection, params};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};

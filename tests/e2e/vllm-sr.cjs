@@ -10,6 +10,15 @@ const { once } = require('node:events');
 const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 async function click(page, name, role = 'button') {
+  if (name === '모델 목록 조회' && (await page.$('.provider-form:not([hidden]) .model-picker'))) {
+    await click(page, '사용할 모델 · 필수', 'combobox');
+    await page.waitForFunction(
+      () => !document.querySelector('.model-picker')?.textContent.includes('조회 취소'),
+    );
+    await page.keyboard.press('Escape');
+    return;
+  }
+
   const target = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
     visible: true,
   });
@@ -90,7 +99,7 @@ async function fill(page, name, value) {
     await a.setViewport({ width: 1440, height: 1000 });
     await a.goto(server.base + '/home/admin', { waitUntil: 'networkidle0' });
     await server.unlock(a);
-    await click(a, 'Decision', 'tab');
+    await click(a, 'Decision Model 연결', 'link');
     await click(a, 'Provider', 'combobox');
     await click(a, 'vLLM-SR', 'option');
     await a.waitForFunction(

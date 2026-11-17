@@ -8,7 +8,7 @@ use axum::{
     http::{Request, StatusCode},
 };
 use futures_util::{StreamExt, stream};
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::Connection;
 use std::time::Duration;
 use tower::ServiceExt;
@@ -92,8 +92,7 @@ async fn restart_marks_interrupted_attempt_failed_and_removes_owned_staging() {
     db.execute("INSERT INTO upload_requests(request_key,kind,state,created_at) VALUES(?1,'reference','receiving',1)",[&key]).unwrap();
     drop(db);
     std::fs::write(
-        root.path()
-            .join("blobs/.staging/.puputyx-upload-interrupted"),
+        root.path().join("blobs/.staging/.prem-upload-interrupted"),
         b"partial",
     )
     .unwrap();

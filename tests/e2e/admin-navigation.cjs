@@ -22,18 +22,18 @@ async function adminNavigation(page, providerId, unlock) {
   const selected = await page.$('.provider-tabs [role="tab"][aria-selected="true"]');
   await selected.focus();
   await page.keyboard.press('ArrowLeft');
-  await page.waitForFunction(() => document.activeElement?.textContent === '판정 테스트');
+  await page.waitForFunction(() => document.activeElement?.textContent === '연결 테스트');
   assert.equal(new URL(page.url()).searchParams.get('tab'), 'history');
   await page.keyboard.press('Enter');
-  await page.waitForFunction(() => new URL(location.href).searchParams.get('tab') === 'decision');
+  await page.waitForFunction(() => new URL(location.href).searchParams.get('tab') === 'tests');
   await page.goBack();
   await page.waitForFunction(() => new URL(location.href).searchParams.get('tab') === 'history');
-  await page.click('.admin-sidebar a[href*="section=system"]');
-  await page.waitForSelector('.admin-system .system-details');
-  assert.equal(await page.$eval('main h1', (n) => n.textContent), '시스템 상태');
+  await page.click('.admin-sidebar a[href*="section=general"]');
+  await page.waitForSelector('.admin-general');
+  assert.equal(await page.$eval('main h1', (n) => n.textContent), '일반 설정');
   assert.equal(
     await page.$eval('.admin-sidebar [aria-current="page"]', (n) => n.textContent),
-    '시스템 상태',
+    '일반',
   );
   assert.equal(
     await page.evaluate(() => document.activeElement === document.querySelector('main h1')),

@@ -40,6 +40,7 @@ const run = z.object({
   total_blocks: z.number(),
   error_code: z.string().nullable(),
   result_revision_id: z.uuid().nullable(),
+  steps: z.array(z.object({ key: z.string(), state: z.string(), attempt: z.number() })).optional(),
 });
 export type Run = z.infer<typeof run>;
 const state = z.object({
@@ -108,8 +109,8 @@ export type Generate = {
   expected_version: number;
   source_snapshot: string;
   guide_version: number;
-  connection_id: string;
-  model_version: number;
+  connection_id?: string;
+  model_version?: number;
   kind: 'generate' | 'map';
   node_ids: string[];
 };

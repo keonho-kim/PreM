@@ -28,7 +28,7 @@ pub(super) async fn archive(store: &Blobs, hash: String) -> Result<(FileReader, 
         let package: Package = serde_json::from_slice(&bytes).map_err(|_| Error::InvalidContent)?;
         package.validate()?;
         let mut file = tempfile::Builder::new()
-            .prefix(".puputyx-upload-archive-")
+            .prefix(".prem-upload-archive-")
             .tempfile_in(path.join(".staging"))
             .map_err(|_| Error::Storage)?;
         {

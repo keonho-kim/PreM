@@ -15,7 +15,7 @@ impl Default for Health {
     fn default() -> Self {
         Self {
             status: "ok",
-            service: "PuPuTyX",
+            service: "PreM",
             version: env!("CARGO_PKG_VERSION"),
         }
     }

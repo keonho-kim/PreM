@@ -1,6 +1,6 @@
 # REST API
 
-PuPuTyX 통합 제품·기술 설계서 v2.0. 원문 **10장**을 수록한다. [문서 색인](README.md)
+PreM 통합 제품·기술 설계서 v2.0. 원문 **10장**을 수록한다. [문서 색인](README.md)
 
 ## 공통 계약
 
@@ -217,6 +217,31 @@ GET `/api/v1/projects/{project}/related-candidates/{id}/evidence`는 후보의 �
 
 ### 현재 PPT 생성 API 경계
 
-실제 대화 수정은 `GET/POST /api/v1/projects/{p}/presentations/{run}/slides/{slide}/edits`와 `POST /api/v1/projects/{p}/slide-edits/{edit}/{apply,reject,retry,cancel}`을 사용한다. 작성 범위는 제목·본문·메모이며 base version·모델 설정 버전·Idempotency-Key로 접수/적용을 보호한다. 실제 상태·오류·저장 관계는 [V20 계약](../dev-docs/04-data-api.md#v20-슬라이드-대화-수정)을 따른다.
+중앙 비교와 편집 세션 캐시의 실제 API는 [V22 계약](../dev-docs/04-data-api.md#v22-중앙-비교와-세션-되돌리기)을 따른다. 최대 3단계 되돌리기는 해당 편집 방문에서만 유효하며 종료 시 참조 캐시를 지운다. 확정된 PPT 버전·복원 출처 기록은 유지한다.
+
+실제 대화 수정은 `GET/POST /api/v1/projects/{p}/presentations/{run}/slides/{slide}/edits`와 `POST /api/v1/projects/{p}/slide-edits/{edit}/{apply,reject,retry,cancel}`을 사용한다. 작성 범위는 텍스트·객체·배치와 선택한 여러 장표이며 base version·모델 설정 버전·Idempotency-Key로 접수/적용을 보호한다. 실제 상태·오류·저장 관계는 [V20 계약](../dev-docs/04-data-api.md#v20-슬라이드-대화-수정)을 따른다.
 
 실제 준비·생성 API는 프로젝트 범위의 `/projects/{p}/presentation-preparation`과 `/projects/{p}/presentations` 아래에서 제공한다. 현재 `{run}`은 생성 작업 및 성공한 결과 revision ID이며, 응답의 `presentation_id`는 동일 발표자료의 여러 결과를 묶는 식별자다. 준비 상태·확정, 템플릿 선택, 생성·재시도·취소, 장표·근거·PNG·PPTX 다운로드의 정확한 경로와 본문은 [V19 데이터/API](../dev-docs/04-data-api.md#v19-발표자료-준비생성)를 따른다. 위 목표 설계의 전역 `/presentations/{id}`·웹 채팅 편집·범용 Workflow SSE 경로를 완료된 API로 간주하지 않는다.
+
+프로젝트의 `/presentation-media` 목록/이미지 등록/조회와 edit의 slide_ids/object_ids 확장은 [V21 실제 계약](../dev-docs/04-data-api.md#v21-객체이미지일괄-수정-계약)을 따른다.
+
+## 구현된 문서 준비 상태 응답
+
+Space/Studio의 기존 자료 처리 조회 응답은 `job.steps` 배열에 `key`, `state`, `attempt`를 추가한다. 문서는 extract/classify/ready, 템플릿은 extract/ready를 사용한다. 기존 취소·재시도 경로와 조건부 버전·멱등 키 계약은 유지한다. 작업 상태의 원본은 document_jobs이며 단계 상태는 V24 공통 체크포인트에서 조회한다. 이벤트 재생/SSE 경로의 구현을 의미하지 않는다. 세부 저장·복구 계약은 [V24 문서 준비](../dev-docs/04-data-api.md#v24-document-preparation-checkpoints)를 따른다.
+
+## 구현된 목차·내용 실행 상태
+
+기존 목차 state/run/취소·재시도 응답은 `steps` 배열에 `key`, `state`, `attempt`를 추가한다. 생성은 compose/publish, 내용 연결은 map/publish를 사용한다. 저장된 배치 수와 최종 리비전 저장 상태를 구분하며 API 경로·조건부 버전·멱등 키 계약은 유지한다. [V25 저장·복구 계약](../dev-docs/04-data-api.md#v25-outline-generation-and-mapping-checkpoints)을 따른다.
+
+## Reference insertion and common execution responses
+
+Generation accepts optional pinned material choices. Explicit editor insertion uses POST `/api/v1/projects/{p}/presentations/{run}/materials` with a current revision condition and Idempotency-Key. GET `/api/v1/projects/{p}/presentations/{run}/slides/{slide}/materials` returns exact-version lineage for source preview. Relation and chat responses add committed steps(key/state/attempt). User approval remains a separate command. [V26–V28 contracts](../dev-docs/04-data-api.md#v26-relation-execution-checkpoints) own the implemented details; these endpoints do not imply SSE/unified monitoring.
+
+## 직접 캔버스 작성 API
+
+- GET `/api/v1/projects/{p}/presentation-layouts`: 실제 템플릿 또는 기존 발표자료의 고정 레이아웃 조회.
+- POST `/api/v1/projects/{p}/presentations/blank`: 모델 호출 없는 빈 장표 생성.
+- POST `/api/v1/projects/{p}/presentations/{run}/canvas`: 버전 검사·멱등성을 갖는 객체 배치/내용·장표 구성 명령.
+- GET `/api/v1/projects/{p}/presentations/{run}/slides/{slide}/layers` 및 `/{layer}`: 해당 장표에 연결된 수동 조작용 PNG 조회.
+
+사용자 권한 계층은 추가하지 않고 공유 프로젝트의 실제 버전·리소스 범위를 검증한다. 상세 요청/저장 필드는 [구현 데이터 계약](../dev-docs/04-data-api.md#v30-manual-canvas-authoring)을 따른다.

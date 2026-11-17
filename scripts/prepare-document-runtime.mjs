@@ -21,7 +21,18 @@ for (const name of [
   'process-parent-watch.mjs',
 ])
   await fs.copyFile(path.join(root, 'backend/tools', name), path.join(runtime, name));
-for (const name of ['presentation-render.py', 'presentation-validate.mjs'])
+for (const name of [
+  'presentation-render.py',
+  'presentation-layers.py',
+  'presentation-previews.mjs',
+  'presentation-canvas.py',
+  'presentation-quality.py',
+  'presentation-assemble.py',
+  'presentation-objects.py',
+  'presentation-references.py',
+  'presentation-image.mjs',
+  'presentation-validate.mjs',
+])
   await fs.copyFile(path.join(root, 'backend/tools', name), path.join(runtime, name));
 const node = path.join(runtime, 'node/bin/node');
 const pythonFolder = (await fs.readdir(path.join(runtime, 'python'))).find((name) =>

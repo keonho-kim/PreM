@@ -38,7 +38,7 @@ async function createServer(prefix) {
   }
   async function start() {
     child = spawn(
-      path.join(projectRoot, 'target/release/PuPuTyX'),
+      path.join(projectRoot, 'target/release/PreM'),
       ['--data-storage-path', storage, '--listen-address', '127.0.0.1', '--port', String(port)],
       { stdio: ['ignore', 'pipe', 'pipe'] },
     );
@@ -51,7 +51,7 @@ async function createServer(prefix) {
         while ((end = pending.indexOf('\n')) >= 0) {
           const line = pending.slice(0, end);
           pending = pending.slice(end + 1);
-          const match = line.match(/^PuPuTyX Admin token: ([a-f0-9]{64})$/);
+          const match = line.match(/^PreM Admin token: ([a-f0-9]{64})$/);
           if (match) {
             adminToken = match[1];
             setToken(base, adminToken);
@@ -59,7 +59,7 @@ async function createServer(prefix) {
         }
       });
     }
-    for (let attempt = 0; attempt < 80; attempt++) {
+    for (let attempt = 0; attempt < 300; attempt++) {
       assert.equal(child.exitCode, null, log);
       try {
         if ((await fetch(base + '/healthz')).ok && adminToken) return;
@@ -80,6 +80,14 @@ async function createServer(prefix) {
     },
     start,
     stop,
+    async crash() {
+      forgetToken(base);
+      adminToken = undefined;
+      if (!child || child.exitCode !== null || child.signalCode !== null) return;
+      const exited = once(child, 'exit');
+      child.kill('SIGKILL');
+      await exited;
+    },
     async close() {
       await stop();
       fs.rmSync(storage, { recursive: true, force: true });

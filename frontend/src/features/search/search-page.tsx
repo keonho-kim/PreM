@@ -141,7 +141,7 @@ export function SearchPage() {
   const navigate = (next: SearchInput) => setParams(encodeSearch(next));
   return (
     <main className="container workspace search-workspace">
-      <title>Space · 자료 검색 | PuPuTyX</title>
+      <title>Space · 자료 검색 | PreM</title>
       <header className="space-search-heading">
         <div>
           <p className="workspace-label">팀 공용 자료</p>

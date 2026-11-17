@@ -2,7 +2,7 @@
 // Pattern: Feature factory with owned, disposable preview hydration.
 // Usage: Render first, enhance the attached gallery, and dispose before route changes.
 // Related: mock/app.js, mock/styles/document-gallery.css, mock/js/data.js.
-window.PuPuTyXModules.documents = (context) => {
+window.PreMModules.documents = (context) => {
   'use strict';
   const {
     esc,

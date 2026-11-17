@@ -9,6 +9,17 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DeckPreview } from './deck-preview';
 import type { Run } from './api';
+vi.mock('./use-editor-session', () => ({
+  useEditorSession: () => ({ id: 'session', error: null, retry: () => {} }),
+}));
+vi.mock('./history-api', async (original) => ({
+  ...(await original<typeof import('./history-api')>()),
+  getHistory: async () => ({ before_run_id: null, slides: [], undo_remaining: 0 }),
+}));
+vi.mock('./edit-api', async (original) => ({
+  ...(await original<typeof import('./edit-api')>()),
+  getEdits: async () => [],
+}));
 vi.mock('./slide-chat', () => ({ SlideChat: () => null }));
 vi.mock('./api', async (original) => ({
   ...(await original<typeof import('./api')>()),

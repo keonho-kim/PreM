@@ -128,7 +128,7 @@ export function UploadDialog({
                 setError('');
               }}
             />
-            <p className="muted" id={`${id}-format-hint`}>
+            <p className="field-hint" id={`${id}-format-hint`}>
               {kind === 'templates'
                 ? 'PPTX'
                 : 'PDF · HWP · HWPX · DOCX · PPTX · XLSX · HTML · Markdown'}{' '}

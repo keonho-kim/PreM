@@ -14,7 +14,7 @@ const sizes = [
   { name: 'phone', width: 390, height: 844 },
 ];
 const stable = async (page) => {
-  await page.waitForFunction(() => !!window.PuPuTyXMock && !!document.querySelector('#main-title'));
+  await page.waitForFunction(() => !!window.PreMMock && !!document.querySelector('#main-title'));
   await page.evaluate(async () => {
     await document.fonts.ready;
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -63,7 +63,7 @@ const stable = async (page) => {
         await page.evaluate(() => {
           if (document.activeElement?.id === 'main-title') document.activeElement.blur();
         });
-        const filename = 'PuPuTyX--' + screen.slug + '-' + size.name + '.png';
+        const filename = 'PreM--' + screen.slug + '-' + size.name + '.png';
         if (screen.hash.startsWith('#view=documents')) {
           await page.screenshot({
             path: path.join(output, 'document-gallery-' + size.name + '.png'),
@@ -101,7 +101,7 @@ const stable = async (page) => {
     );
     const date = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date());
     const lines = [
-      '# PuPuTyX Folio captures',
+      '# PreM Folio captures',
       '',
       date +
         ' / current Folio app: Home, Studio review stepper, Space processing, and Admin preview; light only.',
@@ -112,7 +112,7 @@ const stable = async (page) => {
       '| --- | --- | --- |',
     ];
     for (const screen of screens) {
-      const stem = 'screens/PuPuTyX--' + screen.slug;
+      const stem = 'screens/PreM--' + screen.slug;
       lines.push(
         '| ' +
           screen.title +

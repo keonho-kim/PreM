@@ -5,7 +5,7 @@
 use clap::Parser;
 use std::{net::IpAddr, path::PathBuf};
 #[derive(Debug, Parser)]
-#[command(name = "PuPuTyX", version, about = "PuPuTyX application server")]
+#[command(name = "PreM", version, about = "PreM application server")]
 pub(super) struct Config {
     #[arg(long, value_parser = absolute_path)]
     pub data_storage_path: PathBuf,

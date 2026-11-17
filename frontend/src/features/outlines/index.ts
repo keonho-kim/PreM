@@ -4,3 +4,5 @@
 // Related: workspace.tsx, api.ts.
 export { OutlineWorkspace } from './workspace';
 export { getOutline, outlineKeys } from './api';
+
+export { OutlineRevisionDialog, type OutlineAction, type OutlineEdit } from './revision-dialog';

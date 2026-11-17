@@ -27,13 +27,13 @@ class MockHandler(SimpleHTTPRequestHandler):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Preview the PuPuTyX mock locally.')
+    parser = argparse.ArgumentParser(description='Preview the PreM mock locally.')
     parser.add_argument('--port', type=int, default=5174)
     options = parser.parse_args()
     directory = Path(__file__).resolve().parents[1]
     handler = partial(MockHandler, directory=str(directory))
     with MockServer(('127.0.0.1', options.port), handler) as server:
-        print(f'PuPuTyX mock: http://127.0.0.1:{options.port}/', flush=True)
+        print(f'PreM mock: http://127.0.0.1:{options.port}/', flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:

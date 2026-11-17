@@ -15,7 +15,7 @@ export function AppHeader() {
     <header className="app-header">
       <div className="container">
         <Link className="brand" to="/">
-          PuPuTyX
+          PreM
         </Link>
         <nav className="app-navigation" aria-label="주요 메뉴">
           <NavLink to="/" end>

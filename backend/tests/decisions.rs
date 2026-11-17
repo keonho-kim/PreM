@@ -6,7 +6,7 @@ mod common;
 mod decision_support;
 use common::request;
 use decision_support::Fixture;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use std::sync::atomic::Ordering;
 use uuid::Uuid;

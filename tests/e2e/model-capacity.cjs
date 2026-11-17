@@ -61,7 +61,7 @@ async function save(page) {
                 },
               }
             : {
-                choices: [{ finish_reason: 'stop', message: { content: 'PuPuTyX connection OK' } }],
+                choices: [{ finish_reason: 'stop', message: { content: 'PreM connection OK' } }],
               },
         ),
       );

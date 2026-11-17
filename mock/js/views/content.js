@@ -2,7 +2,7 @@
 // Pattern: Feature factory with an explicit application context.
 // Usage: Registered before mock/app.js by mock/index.html.
 // Related: mock/app.js, mock/styles/content-workspace.css.
-window.PuPuTyXModules.content = (context) => {
+window.PreMModules.content = (context) => {
   'use strict';
   const {
     esc,
@@ -79,7 +79,7 @@ window.PuPuTyXModules.content = (context) => {
     );
   }
 
-  const discovery = window.PuPuTyXModules.assetSearch({
+  const discovery = window.PreMModules.assetSearch({
     esc,
     icon,
     project,

@@ -24,6 +24,15 @@ pub(super) fn next(db: &mut rusqlite::Connection, r: Run) -> Result<Option<Plan>
     }
     let context = json!({"task":"presentation_slide","presentation_title":r.title,"section":{"title":title,"description":description},"direction":{"do":do_text,"dont":dont_text},"additional_request":instructions,"sources":texts});
     Ok(Some(Plan {
+        first: db
+            .query_row(
+                "SELECT position=1 FROM presentation_slide_versions WHERE id=?",
+                [&slide],
+                |r| r.get(0),
+            )
+            .map_err(failure)?,
+        layouts: vec![],
+        materials: vec![],
         slide_id: uuid(slide)?,
         context,
         block_ids: blocks,
@@ -56,11 +65,23 @@ pub(super) fn checkpoint(
     spec: crate::modules::assets::DerivedBlob,
     blocks: Vec<Uuid>,
     request: Uuid,
+    references: Vec<Uuid>,
 ) -> Result<(), Error> {
     let tx = db.transaction().map_err(failure)?;
     jobs::active(&tx, &r)?;
     blob(&tx, &spec, "application/json", "json")?;
     if tx.execute("UPDATE presentation_slide_versions SET spec_sha256=?,request_id=? WHERE id=? AND run_id=? AND spec_sha256 IS NULL",params![spec.sha256,request.to_string(),slide.to_string(),r.id.to_string()]).map_err(failure)?!=1{return Err(Error::Conflict)}
+    for reference in references {
+        let allowed:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM presentation_generation_imports WHERE run_id=? AND import_id=?)",params![r.id.to_string(),reference.to_string()],|r|r.get(0)).map_err(failure)?;
+        if !allowed {
+            return Err(Error::Conflict);
+        }
+        tx.execute(
+            "INSERT INTO presentation_slide_imports VALUES(?,?)",
+            params![slide.to_string(), reference.to_string()],
+        )
+        .map_err(failure)?;
+    }
     for b in blocks {
         tx.execute(
             "INSERT INTO presentation_slide_evidence VALUES(?,?)",
@@ -81,10 +102,7 @@ pub(super) fn render_source(
     r: Run,
 ) -> Result<Option<String>, Error> {
     jobs::active(db, &r)?;
-    let job:Option<String>=db.query_row("SELECT d.template_job_id FROM presentation_runs r JOIN presentation_designs d ON d.id=r.design_id WHERE r.id=?",[r.id.to_string()],|r|r.get(0)).map_err(failure)?;
-    let hash = job.map(|j| if edits::is_edit(db,&r.id.to_string())? {
-        db.query_row("SELECT f.blob_sha256 FROM document_jobs j JOIN template_versions v ON v.id=j.template_version_id JOIN file_registrations f ON f.id=v.file_registration_id WHERE j.id=?",[j],|row|row.get(0)).map_err(failure)
-    }else{preparation::template(db,&j)}).transpose()?;
+    let hash = canvas::source(db, &r.id.to_string())?;
     db.execute("UPDATE presentation_runs SET stage='rendering',version=version+1 WHERE id=? AND stage!='rendering'",[r.id.to_string()]).map_err(failure)?;
     Ok(hash)
 }

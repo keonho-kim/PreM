@@ -17,13 +17,9 @@ const { openBrowser, baseURL, projectRoot, artifacts } = require('./browser.cjs'
     await p.goto(baseURL + '#view=editor&project=platform&deck=deck1', {
       waitUntil: 'networkidle0',
     });
-    const state = () => p.evaluate(() => PuPuTyXMock.snapshot().projects[0].decks[0]);
+    const state = () => p.evaluate(() => PreMMock.snapshot().projects[0].decks[0]);
     const count = async (n) =>
-      p.waitForFunction(
-        (n) => PuPuTyXMock.snapshot().projects[0].decks[0].slides.length === n,
-        {},
-        n,
-      );
+      p.waitForFunction((n) => PreMMock.snapshot().projects[0].decks[0].slides.length === n, {}, n);
     await p.click('[data-action="add-slide"]');
     await count(7);
     await p.click('[data-canvas-command="undo"]');
@@ -124,7 +120,7 @@ const { openBrowser, baseURL, projectRoot, artifacts } = require('./browser.cjs'
     ]);
     await chooser.accept([fixture]);
     await p.waitForFunction(() =>
-      PuPuTyXMock.snapshot().projects[0].decks[0].slides.some((s) =>
+      PreMMock.snapshot().projects[0].decks[0].slides.some((s) =>
         s.objects?.some((o) => o.type === 'image'),
       ),
     );

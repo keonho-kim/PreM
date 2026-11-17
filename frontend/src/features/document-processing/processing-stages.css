@@ -1,0 +1,37 @@
+/* Hallmark · Folio: real document preparation checkpoints. */
+/* Purpose: Show saved reading/organization/readiness without guessed processing percentages.
+ * Pattern: Neutral ruled status list; no Studio review-stepper or artificial animation.
+ * Usage: ProcessingStatus in Space/Studio previews and the initiating-tab work panel.
+ * Related: status.tsx, api.ts, workflow definitions. */
+.processing-stages {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.processing-stages li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.processing-stages li svg {
+  inline-size: 16px;
+  block-size: 16px;
+}
+.processing-stages li > span:last-child {
+  color: var(--color-muted);
+}
+.processing-stages [aria-current="step"] {
+  font-weight: 600;
+}
+.processing-stages [aria-current="step"] > span:last-child {
+  color: var(--color-ink);
+}
+@media (forced-colors: active) {
+  .processing-stages [aria-current="step"] {
+    outline: 1px solid Highlight;
+  }
+}

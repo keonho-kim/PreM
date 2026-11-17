@@ -1,7 +1,8 @@
 // Purpose: Implement the document-owned persistence boundary using the existing SQLite writer.
 // Pattern: Async library calls wrap short synchronous transactions, never external work.
-// Usage: App wires this store to Documents and its Apalis worker.
+// Usage: App wires this store to Documents and its common-engine driver.
 // Related: queries.rs, jobs.rs, results.rs, modules/documents/ports.rs.
+mod execution;
 mod jobs;
 mod materials;
 mod queries;
@@ -22,6 +23,19 @@ fn failure(e: rusqlite::Error) -> Error {
     Error::Storage
 }
 impl Store for SqliteDocuments {
+    fn current_job(&self, id: Uuid) -> Work<Job> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| queries::get(db, id)).await })
+    }
+    fn begin_node(&self, j: Job, n: crate::workflows::engine::Node) -> Work<bool> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| execution::begin(db, j, n)).await })
+    }
+    fn finish_node(&self, j: Job, n: crate::workflows::engine::Node) -> Work<()> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| execution::finish(db, j, n)).await })
+    }
+
     fn enqueue(&self, k: String, i: Uuid, e: i64, key: Uuid, p: ExtractionProfiles) -> Work<Job> {
         let q = self.0.clone();
         Box::pin(async move { q.call(move |db| jobs::enqueue(db, k, i, e, key, p)).await })
@@ -124,6 +138,7 @@ impl Store for SqliteDocuments {
     }
 }
 pub(super) fn recover(db: &rusqlite::Connection) -> rusqlite::Result<()> {
+    execution::recover(db)?;
     db.execute("UPDATE document_jobs SET status=CASE WHEN attempt<3 THEN 'queued' ELSE 'failed' END,error_code='server_restarted',lease=NULL,lease_until=NULL,version=version+1,updated_at=? WHERE status IN('extracting','classifying')",[now()])?;
     Ok(())
 }

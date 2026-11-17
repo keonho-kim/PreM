@@ -1,6 +1,6 @@
 # Workflow와 동시성
 
-PuPuTyX 통합 제품·기술 설계서 v2.0. 원문 **5장, 12장**을 수록한다. [문서 색인](README.md)
+PreM 통합 제품·기술 설계서 v2.0. 원문 **5장, 12장**을 수록한다. [문서 색인](README.md)
 
 ## 5.1 기본 구조
 
@@ -202,7 +202,7 @@ Validation
 
 자동 수정은 최초 생성 Workflow의 품질 검증 과정에 한정한다. 최초 생성 완료 후에는 사용자 요청 없이 결과물을 다시 생성하지 않는다.
 
-자동 수정 반복 횟수에는 상한을 두고, 해결하지 못한 오류는 사용자에게 표시한다. 구체적인 상한값은 원문에 지정되어 있지 않다.
+자동 수정 반복 횟수에는 상한을 두고, 해결하지 못한 오류는 사용자에게 표시한다. 현재 구현의 최초 미확정 생성은 최대 두 단계의 글자 크기 보정으로 제한한다. 원문·차트 값·근거를 삭제하거나 바꾸지 않고, 해결되지 않은 장표는 게시를 중단한다. 대화 편집은 이미 확인한 동일 제목·본문의 조판 크기를 유지하며 새 내용에 추가 자동 보정을 적용하지 않는다.
 
 ## 5.6 Slide Revision Workflow
 
@@ -330,7 +330,7 @@ Studio의 근거·템플릿 단계는 검색 결과를 검토하는 단계다. �
 
 템플릿은 PPT Master 템플릿 추출 → 편집 구조·원본 관계 보존 → 장표 PNG 미리보기 저장으로 완료한다. 레퍼런스 본문 추출과 목차 판정 노드를 호출하지 않는다. 레퍼런스는 검증된 파일 형식으로 PPTX 템플릿 추출 가능 여부 확인 → 내용 추출 → 선택된 Decision 연결을 통한 목차 분류 순서로 처리한다. 이 판별이 레퍼런스를 템플릿으로 자동 등록하지 않는다.
 
-현재 제품의 두 Apalis worker는 SQLite 작업·lease·완료 배치 체크포인트를 사용한다. 취소된 작업의 뒤늦은 결과는 확정하지 않으며 완료한 템플릿 구조와 미리보기는 원본 버전에 연결한다. 범용 DAG와 Studio 생성은 별도 구현 범위다. UI에는 개발 검증 단계를 노출하지 않고 준비 상태와 실제 자산 미리보기를 제공한다.
+현재 제품의 두 문서 처리 실행 슬롯은 공통 Rust 엔진과 SQLite 작업·lease·완료 배치 체크포인트를 사용한다. 취소된 작업의 뒤늦은 결과는 확정하지 않으며 완료한 템플릿 구조와 미리보기는 원본 버전에 연결한다. 문서는 추출·분류·준비, 템플릿은 추출·준비의 독립 그래프를 사용하며 PPT 생성도 공통 엔진에 연결되어 있다. UI에는 개발 검증 단계를 노출하지 않고 준비 상태와 실제 자산 미리보기를 제공한다.
 
 ## 사용자 경험 적용 범위
 
@@ -360,6 +360,22 @@ v2는 초기 비교 → 주변 문맥 재검토 → 최대 3질의의 추가 검
 
 ### PPT 생성 Worker 구현 경계
 
-대화 수정은 기존 생성 Worker와 별도의 영속 편집 요청으로 현재 장표의 제목·본문·메모를 처리한다. 하나의 `propose_slide_patch` 구조화 명령을 서버에서 선택 범위와 대조하고, 사용자 검토/적용 후 변경 Spec과 새 deck rendering run을 만든다. 미변경 slide version은 재사용하되 전체 PPTX 조립·검증을 수행한다. 네이티브 다중 도구 에이전트, 이미지/차트/객체 배치와 전체 발표자료 수정은 후속 구현이다. 실제 테이블/API는 [V20 계약](../dev-docs/04-data-api.md#v20-슬라이드-대화-수정)을 따른다.
+대화 수정은 기존 생성 Worker와 별도의 영속 편집 요청으로 선택한 장표의 텍스트·이미지·차트·도형·배치를 처리한다. 하나의 `propose_slide_patch` 구조화 명령을 서버에서 선택 범위와 대조하고, 사용자 검토/적용 후 변경 Spec과 새 deck rendering run을 만든다. 미변경 slide version은 재사용하되 전체 PPTX 조립·검증을 수행한다. 최대 24개 선택 장표의 제안을 개별 checkpoint하며 전체 검토 후 원자적으로 적용한다. 네이티브 다중 도구 에이전트와 캔버스 직접 드래그는 후속 구현이다. 실제 테이블/API는 [V20 계약](../dev-docs/04-data-api.md#v20-슬라이드-대화-수정)을 따른다.
 
-현재 구현은 presentations 기능의 단일 영속 Worker다. writing 단계는 슬라이드별 Spec Blob과 모델 요청·원문 링크를 checkpoint하고, rendering 단계는 실제 PPTX·재추출 검사·미리보기 이후 원자적으로 결과 revision을 공개한다. 중단 시 완료한 Spec을 재사용하고 취소·재시도는 버전과 멱등 키로 제어한다. 원본·가이드·목차·근거·디자인이 변경되면 오래된 작업을 새 head로 적용하지 않는다. 범용 DAG, 시각 모델 자동 수정과 변경 슬라이드만 렌더링하는 편집 Workflow는 후속 범위다.
+PPT generation now uses the common write → render → publish engine. Slide specs, rendered output and publication have durable checkpoints; publication and head advancement remain atomic. Other worker migration, parallel nodes, dynamic branches, visual-model repair and changed-slide-only rendering remain follow-on work.
+
+## Common engine implementation boundary
+
+Presentation generation uses the versioned write → render → publish graph. Generic dependency execution, bounded admission, heartbeat/cancellation supervision and durable node/event/artifact checkpoints are implemented. Feature adapters retain canonical job/input ownership and fence every commit with the job lease. Render output and render-node success commit together; publication and publish-node success commit together.
+
+Document/template preparation also consumes the common engine: document extract → classify → ready and template extract → ready, with two shared processing slots independent of the one-slot PPT engine. Space and Studio expose committed stages and explicit cancellation/retry; restart reuses completed extraction and decision batches. OCR remains within extraction rather than an independent per-page checkpoint. Outline generation and content mapping also use separate compose → publish and map → publish graphs, with a shared one-slot outline engine. Canonical batch responses are reused after interruption; final batch and work-node success are atomic, and publication/head advancement and publish-node success are atomic. Relation discovery uses retrieve → review → publish with bounded feature-owned parallel comparisons/exploration. Chat proposals use propose → render, with explicit user approval outside generic execution followed by normal PPT publication. Parallel-node execution, dynamic branches, general human gates, unified workflow APIs/SSE and an Admin monitor are not yet implemented. Persistence contracts are documented in [execution checkpoints](../dev-docs/04-data-api.md#v23-workflow-execution-checkpoints) and [outline checkpoints](../dev-docs/04-data-api.md#v25-outline-generation-and-mapping-checkpoints).
+
+## Reference-enabled generation and editing
+
+Initial generation pins source material IDs, preserves the original model draft and applies references once before rendering. Editor insertion creates a render-only immutable revision with unchanged slides reused. Chat proposals freeze available source IDs, checkpoint each target and render real previews before explicit approval. Native PPTX reference parts and chart workbooks are retained; generic source handling never grants arbitrary filesystem/process/SQL tools. [Current contracts](../dev-docs/04-data-api.md#v27-pinned-native-reference-insertion) define actual limits and remaining format fidelity gaps.
+
+## 장표별 품질 실행 계약
+
+공통 render 노드 내부에서 장표마다 작성 Spec, 목적 위치, 템플릿·원본·런타임 버전에 따른 결과를 저장한다. 재시도와 변경 편집은 통과한 장표의 네이티브 PPTX·PNG를 재사용하고 누락·변경한 장표만 렌더링한다. 모든 장표가 통과하면 원본 테마·차트·워크북을 보존하여 조립하고 기존 버전 검사로 확정한다. 원본과 확정 리비전은 재시도·캐시 정리로 삭제하지 않는다.
+
+검사는 해당 장표의 텍스트 누락, 근거 연결, 보수적인 글자 배치 추정, 관리 객체의 경계, 이미지 비율과 네이티브 내용 보존을 포함한다. 배경·도식 겹침은 경고로 구분하며 의미 정확도나 시각 모델의 평가를 대신하지 않는다. 일반 사용자에게 장표 번호와 필요한 조치를 알려주고, 운영 상세 코드와 내부 캐시 구조는 노출하지 않는다.

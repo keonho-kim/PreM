@@ -31,6 +31,21 @@ async function model() {
       for await (const chunk of req) text += chunk;
       assert.ok(Buffer.byteLength(text) < 32768);
       const body = JSON.parse(text);
+      if (body.state?.regions) {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(
+          JSON.stringify({
+            model: body.model,
+            answers: Object.fromEntries(
+              Object.keys(body.questions).map((id) => [
+                id,
+                { type: 'choice', choice: '0', probabilities: { 0: 0.9, 1: 0.1 }, confidence: 0.9 },
+              ]),
+            ),
+          }),
+        );
+        return;
+      }
       if (body.messages) {
         state.plannerCalls++;
         res.setHeader('Content-Type', 'application/json');
@@ -130,6 +145,20 @@ async function ready(base, p, item) {
   throw new Error('extraction timeout');
 }
 async function seed(base, modelBase) {
+  const provider = crypto.randomUUID();
+  await json(base, `/api/v1/admin/llm/providers/${provider}`, 'PUT', {
+    expected_version: 0,
+    name: '자료 비교 AI',
+    provider_type: 'lm_studio_decision',
+    base_url: modelBase,
+    model_identifier: 'fixture-relations',
+    timeout_seconds: 30,
+    enabled: true,
+  });
+  await json(base, '/api/v1/admin/document-processing/settings', 'PUT', {
+    expected_version: 0,
+    connection_id: provider,
+  });
   const target = await project(base, '현재 업무 개선 보고');
   const source = await upload(
     base,
@@ -161,16 +190,6 @@ async function seed(base, modelBase) {
   for (const [p, name, bytes] of inputs) uploads.push([p, await upload(base, p.id, name, bytes)]);
   await ready(base, target.id, source);
   for (const [p, item] of uploads) await ready(base, p.id, item);
-  const provider = crypto.randomUUID();
-  await json(base, `/api/v1/admin/llm/providers/${provider}`, 'PUT', {
-    expected_version: 0,
-    name: '자료 비교 AI',
-    provider_type: 'lm_studio_decision',
-    base_url: modelBase,
-    model_identifier: 'fixture-relations',
-    timeout_seconds: 30,
-    enabled: true,
-  });
   return { target, original, provider };
 }
 module.exports = { model, json, upload, seed, ready };

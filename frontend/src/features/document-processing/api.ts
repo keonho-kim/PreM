@@ -27,6 +27,7 @@ const jobSchema = z.object({
   updated_at: z.number(),
   total_blocks: z.number(),
   completed_blocks: z.number(),
+  steps: z.array(z.object({ key: z.string(), state: z.string(), attempt: z.number() })).optional(),
 });
 export type Job = z.infer<typeof jobSchema>;
 const pageSchema = z.object({

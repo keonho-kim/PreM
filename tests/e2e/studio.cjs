@@ -78,6 +78,9 @@ async function capture(page, name) {
     await capture(a, 'studio-sources.png');
     await a.click('.studio-source-preview');
     await a.waitForSelector('.processing-pages img');
+    assert.equal(await a.$$eval('.processing-stages li', (nodes) => nodes.length), 3);
+    assert((await a.$eval('.processing-stages', (n) => n.textContent)).includes('문서 읽기'));
+    await capture(a, 'studio-document-engine.png');
     await a.waitForFunction(() =>
       Array.from(document.querySelectorAll('.processing-pages img')).some(
         (i) => i.complete && i.naturalWidth > 0,

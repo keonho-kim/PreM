@@ -60,7 +60,7 @@ let headingAttributes: [NSAttributedString.Key: Any] = [
 
 for (stem, title, entries) in groups {
     let images = entries.map { entry -> NSImage in
-        let file = root.appendingPathComponent("screens/PuPuTyX--view-\(entry.1)-desktop.png")
+        let file = root.appendingPathComponent("screens/PreM--view-\(entry.1)-desktop.png")
         guard let image = NSImage(contentsOf: file) else { fatalError("Missing screenshot: \(file.path)") }
         return image
     }
@@ -75,7 +75,7 @@ for (stem, title, entries) in groups {
     context.imageInterpolation = .high
     background.setFill()
     NSRect(x: 0, y: 0, width: width, height: height).fill()
-    ("PuPuTyX  /  \(title)" as NSString).draw(at: NSPoint(x: pad, y: height - 56), withAttributes: headingAttributes)
+    ("PreM  /  \(title)" as NSString).draw(at: NSPoint(x: pad, y: height - 56), withAttributes: headingAttributes)
     var rowTop = headerHeight
     for row in 0..<2 {
         for column in 0..<2 {

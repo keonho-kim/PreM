@@ -1,6 +1,6 @@
 // Purpose: Verify always-visible Studio progress and independent editor panels in the direct-file mock.
 // Pattern: Isolated browser, real keyboard/pointer controls and current Folio captures.
-// Usage: PUPUTYX_BROWSER_TOOLS=... node mock/helpers/studio-workbench.cjs.
+// Usage: PREM_BROWSER_TOOLS=... node mock/helpers/studio-workbench.cjs.
 // Related: mock/js/studio.js, mock/styles/workspace-flow.css, editor-support.js.
 const assert = require('node:assert/strict');
 const path = require('node:path');

@@ -19,7 +19,7 @@ const source = await readFile(sourcePath, 'utf8');
 const theme = JSON.parse(source);
 const groups = ['properties', 'backdrop', 'reducedTransparency', 'forcedColors'];
 if (theme.schema_version !== 1 || theme.mode !== 'light') {
-  throw new Error('Unsupported design schema or color mode. PuPuTyX uses light mode only.');
+  throw new Error('Unsupported design schema or color mode. PreM uses light mode only.');
 }
 for (const name of groups) {
   if (!theme[name] || typeof theme[name] !== 'object' || Array.isArray(theme[name])) {

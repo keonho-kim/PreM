@@ -34,7 +34,7 @@ pub(super) async fn publish(
         let hash = hex::encode(Sha256::digest(&bytes));
         let size = bytes.len() as u64;
         let mut file = tempfile::Builder::new()
-            .prefix(".puputyx-upload-derived-")
+            .prefix(".prem-upload-derived-")
             .tempfile_in(path.join(".staging"))
             .map_err(|_| Error::Storage)?;
         file.write_all(&bytes).map_err(|_| Error::Storage)?;

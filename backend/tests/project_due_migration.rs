@@ -4,7 +4,7 @@
 // Related: migrations/V3__project_due_date.sql, adapters/http/projects.rs.
 mod common;
 use axum::http::StatusCode;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::{Connection, params};
 use serde_json::json;
 use uuid::Uuid;
@@ -85,7 +85,7 @@ async fn deadline_rename_preserves_values_revisions_and_retries() {
     assert_eq!(
         db.pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        20
+        32
     );
     let mut columns = db
         .prepare("SELECT name FROM pragma_table_info('projects')")

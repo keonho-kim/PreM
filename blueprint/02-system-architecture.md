@@ -1,6 +1,6 @@
 # 본개발 소스 아키텍처
 
-PuPuTyX의 제품 구현에 적용할 모듈 책임, 의존 방향, 데이터 변경 경계와 단계별 수용 조건을 정의한다. [문서 색인](README.md)
+PreM의 제품 구현에 적용할 모듈 책임, 의존 방향, 데이터 변경 경계와 단계별 수용 조건을 정의한다. [문서 색인](README.md)
 
 **이 문서의 소스 트리는 목표 구조다.** 현재 실행 코드의 위치는 [구현 아키텍처](../dev-docs/01-architecture.md), 설치된 패키지·기능과 도입 후보는 [의존성 명세](../dev-docs/08-dependencies.md)를 기준으로 한다. 현재 프로젝트·Space 원본 관리·Admin Provider 연결 기능은 app/modules/adapters 경계에서 실제 DB·API·React 화면으로 구현되어 있다. 나머지 목표 모듈은 미구현이며, 의존성 설치만으로 기능 완료를 판단하지 않는다.
 
@@ -243,11 +243,11 @@ AI 컴포넌트에는 메시지·진행·근거의 명시적 view model과 callb
 
 현재 공용 원본 등록 단계는 `modules/assets`와 `modules/libraries`, HTTP/SQLite/filesystem/formats adapter 및 `frontend/src/features/space`가 담당한다. Reference와 Template의 동일한 수명주기는 `libraries`가 소유하고 실제 테이블은 분리한다. 전문 검색·템플릿 분석의 첫 소비자가 생길 때 해당 feature로 책임을 분리한다. `LibraryStore.register`가 파일·라이브러리·요청 결과를 함께 확정하는 유일한 commit port다.
 
-SQLite 전용 스레드/큐는 `async-sqlite 0.7.0`을 사용하며 `rusqlite 0.41`, refinery, 단일 DB와 짧은 직렬 트랜잭션을 유지한다. Uppy는 브라우저 전송, Tokio는 서버 파일 작업 제한/취소를 담당한다. 이 큐는 Durable DAG 실행기를 대신하지 않는다. Apalis는 worker 후보이며 SQLite backend의 native driver 호환성을 해결하기 전에는 설치하지 않는다. 실제 계약은 [현재 아키텍처](../dev-docs/01-architecture.md)와 [의존성](../dev-docs/08-dependencies.md)을 따른다.
+SQLite 전용 스레드/큐는 `async-sqlite 0.7.0`을 사용하며 `rusqlite 0.41`, refinery, 단일 DB와 짧은 직렬 트랜잭션을 유지한다. Uppy는 브라우저 전송, Tokio는 서버 파일 작업 제한/취소를 담당한다. 이 큐는 Durable DAG 실행기를 대신하지 않는다. 문서·템플릿과 PPT 작업은 공통 Rust 실행 엔진을 사용하고 기존 SQLite 어댑터에 상태·체크포인트를 보존한다. 별도의 Apalis runner나 SQLite 드라이버는 사용하지 않는다. 실제 계약은 [현재 아키텍처](../dev-docs/01-architecture.md)와 [의존성](../dev-docs/08-dependencies.md)을 따른다.
 
 ### 구현된 Provider 경계
 
-model_registry는 설정 리비전과 typed Provider 카탈로그를, model_execution은 공통 호출 정책과 llm_requests를 소유한다. inference와 decisions는 별도 소비자다. diagnostics는 진단 입력·기대 응답만 정의하고 execution을 사용한다. HTTP·SQLite·파일 키·프로바이더별 native/공식 호환 wire 형식은 adapters에 분리한다. settings snapshot은 요청 시작 시 고정하고 설정 저장은 기존 작업을 재실행하지 않는다. LM Studio 어댑터는 로컬 서버에 HTTP로 접근하며 모델 패키지·OCR 도구를 다운로드하거나 PuPuTyX에 포함하지 않는다. 후속 문서 처리 노드는 이 경계를 통해 모델을 호출하도록 확장한다.
+model_registry는 설정 리비전과 typed Provider 카탈로그를, model_execution은 공통 호출 정책과 llm_requests를 소유한다. inference와 decisions는 별도 소비자다. diagnostics는 진단 입력·기대 응답만 정의하고 execution을 사용한다. HTTP·SQLite·파일 키·프로바이더별 native/공식 호환 wire 형식은 adapters에 분리한다. settings snapshot은 요청 시작 시 고정하고 설정 저장은 기존 작업을 재실행하지 않는다. LM Studio 어댑터는 로컬 서버에 HTTP로 접근하며 모델 패키지·OCR 도구를 다운로드하거나 PreM에 포함하지 않는다. 후속 문서 처리 노드는 이 경계를 통해 모델을 호출하도록 확장한다.
 
 Provider 종류는 ProviderKind로 HTTP·SQLite 경계에서 파싱하고 어댑터는 exhaustive match를 사용한다. 구현된 기능 정보는 서버 카탈로그에서 UI로 전달한다. 프론트에 별도 Provider 목록·지원 기능 규칙을 복제하지 않는다. 공통 transport는 Provider 종류를 모르며 인증 형식과 API 버전은 해당 프로토콜 어댑터가 결정한다. 시작 시 미완료 상태 복구는 app이 조립하고 SQL 쓰기는 각 기능의 저장 어댑터가 소유한다.
 

@@ -34,10 +34,6 @@
   color: var(--color-ink);
   background: var(--color-paper);
 }
-.field-hint {
-  font-size: 13px;
-  color: var(--color-muted);
-}
 .form-message {
   min-block-size: 48px;
   font-size: 14px;

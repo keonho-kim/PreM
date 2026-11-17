@@ -11,6 +11,7 @@ mod frontend;
 mod health;
 mod model_capacity;
 mod model_discovery;
+mod outline_authoring;
 mod outlines;
 mod presentations;
 mod projects;
@@ -44,7 +45,12 @@ pub(crate) fn router(
     authoring: WorkspaceApi,
 ) -> Router {
     let access = authoring.admin_access;
+    let outline_authoring = crate::app::outline_authoring::OutlineAuthoring {
+        outlines: authoring.outlines.clone(),
+        presentations: authoring.presentations.clone(),
+    };
     Router::new()
+        .merge(outline_authoring::router(outline_authoring))
         .merge(admin_access::settings_router(access.clone()))
         .route("/api/v1/admin/access", axum::routing::post(admin_access::verify))
         .route("/", get(|| async { Redirect::temporary("/home") }))

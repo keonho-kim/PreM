@@ -11,8 +11,8 @@ mod presentation_support;
 mod space_support;
 use common::request;
 use outline_support::*;
+use prem_backend::app::Application;
 use presentation_support::*;
-use puputyx_backend::app::Application;
 use serde_json::json;
 use uuid::Uuid;
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -70,6 +70,31 @@ async fn template_output_preserves_native_master_and_rejects_foreign_reads() {
     assert_eq!(s, 202, "{r}");
     let done = wait_run(&app, &p, "succeeded").await;
     let run = done["id"].as_str().unwrap();
+    let (_, slides) = request(
+        &app.router(),
+        "GET",
+        &format!("/api/v1/projects/{p}/presentations/{run}/slides"),
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(slides[0]["spec"]["schema_version"], 4);
+    assert_eq!(slides[0]["spec"]["design"]["authored"], false);
+    let (_, layouts) = request(
+        &app.router(),
+        "GET",
+        &format!("/api/v1/projects/{p}/presentation-layouts?run_id={run}"),
+        None,
+        None,
+    )
+    .await;
+    assert!(
+        layouts
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|l| l["key"] == slides[0]["spec"]["design"]["layout_key"])
+    );
     let (s, output) = space_support::download(
         &app.router(),
         &format!("/api/v1/projects/{p}/presentations/{run}/download"),

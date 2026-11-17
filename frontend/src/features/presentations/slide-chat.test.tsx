@@ -8,20 +8,16 @@ import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/re
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SlideChat } from './slide-chat';
+import { EditProposal } from './edit-proposal';
 import { getEdits, sendEdit, editCommand, type Edit } from './edit-api';
 import type { Run, Slide } from './api';
+import { useEditThread } from './use-edit-thread';
 import { useChatDrafts } from './chat-drafts';
 vi.mock('./edit-api', async (original) => ({
   ...(await original<typeof import('./edit-api')>()),
   getEdits: vi.fn(),
   sendEdit: vi.fn(),
   editCommand: vi.fn(),
-}));
-vi.mock('@/features/providers', () => ({
-  authoringModelsKey: ['authoring-models'],
-  listAuthoringModels: async () => [
-    { id: 'model', name: 'Ornith', version: 1, model_identifier: 'ornith' },
-  ],
 }));
 vi.mock('@/components/ui/message-scroller', () => ({
   MessageScrollerProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -76,15 +72,31 @@ const edit: Edit = {
   applied_run_id: null,
   render_status: null,
   created_at: 1,
+  preview: true,
   before: originalSpec,
   proposal: { ...originalSpec, title: '새 제목' },
 };
 let client: QueryClient;
-function mount() {
+function TestChat(props: Partial<React.ComponentProps<typeof SlideChat>>) {
+  const history = useEditThread('p', run, slide, true);
+  return (
+    <SlideChat
+      project="p"
+      run={run}
+      slide={slide}
+      canEdit
+      history={history}
+      onResult={() => {}}
+      {...props}
+      session={props.session === undefined ? 'session' : props.session}
+    />
+  );
+}
+function mount(props: Partial<React.ComponentProps<typeof SlideChat>> = {}) {
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(
     <QueryClientProvider client={client}>
-      <SlideChat project="p" run={run} slide={slide} active canEdit onResult={() => {}} />
+      <TestChat {...props} />
     </QueryClientProvider>,
   );
 }
@@ -94,15 +106,13 @@ afterEach(() => {
   vi.clearAllMocks();
   useChatDrafts.setState({ drafts: {} });
 });
-it('does not send IME confirmation keys and pins the selected field/model to one request', async () => {
+it('does not send IME confirmation keys and defaults to the entire current slide without model controls', async () => {
   vi.mocked(getEdits).mockResolvedValue([]);
   vi.mocked(sendEdit).mockResolvedValue({ ...edit, status: 'queued' });
-  useChatDrafts
-    .getState()
-    .update('p:run:slide', { model: 'model', scope: 'title', prompt: '제목을 수정해줘' });
+  useChatDrafts.getState().update('p:run:slide', { prompt: '제목을 수정해줘' });
   mount();
   const input = screen.getByRole('textbox', { name: '슬라이드 수정 요청' });
-  await waitFor(() => expect(screen.getByText('Ornith')).toBeInTheDocument());
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
   fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 });
   fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
@@ -111,10 +121,8 @@ it('does not send IME confirmation keys and pins the selected field/model to one
   await waitFor(() => expect(sendEdit).toHaveBeenCalledTimes(1));
   expect(vi.mocked(sendEdit).mock.calls[0]?.[4]).toEqual({
     expected_version: 1,
-    connection_id: 'model',
-    model_version: 1,
     prompt: '제목을 수정해줘',
-    fields: ['title'],
+    fields: ['title', 'bullets', 'notes', 'objects', 'layout'],
   });
 });
 it('does not apply the returned proposal until the user accepts its visible difference', async () => {
@@ -125,8 +133,8 @@ it('does not apply the returned proposal until the user accepts its visible diff
     applied_run_id: 'new-run',
   });
   mount();
-  await screen.findByText('새 제목');
-  expect(screen.getByText('기존 제목')).toBeVisible();
+  await screen.findByText(/가운데 장표에서 수정안을 확인하세요/);
+  expect(screen.queryByRole('button', { name: '수정 전후 보기' })).not.toBeInTheDocument();
   expect(editCommand).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole('button', { name: '수정안 적용' }));
   await waitFor(() => expect(editCommand).toHaveBeenCalledTimes(1));
@@ -134,8 +142,48 @@ it('does not apply the returned proposal until the user accepts its visible diff
 });
 it('retains drafts independently for different immutable slide scopes', () => {
   const update = useChatDrafts.getState().update;
-  update('p:run:slide', { prompt: '첫 슬라이드 요청', scope: 'title' });
+  update('p:run:slide', { prompt: '첫 슬라이드 요청' });
   update('p:run:other', { prompt: '다른 슬라이드 요청' });
   expect(useChatDrafts.getState().drafts['p:run:slide']?.prompt).toBe('첫 슬라이드 요청');
   client = new QueryClient();
+});
+
+it('pins a multi-slide visual request while preserving the selected text fields', async () => {
+  vi.mocked(getEdits).mockResolvedValue([]);
+  vi.mocked(sendEdit).mockResolvedValue({ ...edit, status: 'queued' });
+  useChatDrafts.getState().update('p:run:slide', {
+    prompt: '두 장표에 차트를 추가해줘',
+  });
+  mount({ targetSlides: [slide, { ...slide, id: 'second', position: 2 }] });
+  await userEvent.click(screen.getByRole('button', { name: '수정 요청 보내기' }));
+  await waitFor(() => expect(sendEdit).toHaveBeenCalledTimes(1));
+  expect(vi.mocked(sendEdit).mock.calls[0]?.[4]).toMatchObject({
+    fields: ['title', 'bullets', 'notes', 'objects', 'layout'],
+    slide_ids: ['slide', 'second'],
+  });
+});
+it('limits a component-selected request to explicit object IDs', async () => {
+  vi.mocked(getEdits).mockResolvedValue([]);
+  vi.mocked(sendEdit).mockResolvedValue({ ...edit, status: 'queued' });
+  useChatDrafts.getState().update('p:run:slide', { prompt: '오른쪽으로 옮겨줘' });
+  mount({ objectIds: ['chart-1', 'image-1'] });
+  await userEvent.click(screen.getByRole('button', { name: '수정 요청 보내기' }));
+  await waitFor(() => expect(sendEdit).toHaveBeenCalledTimes(1));
+  expect(vi.mocked(sendEdit).mock.calls[0]?.[4]).toMatchObject({
+    fields: ['objects'],
+    object_ids: ['chart-1', 'image-1'],
+  });
+});
+
+it('keeps comparison and result navigation out of chat when a proposal becomes ready', () => {
+  client = new QueryClient();
+  const view = (status: Edit['status']) => (
+    <EditProposal edit={{ ...edit, status }} current pending={false} onCommand={() => {}} />
+  );
+  const { rerender } = render(view('running'));
+  expect(screen.queryByRole('button', { name: '수정안 적용' })).not.toBeInTheDocument();
+  rerender(view('ready'));
+  expect(screen.getByRole('button', { name: '수정안 적용' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: '수정 전후 보기' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '수정 결과 보기' })).not.toBeInTheDocument();
 });

@@ -74,6 +74,7 @@ function FilterDraft({
         <Label htmlFor={`${id}-due`}>마감일</Label>
         <DueDatePicker
           id={`${id}-due`}
+          inputTrigger
           value={draft.due_date}
           onChange={(value) => setDraft({ ...draft, due_date: value })}
         />

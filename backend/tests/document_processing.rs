@@ -8,7 +8,7 @@ mod document_support;
 mod space_support;
 use common::request;
 use document_support::*;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::json;
 use std::sync::atomic::Ordering;
 use uuid::Uuid;

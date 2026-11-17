@@ -1,16 +1,16 @@
 // Purpose: Explicitly validate the selected local LM Studio model through the product adapter.
 // Pattern: Opt-in endpoint/model with isolated application data and sanitized acceptance output.
-// Usage: Set PUPUTYX_LIVE_LLM_URL and PUPUTYX_LIVE_LLM_MODEL; run after pnpm build.
+// Usage: Set PREM_LIVE_LLM_URL and PREM_LIVE_LLM_MODEL; run after pnpm build.
 // Related: providers.cjs, server.cjs; never runs as part of the ordinary test suite.
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const { randomUUID } = require('node:crypto');
 const { createServer } = require('./server.cjs');
 (async () => {
-  const base = process.env.PUPUTYX_LIVE_LLM_URL,
-    model = process.env.PUPUTYX_LIVE_LLM_MODEL;
+  const base = process.env.PREM_LIVE_LLM_URL,
+    model = process.env.PREM_LIVE_LLM_MODEL;
   assert.ok(base && model, 'Explicit LM endpoint and model are required');
-  const protocol = process.env.PUPUTYX_LIVE_LLM_PROTOCOL ?? 'lm_studio';
+  const protocol = process.env.PREM_LIVE_LLM_PROTOCOL ?? 'lm_studio';
   assert.ok(['lm_studio', 'lm_studio_native'].includes(protocol));
   const server = await createServer('provider-live-');
   try {

@@ -7,7 +7,7 @@ import { request } from '@/shared/api/http';
 
 const healthSchema = z.object({
   status: z.literal('ok'),
-  service: z.literal('PuPuTyX'),
+  service: z.literal('PreM'),
   version: z.string(),
 });
 

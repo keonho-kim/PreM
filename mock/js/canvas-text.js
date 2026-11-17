@@ -2,7 +2,7 @@
 // Pattern: Input boundary with escaped rendering, cancellation and focus restoration.
 // Usage: Bound per editor render by canvas-editor.js using its abort signal.
 // Related: mock/js/slide-commands.js, mock/js/canvas-format.js.
-window.PuPuTyXModules.canvasText = ({
+window.PreMModules.canvasText = ({
   sheet,
   ui,
   commands,

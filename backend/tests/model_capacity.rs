@@ -7,7 +7,7 @@ mod common;
 use axum::{Router, http::StatusCode};
 use capacity_support::*;
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use uuid::Uuid;
 fn path(id: Uuid) -> String {

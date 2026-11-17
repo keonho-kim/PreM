@@ -50,6 +50,30 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
         Number(getComputedStyle(document.querySelector('[data-sonner-toast]')).opacity) > 0.99
       );
     });
+    // The toast must remain viewport-bound even if the app root establishes a containing block.
+    await a.evaluate(() => {
+      const root = document.getElementById('root');
+      root.style.transform = 'translateZ(0)';
+      root.style.minHeight = '2500px';
+      window.scrollTo(0, 600);
+    });
+    assert.equal(
+      await a.$eval('[data-sonner-toaster]', (n) => !document.getElementById('root').contains(n)),
+      true,
+    );
+    assert.equal(
+      await a.$eval('[data-sonner-toast][data-front="true"]', (n) => {
+        const rect = n.getBoundingClientRect();
+        return rect.top >= 0 && rect.bottom <= innerHeight && rect.right <= innerWidth;
+      }),
+      true,
+    );
+    await a.evaluate(() => {
+      const root = document.getElementById('root');
+      root.style.removeProperty('transform');
+      root.style.removeProperty('min-height');
+      window.scrollTo(0, 0);
+    });
     await a.click('button[aria-label="작업 패널 닫기"]');
     await a.waitForSelector('.work-launcher');
     await notifications(a);

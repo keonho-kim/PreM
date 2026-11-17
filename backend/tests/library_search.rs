@@ -9,7 +9,7 @@ mod document_support;
 mod space_support;
 use common::request;
 use document_support::{fixture, upload, wait};
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use uuid::Uuid;
 async fn search(app: &Application, q: &str, extra: &str) -> Value {

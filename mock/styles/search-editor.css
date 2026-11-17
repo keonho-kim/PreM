@@ -51,7 +51,7 @@
 .search-result-row .asset-flow span {
   font-size: var(--text-xs);
 }
-::highlight(puputyx-search) {
+::highlight(prem-search) {
   color: var(--color-ink);
   background-color: var(--color-selection);
   text-decoration: underline;

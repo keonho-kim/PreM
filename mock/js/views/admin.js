@@ -2,7 +2,7 @@
 // Pattern: Local navigation and task-based forms; technical protocol names stay in implementation.
 // Usage: Registered before mock/app.js; all connections and responses are samples.
 // Related: actions-presentation.js, forms.js, styles/office-workspace.css.
-window.PuPuTyXModules.admin = (context) => {
+window.PreMModules.admin = (context) => {
   'use strict';
   const { esc, icon, button, badge, ui, href, pageHeading, empty, workflowPanel } = context;
   const adminTabs = [

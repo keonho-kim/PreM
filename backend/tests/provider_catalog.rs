@@ -4,7 +4,7 @@
 // Related: model_registry/kind.rs, sqlite/libraries/uploads.rs, sqlite/model_requests.rs.
 mod common;
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::json;
 use uuid::Uuid;
 #[tokio::test]

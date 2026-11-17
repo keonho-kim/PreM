@@ -1,6 +1,6 @@
 // Purpose: Run frontend behavior tests in an isolated DOM environment.
 // Pattern: Vitest configuration with the production source alias.
-// Usage: pnpm --filter @puputyx/frontend test.
+// Usage: pnpm --filter @prem/frontend test.
 // Related: src/pages/home-page.test.tsx, package.json.
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vitest/config';

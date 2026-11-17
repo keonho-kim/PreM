@@ -11,7 +11,7 @@ export function StudioPage() {
     <StudioWorkspace key={projectId} projectId={projectId} />
   ) : (
     <main className="container workspace">
-      <title>Studio | PuPuTyX</title>
+      <title>Studio | PreM</title>
       <h1>Studio</h1>
       <p>작업할 프로젝트를 Home에서 선택하세요.</p>
       <Button asChild>

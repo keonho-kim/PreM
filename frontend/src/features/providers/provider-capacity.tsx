@@ -105,7 +105,7 @@ export function ProviderCapacity({ providerId, active }: { providerId: string; a
     <section className="provider-capacity" aria-labelledby={`${prefix}-title`}>
       <header>
         <h2 id={`${prefix}-title`}>처리 설정</h2>
-        <p>PuPuTyX에서 이 AI 연결에 보내는 요청 수와 대기 시간을 조절합니다.</p>
+        <p>PreM에서 이 AI 연결에 보내는 요청 수와 대기 시간을 조절합니다.</p>
       </header>
       <dl className="capacity-live" aria-label="현재 요청 현황">
         <div>

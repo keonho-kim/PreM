@@ -97,6 +97,11 @@
       "url": "https://ui.shadcn.com/r/styles/new-york-v4/message-scroller.json",
       "sha256": "9fa06194196391e5bda4fbd890f06ee06c8f1d2016b5f8e8d6d05a0780bbf091",
       "retrieved_on": "2026-11-17"
+    },
+    "checkbox": {
+      "url": "https://ui.shadcn.com/r/styles/new-york/checkbox.json",
+      "sha256": "e1520741b797637574f9e7533941f1c80199dbe9f617585c7965f5b9696f9d4b",
+      "retrieved_on": "2026-11-17"
     }
   },
   "adaptations": [

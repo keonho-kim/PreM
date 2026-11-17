@@ -3,6 +3,7 @@
 // Usage: Database exposes only the consumer-owned Relations Store.
 // Related: modules/relations/, V14__related_documents.sql.
 mod context;
+mod execution;
 mod exploration;
 mod lifecycle;
 mod pull;
@@ -30,6 +31,19 @@ fn uuid(s: String) -> Result<Uuid, Error> {
     Uuid::parse_str(&s).map_err(|_| Error::Storage)
 }
 impl Store for SqliteRelations {
+    fn begin_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<bool> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| execution::begin(db, r, n)).await })
+    }
+    fn finish_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<()> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| execution::finish(db, r, n)).await })
+    }
+    fn reviewed(&self, r: Run, b: bool) -> Work<()> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| execution::reviewed(db, r, b)).await })
+    }
+
     fn advance(&self, r: Run) -> Work<Next> {
         let q = self.0.clone();
         Box::pin(async move { q.call(move |db| exploration::advance(db, r)).await })

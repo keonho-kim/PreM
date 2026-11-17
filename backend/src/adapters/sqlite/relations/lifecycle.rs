@@ -33,6 +33,9 @@ pub(super) fn create(
     }
     let snapshot = context::snapshot(&tx, p, true)?;
     let config = settings::config(&tx, settings::read(&tx)?.connection_id)?;
+    if config.is_none() {
+        return Err(Error::MissingModel);
+    }
     let id = Uuid::new_v4();
     tx.execute("INSERT INTO relation_runs(id,project_id,request_key,fingerprint,query,options_json,snapshot_hash,guide_revision_id,config_id,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",params![id.to_string(),p.to_string(),key.to_string(),fingerprint,input.query,serde_json::to_string(&input.options).map_err(|_|Error::Storage)?,snapshot.hash,snapshot.guide,config,if config.is_some(){"queued"}else{"waiting_configuration"},now(),now()]).map_err(failure)?;
     for (v, e) in &snapshot.sources {
@@ -81,6 +84,7 @@ pub(super) fn create(
             )
             .map_err(failure)?;
             tx.execute("UPDATE relation_workspaces SET phase='complete',stop_reason='no_new_results' WHERE run_id=?",[id.to_string()]).map_err(failure)?;
+            execution::empty(&tx, id)?;
         }
     }
     let result = queries::get(&tx, p, Some(id))?.ok_or(Error::Storage)?;
@@ -195,7 +199,18 @@ pub(super) fn finish(
     if error.as_deref() == Some("search_budget_exhausted") {
         exploration::end(&tx, &run, "budget")?;
     }
-    tx.execute("UPDATE relation_runs SET status=?,error_code=?,lease=NULL,lease_until=NULL,version=version+1,updated_at=? WHERE id=?",params![status,error,now(),run.id.to_string()]).map_err(failure)?;
+    let error = if status == "succeeded" {
+        execution::publish(&tx, &run)?;
+        let budget:bool=tx.query_row("SELECT EXISTS(SELECT 1 FROM relation_workspaces WHERE run_id=? AND stop_reason='budget')",[run.id.to_string()],|r|r.get(0)).map_err(failure)?;
+        if budget {
+            Some("search_budget_exhausted".into())
+        } else {
+            error
+        }
+    } else {
+        error
+    };
+    tx.execute("UPDATE relation_runs SET status=CASE WHEN ?1='queued' AND attempt>=3 THEN 'failed' ELSE ?1 END,error_code=?2,lease=NULL,lease_until=NULL,version=version+1,updated_at=?3 WHERE id=?4",params![status,error,now(),run.id.to_string()]).map_err(failure)?;
     tx.commit().map_err(failure)?;
     Ok(())
 }

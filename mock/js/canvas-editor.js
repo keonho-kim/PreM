@@ -2,7 +2,7 @@
 // Pattern: Rerender-scoped DOM gestures commit immutable snapshots only on completion.
 // Usage: Owned by editor-support.js; image contents are read only after explicit selection.
 // Related: mock/js/slide-commands.js, mock/js/ui.js, mock/styles/editor-interactions.css.
-window.PuPuTyXModules.canvasEditor = ({ ui, deck, commands, announce, selection }) => {
+window.PreMModules.canvasEditor = ({ ui, deck, commands, announce, selection }) => {
   let release = () => {};
   const current = () => deck().slides[ui.slideIndex];
   function enhance() {
@@ -87,7 +87,7 @@ window.PuPuTyXModules.canvasEditor = ({ ui, deck, commands, announce, selection 
       },
       { signal },
     );
-    window.PuPuTyXModules.canvasText({
+    window.PreMModules.canvasText({
       sheet,
       ui,
       commands,
@@ -257,7 +257,7 @@ window.PuPuTyXModules.canvasEditor = ({ ui, deck, commands, announce, selection 
         reader = null;
       }
     });
-    const format = window.PuPuTyXModules.canvasFormat({ ui, deck, commands, sheet });
+    const format = window.PreMModules.canvasFormat({ ui, deck, commands, sheet });
     listen(document.querySelector('.editor-toolbar'), 'pointerdown', (event) => {
       if (event.target.closest('[data-canvas-command], #canvas-text-color')) event.preventDefault();
     });

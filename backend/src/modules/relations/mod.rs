@@ -2,6 +2,7 @@
 // Pattern: Durable runs with a consumer-owned store; Decisions owns model transport/admission.
 // Usage: Studio and Admin call this facade; Application owns its worker lifetime.
 // Related: worker.rs, protocol.rs, adapters/sqlite/relations/.
+mod execution;
 mod exploration;
 mod protocol;
 mod types;
@@ -13,6 +14,9 @@ pub(crate) use types::*;
 use uuid::Uuid;
 pub(crate) type Work<T> = Pin<Box<dyn Future<Output = Result<T, Error>> + Send>>;
 pub(crate) trait Store: Send + Sync {
+    fn begin_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<bool>;
+    fn finish_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<()>;
+    fn reviewed(&self, r: Run, budget: bool) -> Work<()>;
     fn advance(&self, run: Run) -> Work<Next>;
     fn pull(&self, run: Run, queries: Vec<String>, request: Option<Uuid>) -> Work<()>;
     fn evidence(&self, project: Uuid, candidate: Uuid) -> Work<Vec<EvidenceRead>>;

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-PUPUTYX_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PUPUTYX_ROOT"
+PREM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PREM_ROOT"
 if [[ "${1:-}" != "--no-build" ]]; then
   ./scripts/build.sh
 fi
-python3 scripts/smoke_test.py "$PUPUTYX_ROOT/target/release/PuPuTyX"
+python3 scripts/smoke_test.py "$PREM_ROOT/target/release/PreM"

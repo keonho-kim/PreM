@@ -1,6 +1,6 @@
 // Purpose: Build and serve the React application with official compiler optimization.
 // Pattern: Vite composition with a React Compiler preset before JSX lowering.
-// Usage: pnpm dev:frontend or pnpm --filter @puputyx/frontend build.
+// Usage: pnpm dev:frontend or pnpm --filter @prem/frontend build.
 // Related: frontend/package.json, vitest.config.ts, dev-docs/08-dependencies.md.
 import { fileURLToPath, URL } from 'node:url';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -20,7 +20,7 @@ function redirectHome(request: IncomingMessage, response: ServerResponse, next: 
 }
 
 const homeRedirect: Plugin = {
-  name: 'puputyx-home-redirect',
+  name: 'prem-home-redirect',
   configureServer(server) {
     server.middlewares.use(redirectHome);
   },

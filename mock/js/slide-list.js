@@ -2,7 +2,7 @@
 // Pattern: DOM adapter committing once on drop; all listeners and frames are disposable.
 // Usage: Enhanced after each editor render by editor-support.js.
 // Related: mock/js/slide-commands.js, mock/styles/editor-interactions.css.
-window.PuPuTyXModules.slideList = ({ ui, deck, commands, icon, announce }) => {
+window.PreMModules.slideList = ({ ui, deck, commands, icon, announce }) => {
   let release = () => {};
   function enhance() {
     release();

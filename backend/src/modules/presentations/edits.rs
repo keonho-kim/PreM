@@ -3,7 +3,6 @@
 // Usage: Presentations facade; runtime reads/rendering reuse existing feature ports.
 // Related: edit_types.rs, edit_model.rs, adapters/sqlite/presentations/edits/.
 use super::*;
-use std::time::Duration;
 impl Presentations {
     pub async fn edit(
         &self,
@@ -18,14 +17,27 @@ impl Presentations {
         if input.prompt.is_empty()
             || input.prompt.chars().count() > 2000
             || input.fields.is_empty()
-            || input.fields.len() > 3
+            || input.fields.len() > 5
             || input
                 .fields
                 .iter()
-                .any(|f| !["title", "bullets", "notes"].contains(&f.as_str()))
+                .any(|f| !["title", "bullets", "notes", "objects", "layout"].contains(&f.as_str()))
             || input.fields.windows(2).any(|f| f[0] == f[1])
             || input.expected_version < 1
-            || input.model_version < 1
+            || input.model_version.is_some_and(|v| v < 1)
+            || input.connection_id.is_some() != input.model_version.is_some()
+        {
+            return Err(Error::EditInvalid);
+        }
+        input.slide_ids.sort();
+        if input.slide_ids.len() > 24
+            || input.slide_ids.windows(2).any(|s| s[0] == s[1])
+            || input.object_ids.len() > 20
+            || input
+                .object_ids
+                .iter()
+                .any(|s| s.is_empty() || s.len() > 64)
+            || (!input.object_ids.is_empty() && input.fields != ["objects"])
         {
             return Err(Error::EditInvalid);
         }
@@ -49,14 +61,18 @@ impl Presentations {
         key: Uuid,
         v: i64,
         action: String,
+        session: Option<Uuid>,
     ) -> Result<EditView, Error> {
         if !["apply", "reject", "cancel", "retry"].contains(&action.as_str()) {
             return Err(Error::EditInvalid);
         }
-        let edit = self.store.edit_command(p, id, key, v, action).await?;
+        let edit = self
+            .store
+            .edit_command(p, id, key, v, action, session)
+            .await?;
         self.edit_view(edit).await
     }
-    async fn spec(&self, hash: String) -> Result<SlideSpec, Error> {
+    pub(super) async fn spec(&self, hash: String) -> Result<SlideSpec, Error> {
         serde_json::from_slice(
             &self
                 .assets
@@ -73,55 +89,92 @@ impl Presentations {
         } else {
             None
         };
+        let mut slides = vec![];
+        for t in &edit.targets {
+            slides.push(EditSlideView {
+                slide_id: t.slide_id,
+                position: t.position,
+                before: self.spec(t.source_spec.clone()).await?,
+                proposal: if let Some(h) = &t.proposed_spec {
+                    Some(self.spec(h.clone()).await?)
+                } else {
+                    None
+                },
+            });
+        }
         Ok(EditView {
             edit,
             before,
             proposal,
+            slides,
         })
     }
-    pub(super) async fn process_edit(&self, stop: CancellationToken) {
-        let edit = match self.store.claim_edit().await {
-            Ok(Some(edit)) => edit,
-            Ok(None) => return,
-            Err(e) => {
-                tracing::warn!(%e,"slide editing scheduling failed");
-                return;
-            }
-        };
-        let cancel = stop.child_token();
-        let token = cancel.clone();
-        let store = self.store.clone();
-        let watched = edit.clone();
-        let monitor = tokio::spawn(async move {
-            loop {
-                tokio::select! {()=token.cancelled()=>break,()=tokio::time::sleep(Duration::from_secs(2))=>{if !matches!(store.edit_heartbeat(watched.clone()).await,Ok(true)){token.cancel();break}}}
-            }
-        });
-        let result = self.propose(&edit, cancel.clone()).await;
-        cancel.cancel();
-        let _ = monitor.await;
-        if let Err(e) = result {
-            let code = match e {
-                Error::Cancelled => "interrupted",
-                Error::Conflict => "inputs_changed",
-                Error::Processing(c) => c,
-                _ => "edit_failed",
-            };
-            let _ = self.store.edit_fail(edit, code.into()).await;
-        }
-    }
-    async fn propose(&self, edit: &Edit, cancel: CancellationToken) -> Result<(), Error> {
+    pub(super) async fn propose_targets(
+        &self,
+        edit: &Edit,
+        cancel: CancellationToken,
+    ) -> Result<(), Error> {
         if edit.runtime_profile != self.renderer.profile() {
             return Err(Error::Processing("runtime_changed"));
         }
-        let original = self.spec(edit.source_spec.clone()).await?;
-        let context = self.store.edit_context(edit.clone()).await?;
+        for target in edit.targets.iter().filter(|t| !t.completed) {
+            if cancel.is_cancelled() {
+                return Err(Error::Cancelled);
+            }
+            let mut scoped = edit.clone();
+            scoped.source_slide_id = target.slide_id;
+            scoped.source_spec = target.source_spec.clone();
+            scoped.object_ids = target.object_ids.clone();
+            self.propose_target(&scoped, edit, target, cancel.clone())
+                .await?;
+        }
+        Ok(())
+    }
+    async fn propose_target(
+        &self,
+        scoped: &Edit,
+        edit: &Edit,
+        target: &EditTarget,
+        cancel: CancellationToken,
+    ) -> Result<(), Error> {
+        let original = self.spec(target.source_spec.clone()).await?;
+        let mut scoped = scoped.clone();
+        let used: std::collections::HashSet<_> = original
+            .objects
+            .iter()
+            .filter_map(|o| {
+                if let ObjectContent::Reference { reference_id } = &o.content {
+                    Some(*reference_id)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let words: Vec<_> = edit
+            .prompt
+            .split_whitespace()
+            .filter(|w| w.chars().count() > 1)
+            .collect();
+        scoped.references.sort_by_key(|r| {
+            !words.iter().any(|w| r.title.contains(w))
+                && !(r.kind == "chart" && edit.prompt.contains("차트"))
+        });
+        let mut candidates = 0;
+        scoped.references.retain(|r| {
+            if used.contains(&r.id) {
+                true
+            } else {
+                candidates += 1;
+                candidates <= 12
+            }
+        });
+        let context = self.store.edit_context(scoped.clone()).await?;
         let plan = EditPlan { context, original };
         let reply = self
             .inference
             .pinned_json(
                 edit.config_id,
-                super::edit_model::input(edit, &plan)?,
+                super::edit_model::input(&scoped, &plan)?,
                 cancel.clone(),
             )
             .await
@@ -129,7 +182,19 @@ impl Presentations {
                 crate::modules::inference::Error::Cancelled => Error::Cancelled,
                 e => Error::Processing(e.code()),
             })?;
-        let output = super::edit_model::validate(edit, &plan, &reply.text)?;
+        let output = super::edit_model::validate(&scoped, &plan, &reply.text)?;
+        let media = output
+            .spec
+            .objects
+            .iter()
+            .filter_map(|o| {
+                if let ObjectContent::Image { media_id } = &o.content {
+                    Some(*media_id)
+                } else {
+                    None
+                }
+            })
+            .collect();
         let blob = self
             .assets
             .publish(
@@ -142,7 +207,28 @@ impl Presentations {
             return Err(Error::Cancelled);
         }
         self.store
-            .edit_ready(edit.clone(), blob, output.message, reply.record.id)
+            .edit_ready(
+                edit.clone(),
+                target.slide_id,
+                blob,
+                output.message,
+                reply.record.id,
+                UsedAssets {
+                    media,
+                    references: output
+                        .spec
+                        .objects
+                        .iter()
+                        .filter_map(|o| {
+                            if let ObjectContent::Reference { reference_id } = &o.content {
+                                Some(*reference_id)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                },
+            )
             .await
     }
 }

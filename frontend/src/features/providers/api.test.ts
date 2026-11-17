@@ -30,6 +30,7 @@ it('sends only editable settings and the explicit version precondition', () => {
     timeout_seconds: 180,
     enabled: true,
     expected_version: 2,
+    max_output_tokens: null,
     clear_secret: false,
   });
 });

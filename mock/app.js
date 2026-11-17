@@ -4,7 +4,7 @@
 // Related: mock/app.js, mock/index.html.
 (() => {
   'use strict';
-  const modules = window.PuPuTyXModules;
+  const modules = window.PreMModules;
   const dom = modules.dom({});
   const { $, $$, esc, clone, uid, icon, badge } = dom;
   const data = modules.data(dom);
@@ -131,7 +131,7 @@
     context.enhanceDocumentGallery();
     context.enhanceTables();
     space.updateIndicators();
-    document.title = ($('#main-title')?.textContent ?? 'PuPuTyX') + ' | PuPuTyX 목업';
+    document.title = ($('#main-title')?.textContent ?? 'PreM') + ' | PreM 목업';
     context.fitSlides();
     editorSupport.enhance();
     context.enhanceProjectWorkspace();
@@ -340,7 +340,7 @@
     },
   });
 
-  window.PuPuTyXMock = Object.freeze({ snapshot: () => clone(context.store) });
+  window.PreMMock = Object.freeze({ snapshot: () => clone(context.store) });
 
   parseRoute();
 })();

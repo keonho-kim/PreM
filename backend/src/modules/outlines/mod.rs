@@ -2,6 +2,7 @@
 // Pattern: Explicit CAS edits and durable model work through narrow persistence contracts.
 // Usage: Studio outline step; existing model execution owns credentials/admission/history.
 // Related: types.rs, validation.rs, worker.rs, adapters/sqlite/outlines/.
+mod execution;
 mod model;
 mod types;
 mod validation;
@@ -28,6 +29,8 @@ pub(crate) trait Store: Send + Sync {
     fn command(&self, p: Uuid, id: Uuid, key: Uuid, expected: i64, action: String) -> Work<Run>;
     fn claim(&self) -> Work<Option<Run>>;
     fn heartbeat(&self, run: Run) -> Work<bool>;
+    fn begin_node(&self, run: Run, node: crate::workflows::engine::Node) -> Work<bool>;
+    fn finish_node(&self, run: Run, node: crate::workflows::engine::Node) -> Work<()>;
     fn plan(&self, run: Run) -> Work<Option<Plan>>;
     fn checkpoint(
         &self,
@@ -81,7 +84,8 @@ impl Outlines {
         if !["generate", "map"].contains(&i.kind.as_str())
             || i.node_ids.len() > 24
             || i.expected_version < 0
-            || i.model_version < 1
+            || i.model_version.is_some_and(|v| v < 1)
+            || i.connection_id.is_some() != i.model_version.is_some()
         {
             return Err(Error::Invalid);
         }

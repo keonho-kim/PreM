@@ -6,8 +6,8 @@ mod common;
 mod provider_support;
 use axum::http::StatusCode;
 use common::request;
+use prem_backend::app::Application;
 use provider_support::{Fixture, settings};
-use puputyx_backend::app::Application;
 use rusqlite::Connection;
 use serde_json::json;
 use uuid::Uuid;
@@ -36,7 +36,7 @@ async fn encrypted_versions_are_shared_preserved_and_require_the_original_key() 
         None,
     )
     .await;
-    assert_eq!(output["text"], "PuPuTyX connection OK");
+    assert_eq!(output["text"], "PreM connection OK");
     assert!(!output.to_string().contains("reasoning_content"));
     assert_eq!(
         request(&router, "PUT", &path, Some(input.clone()), None)

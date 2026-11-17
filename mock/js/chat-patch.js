@@ -2,7 +2,7 @@
 // Pattern: Pure allowlisted patch construction on cloned slide data.
 // Usage: editor-chat.js pins its input revision and applies only a validated proposal.
 // Related: editor-selection.js, slide-commands.js.
-window.PuPuTyXModules.chatPatch = (slide, keys, instruction) => {
+window.PreMModules.chatPatch = (slide, keys, instruction) => {
   const next = structuredClone(slide),
     changes = [];
   const quote = instruction.match(/["'‘“]([^"'’”]+)["'’”]/)?.[1];

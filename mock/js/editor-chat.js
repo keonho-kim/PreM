@@ -2,7 +2,7 @@
 // Pattern: In-memory sessions with inline review and explicit immutable commit.
 // Usage: Rendered by presentations; enhanced alongside the canvas and inspector.
 // Related: editor-selection.js, chat-patch.js, styles/editor-chat.css.
-window.PuPuTyXModules.editorChat = ({ ui, deck, selection, commands, esc, icon, announce }) => {
+window.PreMModules.editorChat = ({ ui, deck, selection, commands, esc, icon, announce }) => {
   const sessions = new WeakMap();
   let events;
   const current = () => deck().slides[ui.slideIndex];
@@ -25,7 +25,7 @@ window.PuPuTyXModules.editorChat = ({ ui, deck, selection, commands, esc, icon, 
     return session()
       .messages.map(
         (m, i) =>
-          `<article class="chat-message ${m.role}"><span class="chat-author">${m.role === 'user' ? '나' : 'PuPuTyX'}</span>${m.target ? `<small class="chat-message-target">${esc(m.target)}</small>` : ''}<p>${esc(m.text)}</p>${m.patch ? `<div class="chat-proposal">${m.patch.changes.map((c) => `<div class="chat-change"><strong>${esc(c.label)}</strong><del>${esc(c.before)}</del><ins>${esc(c.after)}</ins></div>`).join('')}${m.status === 'pending' ? `<div class="actions"><button type="button" class="button primary" data-chat-apply="${i}">${icon('Check')}적용</button><button type="button" class="button quiet-button" data-chat-discard="${i}">취소</button></div>` : `<span class="chat-result">${esc(m.status)}</span>`}</div>` : ''}</article>`,
+          `<article class="chat-message ${m.role}"><span class="chat-author">${m.role === 'user' ? '나' : 'PreM'}</span>${m.target ? `<small class="chat-message-target">${esc(m.target)}</small>` : ''}<p>${esc(m.text)}</p>${m.patch ? `<div class="chat-proposal">${m.patch.changes.map((c) => `<div class="chat-change"><strong>${esc(c.label)}</strong><del>${esc(c.before)}</del><ins>${esc(c.after)}</ins></div>`).join('')}${m.status === 'pending' ? `<div class="actions"><button type="button" class="button primary" data-chat-apply="${i}">${icon('Check')}적용</button><button type="button" class="button quiet-button" data-chat-discard="${i}">취소</button></div>` : `<span class="chat-result">${esc(m.status)}</span>`}</div>` : ''}</article>`,
       )
       .join('');
   }
@@ -53,7 +53,7 @@ window.PuPuTyXModules.editorChat = ({ ui, deck, selection, commands, esc, icon, 
       keys = selection.read(),
       target = targetLabel(keys);
     s.messages.push({ role: 'user', text: instruction, target });
-    const patch = window.PuPuTyXModules.chatPatch(current(), keys, instruction);
+    const patch = window.PreMModules.chatPatch(current(), keys, instruction);
     patch.changes.forEach((change) => {
       change.label = selection.label(change.key);
     });

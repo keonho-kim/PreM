@@ -13,7 +13,7 @@ use axum::{
 };
 use common::request;
 use document_support::{fixture, upload, wait};
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use tower::ServiceExt;
 use uuid::Uuid;

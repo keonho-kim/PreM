@@ -1,6 +1,6 @@
 # LLM Gateway와 Admin
 
-PuPuTyX 통합 제품·기술 설계서 v2.0. 원문 **8장**을 수록한다. [문서 색인](README.md)
+PreM 통합 제품·기술 설계서 v2.0. 원문 **8장**을 수록한다. [문서 색인](README.md)
 
 현재 구현은 Provider별 네이티브/공식 서버 API의 설정 저장·모델 목록·텍스트/지원되는 구조화 진단과 요청 이력이다. Vision/Tool Calling/스트리밍, 작업별 라우팅·fallback과 문서 처리 Workflow는 아직 구현하지 않았다. 실제 API와 키 계약은 [구현 데이터·API](../dev-docs/04-data-api.md#provider-설정진단-api)를 따른다.
 
@@ -143,6 +143,8 @@ Admin
 - API 형식
 - 모델 ID
 - Timeout
+- 요청 제한 시간은 5~900초 범위로 검증하며 기존 값은 그대로 보존한다. 문맥 로드 크기·출력 한도·응답 대기 시간을 구분한다.
+- 선택적 작성 출력 한도 (`max_output_tokens`): 256~65,536토큰; 미지정 시 작업별 기본값
 - 요청 제한
 - 활성화 여부
 
@@ -210,14 +212,14 @@ Admin은 AI 연결·업무별 AI·작업 현황 중심으로 구성한다. 연�
 
 ## 연결별 요청 처리 설정
 
-Admin의 각 LLM/System One 연결에 처리 설정 탭을 제공한다. PuPuTyX 동시 처리 수(기본 4, 1~1024), 대기 요청 수(기본 32, 0~4096), 최대 대기 시간(기본 30초, 1~600초)을 별도 버전으로 저장한다. 저장 후 재시작 없이 적용하며 실행 중 모델 입력과 완료 결과는 변경하지 않는다. 외부 엔진의 로드 설정은 변경하지 않는다.
+Admin의 각 LLM/System One 연결에 처리 설정 탭을 제공한다. PreM 동시 처리 수(기본 4, 1~1024), 대기 요청 수(기본 32, 0~4096), 최대 대기 시간(기본 30초, 1~600초)을 별도 버전으로 저장한다. 저장 후 재시작 없이 적용하며 실행 중 모델 입력과 완료 결과는 변경하지 않는다. 외부 엔진의 로드 설정은 변경하지 않는다.
 
-LLM / Decision 탭을 항상 표시하고 Provider별 입력·모델 조회·선택을 탭 안에서 수행한다. 저장 전 조회는 별도 POST API이며 설정을 임의로 생성하지 않는다. 모델명 직접 입력과 별도 추가 버튼은 제공하지 않는다. 모델 목록은 Provider 네이티브 경로와 인증을 따르고, LM Studio는 명시적인 모델 type으로 LLM과 Decision을 분리한다. UI 상세 동작은 [UI 설계](07-ui-design.md)를 따른다.
+LLM 연결 / Decision Model 연결 사이드 메뉴에서 Provider별 입력·모델 조회·선택을 수행한다. 저장 전 조회는 별도 POST API이며 설정을 임의로 생성하지 않는다. 모델명 직접 입력과 별도 추가 버튼은 제공하지 않는다. 모델 목록은 Provider 네이티브 경로와 인증을 따르고, LM Studio는 명시적인 모델 type으로 LLM과 Decision을 분리한다. UI 상세 동작은 [UI 설계](07-ui-design.md)를 따른다.
 
 
 ### 자료 찾기 연결
 
-자료 관계 판정은 문서 구조 분류와 별도의 작업 설정을 갖는다. Admin → 자료 찾기에서 저장된 native Decision 또는 구조화 LLM 연결을 선택한다. 실행 시 config revision을 고정하고 호출·취소·실패·사용량은 기존 gateway와 model_execution에서 관리한다. 연결 동시성/대기열 변경은 PuPuTyX 요청량에만 적용하며 외부 모델 엔진의 context length나 micro-batch 설정을 자동 변경하지 않는다.
+자료 관계 판정과 문서 구조 분류는 Decision Model 연결의 공통 판정 설정을 사용한다. Admin → Decision Model 연결에서 저장된 native Decision 또는 구조화 LLM 연결을 선택한다. 실행 시 config revision을 고정하고 호출·취소·실패·사용량은 기존 gateway와 model_execution에서 관리한다. 연결 동시성/대기열 변경은 PreM 요청량에만 적용하며 외부 모델 엔진의 context length나 micro-batch 설정을 자동 변경하지 않는다.
 
 
 ### vLLM-SR Decision 연결

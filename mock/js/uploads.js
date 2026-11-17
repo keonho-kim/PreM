@@ -2,7 +2,7 @@
 // Pattern: Narrow browser boundary shared by project and Space upload commands.
 // Usage: Composed before dialogs and forms in app.js.
 // Related: mock/js/forms.js, mock/js/space.js, mock/js/dialogs.js.
-window.PuPuTyXModules.uploads = (capabilities) => {
+window.PreMModules.uploads = (capabilities) => {
   'use strict';
   const { $, uid } = capabilities;
   function validateFiles(form, extensions = ['pdf', 'hwp', 'hwpx', 'docx', 'pptx', 'xlsx']) {

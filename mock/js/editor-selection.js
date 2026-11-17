@@ -2,7 +2,7 @@
 // Pattern: Session-only stable field/object keys with a narrow change subscription.
 // Usage: Composed once; canvas and chat share this selection owner.
 // Related: canvas-editor.js, canvas-text.js, editor-chat.js.
-window.PuPuTyXModules.editorSelection = ({ ui, deck }) => {
+window.PreMModules.editorSelection = ({ ui, deck }) => {
   let owner,
     slideId,
     keys = [],

@@ -28,13 +28,17 @@ fn row(r: &Row<'_>) -> rusqlite::Result<Job> {
         updated_at: r.get(15)?,
         total_blocks: r.get(16)?,
         completed_blocks: r.get(17)?,
+        steps: vec![],
     })
 }
 pub(super) fn get(db: &rusqlite::Connection, id: Uuid) -> Result<Job, Error> {
-    db.query_row(&format!("{SELECT} WHERE j.id=?"), [id.to_string()], row)
+    let mut job = db
+        .query_row(&format!("{SELECT} WHERE j.id=?"), [id.to_string()], row)
         .optional()
         .map_err(failure)?
-        .ok_or(Error::NotFound)
+        .ok_or(Error::NotFound)?;
+    job.steps = execution::steps(db, id)?;
+    Ok(job)
 }
 pub(super) fn prefix(kind: &str) -> Result<&'static str, Error> {
     match kind {
@@ -71,7 +75,11 @@ pub(super) fn history(
 ) -> Result<Vec<Job>, Error> {
     visible(db, kind, item)?;
     let p = prefix(kind)?;
-    db.prepare(&format!("{SELECT} WHERE j.{p}_version_id IN(SELECT id FROM {p}_versions WHERE item_id=?) ORDER BY coalesce(rv.number,tv.number,sv.number) DESC,j.generation DESC,j.id DESC LIMIT 50")).map_err(failure)?.query_map([item.to_string()],row).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)
+    let mut rows:Vec<Job>=db.prepare(&format!("{SELECT} WHERE j.{p}_version_id IN(SELECT id FROM {p}_versions WHERE item_id=?) ORDER BY coalesce(rv.number,tv.number,sv.number) DESC,j.generation DESC,j.id DESC LIMIT 50")).map_err(failure)?.query_map([item.to_string()],row).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
+    for job in &mut rows {
+        job.steps = execution::steps(db, job.id)?;
+    }
+    Ok(rows)
 }
 pub(super) fn detail(
     db: &rusqlite::Connection,
@@ -89,6 +97,8 @@ pub(super) fn detail(
     if job.kind != kind || job.item_id != item {
         return Err(Error::NotFound);
     }
+    let mut job = job;
+    job.steps = execution::steps(db, job.id)?;
     let (page_mode, warnings) = if let Some(id) = job.extraction_id {
         db.query_row(
             "SELECT page_mode,warnings_json FROM document_extractions WHERE id=?",
@@ -145,7 +155,7 @@ pub(super) fn blocks(
 }
 pub(super) fn settings(db: &rusqlite::Connection) -> Result<Settings, Error> {
     db.query_row(
-        "SELECT version,connection_id FROM document_processing_settings WHERE id=1",
+        "SELECT version,connection_id FROM decision_settings WHERE id=1",
         [],
         |r| {
             Ok(Settings {

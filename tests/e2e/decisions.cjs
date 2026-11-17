@@ -9,6 +9,15 @@ const { once } = require('node:events');
 const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 async function click(page, name, role = 'button') {
+  if (name === '모델 목록 조회' && (await page.$('.provider-form:not([hidden]) .model-picker'))) {
+    await click(page, '사용할 모델 · 필수', 'combobox');
+    await page.waitForFunction(
+      () => !document.querySelector('.model-picker')?.textContent.includes('조회 취소'),
+    );
+    await page.keyboard.press('Escape');
+    return;
+  }
+
   await (await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`)).click();
   if (role === 'tab')
     await page.waitForFunction(
@@ -76,7 +85,7 @@ async function field(page, name, value) {
     a.on('pageerror', (e) => errors.push(e.message));
     await a.goto(server.base + '/home/admin', { waitUntil: 'networkidle0' });
     await server.unlock(a);
-    await click(a, 'Decision', 'tab');
+    await click(a, 'Decision Model 연결', 'link');
     await click(a, 'Provider', 'combobox');
     for (const name of ['OpenAI', 'Gemini', 'LM Studio', 'TypeSafe Jev']) {
       assert.ok(await a.$(`::-p-aria(${name}[role="option"])`));
@@ -90,7 +99,7 @@ async function field(page, name, value) {
     await field(a, 'base_url', `http://127.0.0.1:${model.address().port}/v1`);
     await click(a, '모델 목록 조회');
     await click(a, '사용할 모델 · 필수', 'combobox');
-    await click(a, 'decision-fixture', 'option');
+    await click(a, 'decision-fixture · Decision', 'option');
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
     assert.match(await a.$eval('.provider-summary', (e) => e.textContent), /System One/);

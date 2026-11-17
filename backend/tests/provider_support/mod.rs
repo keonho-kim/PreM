@@ -89,7 +89,7 @@ async fn chat(
     } else if body.get("response_format").is_some() {
         "{\"status\":\"ok\"}"
     } else {
-        "PuPuTyX connection OK"
+        "PreM connection OK"
     };
     Json(json!({"choices":[{"finish_reason":"stop","message":{"content":content,"reasoning_content":"not part of the user-visible result"}}],"usage":{"prompt_tokens":20,"completion_tokens":8}})).into_response()
 }

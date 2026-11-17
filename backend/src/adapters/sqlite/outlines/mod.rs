@@ -4,6 +4,7 @@
 // Related: context.rs, queries.rs, revisions.rs, jobs.rs, V17 migration.
 mod admission;
 mod context;
+mod execution;
 mod jobs;
 mod plans;
 mod queries;
@@ -70,6 +71,14 @@ impl Store for SqliteOutlines {
         let q = self.0.clone();
         Box::pin(async move { q.call(move |db| jobs::heartbeat(db, r)).await })
     }
+    fn begin_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<bool> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| execution::begin(db, r, n)).await })
+    }
+    fn finish_node(&self, r: Run, n: crate::workflows::engine::Node) -> Work<()> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| execution::finish(db, r, n)).await })
+    }
     fn plan(&self, r: Run) -> Work<Option<Plan>> {
         let q = self.0.clone();
         Box::pin(async move { q.call(move |db| plans::next(db, r)).await })
@@ -88,6 +97,5 @@ impl Store for SqliteOutlines {
     }
 }
 pub(super) fn recover(db: &rusqlite::Connection) -> rusqlite::Result<()> {
-    db.execute("UPDATE outline_runs SET status='queued',lease=NULL,lease_until=NULL,version=version+1 WHERE status='running'",[])?;
-    Ok(())
+    execution::recover(db)
 }

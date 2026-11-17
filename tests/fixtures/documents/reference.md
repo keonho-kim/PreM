@@ -26,7 +26,7 @@ console.log(message);
 
 ![업무 흐름](https://markdown-fixture.invalid/tracker.png)
 
-<script>window.puputyxMarkdownExecuted = true</script>
+<script>window.premMarkdownExecuted = true</script>
 
 일반 문장에 포함한 <span>HTML 태그</span>도 실행하지 않습니다.
 

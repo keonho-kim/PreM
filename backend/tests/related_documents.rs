@@ -10,7 +10,7 @@ mod relation_support;
 #[allow(dead_code)]
 mod space_support;
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use relation_support::*;
 use serde_json::json;
 use std::sync::atomic::Ordering;
@@ -21,6 +21,7 @@ async fn native_pairs_are_parallel_cached_and_group_project_origins() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
+    let provider = register(&app, &f).await;
     let target = setup(&app, 16).await;
     let duplicate = project(&app, "동일 문서 사용 프로젝트").await;
     let item = upload(
@@ -38,7 +39,7 @@ async fn native_pairs_are_parallel_cached_and_group_project_origins() {
     )
     .await;
     prepared(&app, &different, &item).await;
-    let provider = register(&app, &f).await;
+
     let(s,v)=request(&crate::common::router(&app),"PUT",&format!("/api/v1/admin/llm/providers/{provider}/capacity"),Some(json!({"expected_version":0,"max_parallel":2,"queue_capacity":8,"queue_timeout_seconds":30})),None).await;
     assert_eq!(s, 200, "{v}");
     let run = start(&app, &target, "efficiency").await;
@@ -182,21 +183,46 @@ async fn search_admission_and_retry_preserve_completed_decisions() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
-    let target = setup(&app, 12).await;
-    let waiting = start(&app, &target, "efficiency").await;
-    assert_eq!(waiting["status"], "waiting_configuration");
-    let candidates = results(&app, &target, waiting["id"].as_str().unwrap(), "file").await;
-    let pending = &candidates["items"][0];
-    assert!(pending["relation"].is_null());
-    let(s,_)=request(&crate::common::router(&app),"PUT",&format!("/api/v1/projects/{target}/related-items"),Some(json!({"candidate_id":pending["id"],"source_version_id":pending["origins"][0]["source_version_id"],"expected_version":0,"selected":true})),None).await;
-    assert_eq!(
-        s, 200,
-        "manual source selection must not require model approval"
-    );
-    assert_eq!(f.model.calls.load(Ordering::SeqCst), 0);
-
     register(&app, &f).await;
+    let target = setup(&app, 12).await;
+    let (status, _) = request(
+        &common::router(&app),
+        "PUT",
+        "/api/v1/admin/document-processing/settings",
+        Some(json!({"expected_version":1,"connection_id":null})),
+        None,
+    )
+    .await;
+    assert_eq!(status, 200);
+    let (status, error) = request(
+        &common::router(&app),
+        "POST",
+        &format!("/api/v1/projects/{target}/related-searches"),
+        Some(json!({"query":"efficiency","options":{}})),
+        Some(&Uuid::new_v4().to_string()),
+    )
+    .await;
+    assert_eq!(status, 422, "{error}");
+    assert_eq!(error["code"], "decision_model_required");
+    let (_, providers) = request(
+        &common::router(&app),
+        "GET",
+        "/api/v1/admin/llm/providers",
+        None,
+        None,
+    )
+    .await;
+    let (status, _) = request(
+        &common::router(&app),
+        "PUT",
+        "/api/v1/admin/document-processing/settings",
+        Some(json!({"expected_version":2,"connection_id":providers[0]["id"]})),
+        None,
+    )
+    .await;
+    assert_eq!(status, 200);
     f.model.fail_once.store(true, Ordering::SeqCst);
+    let waiting = start(&app, &target, "efficiency").await;
     let failed = wait(&app, &target, waiting["id"].as_str().unwrap(), "failed").await;
     assert!(failed["completed"].as_i64().unwrap() > 0);
     assert!(failed["completed"] != failed["total"]);
@@ -226,8 +252,9 @@ async fn structured_llm_bridge_batches_multiple_candidates_and_reuses_them() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
-    let target = setup(&app, 12).await;
     register_kind(&app, &f, "lm_studio").await;
+    let target = setup(&app, 12).await;
+
     let run = start(&app, &target, "efficiency").await;
     let done = wait(&app, &target, run["id"].as_str().unwrap(), "succeeded").await;
     assert!(f.model.calls.load(Ordering::SeqCst) < done["total"].as_u64().unwrap() as usize);

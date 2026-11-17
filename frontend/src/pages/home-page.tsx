@@ -6,7 +6,7 @@ import { ServiceStatus } from '@/features/system-status';
 export function HomePage() {
   return (
     <main className="container workspace">
-      <title>PuPuTyX</title>
+      <title>PreM</title>
       <div className="workspace-intro">
         <h1>문서에서 프레젠테이션까지</h1>
         <p>원문을 분석하고, 근거를 연결하고, 편집 가능한 슬라이드를 만듭니다.</p>

@@ -2,7 +2,7 @@
 // Pattern: Feature factory with an explicit application context.
 // Usage: Registered before mock/app.js by mock/index.html.
 // Related: mock/app.js, mock/index.html.
-window.PuPuTyXModules.forms = (context) => {
+window.PreMModules.forms = (context) => {
   'use strict';
   const {
     $,
@@ -65,7 +65,7 @@ window.PuPuTyXModules.forms = (context) => {
               },
             ];
         const endDate = String(data.get('endDate') ?? '');
-        if (!window.PuPuTyXModules.projectDates.valid(endDate)) {
+        if (!window.PreMModules.projectDates.valid(endDate)) {
           $('#new-project-end-date').setCustomValidity('종료일을 달력에서 선택해 주세요.');
           $('#new-project-end-date').reportValidity();
           return;

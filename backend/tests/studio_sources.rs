@@ -12,7 +12,7 @@ use axum::{
     http::Request,
 };
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use tower::ServiceExt;
 use uuid::Uuid;

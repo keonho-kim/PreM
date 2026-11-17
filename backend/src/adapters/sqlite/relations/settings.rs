@@ -1,4 +1,4 @@
-// Purpose: Own the relation-search model choice separately from document classification.
+// Purpose: Adapt legacy relation settings to the shared decision selection.
 // Pattern: Version-checked configuration; running searches retain their pinned provider revision.
 // Usage: Admin selects an existing Decision connection or structured LLM bridge.
 // Related: lifecycle.rs, modules/model_registry/.
@@ -19,7 +19,7 @@ pub(super) fn config(db: &rusqlite::Connection, id: Option<Uuid>) -> Result<Opti
 pub(super) fn read(db: &rusqlite::Connection) -> Result<Settings, Error> {
     let (version, id, planner): (i64, Option<String>, Option<String>) = db
         .query_row(
-            "SELECT version,connection_id,planner_connection_id FROM relation_settings WHERE id=1",
+            "SELECT d.version,d.connection_id,r.planner_connection_id FROM decision_settings d JOIN relation_settings r ON r.id=d.id WHERE d.id=1",
             [],
             |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
         )
@@ -48,10 +48,11 @@ pub(super) fn save(
         return Err(Error::Invalid);
     }
     tx.execute(
-        "UPDATE relation_settings SET version=version+1,connection_id=?,planner_connection_id=? WHERE id=1",
-        params![edit.connection_id.map(|v| v.to_string()),edit.planner_connection_id.map(|v|v.to_string())],
+        "UPDATE relation_settings SET version=version+1,planner_connection_id=? WHERE id=1",
+        params![edit.planner_connection_id.map(|v| v.to_string())],
     )
     .map_err(failure)?;
+    super::super::decision_settings::write(&tx, edit.connection_id).map_err(failure)?;
     let saved = read(&tx)?;
     tx.commit().map_err(failure)?;
     Ok(saved)

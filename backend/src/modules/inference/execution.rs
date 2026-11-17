@@ -37,6 +37,9 @@ impl Inference {
                     if !c.kind.descriptor().structured {
                         input.schema = None;
                     }
+                    if let Some(budget) = c.max_output_tokens {
+                        input.max_tokens = budget;
+                    }
                     let result = client.complete(c, input).await?;
                     let value: serde_json::Value =
                         serde_json::from_str(&result.text).map_err(|_| Error::InvalidResponse)?;

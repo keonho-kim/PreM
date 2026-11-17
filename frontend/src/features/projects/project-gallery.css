@@ -163,21 +163,12 @@
   gap: 16px;
   padding-block: 20px;
 }
-.projects-pagination,
-.projects-footer {
+.projects-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-block-start: 32px;
-}
-.projects-footer {
-  flex-wrap: wrap;
-  font-size: 13px;
-  color: var(--color-muted);
-}
-.projects-footer a {
-  color: var(--color-accent);
 }
 .project-menu {
   inline-size: min(240px, var(--radix-context-menu-content-available-width, calc(100vw - 16px)));
@@ -218,6 +209,10 @@
   .project-card,
   .project-menu {
     border: 1px solid CanvasText;
+  }
+  .project-filters .due-date-picker input:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
   .project-menu [role="menuitem"]:focus-visible {
     outline: 2px solid Highlight;

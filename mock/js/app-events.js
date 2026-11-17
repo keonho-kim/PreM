@@ -2,7 +2,7 @@
 // Pattern: Narrow event adapter around application commands and feature callbacks.
 // Usage: app.js provides handlers and lifecycle ports after composition.
 // Related: mock/app.js, feedback.js, mock/index.html.
-window.PuPuTyXModules.appEvents = (capabilities) => {
+window.PreMModules.appEvents = (capabilities) => {
   'use strict';
   const {
     actions,

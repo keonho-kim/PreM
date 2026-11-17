@@ -7,7 +7,7 @@ use axum::{
     body::{Body, to_bytes},
     http::Request,
 };
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::json;
 use tower::ServiceExt;
 async fn access(app: &Application, path: &str, token: Option<&str>) -> u16 {

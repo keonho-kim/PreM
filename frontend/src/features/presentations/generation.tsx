@@ -1,10 +1,10 @@
-// Purpose: Compose compact creation settings, durable history and the slide workbench.
-// Pattern: Query owns jobs; disclosures preserve request drafts and panels own their view state.
+// Purpose: Compose inline presentation creation, durable history and the slide workbench.
+// Pattern: Query owns jobs; inline forms preserve drafts and the current deck leads the page.
 // Usage: Studio generation step; existing persistence and model commands remain explicit.
 // Related: generation-form.tsx, deck-preview.tsx, api.ts.
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Download, Settings2, ChevronDown } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,7 +14,6 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { errorMessage } from '@/shared/api/http';
 import {
   listRuns,
@@ -25,6 +24,8 @@ import {
   type Run,
 } from './api';
 import { DeckPreview } from './deck-preview';
+import { QualityStatus } from './quality-status';
+import { WorkflowStatus } from './workflow-status';
 import { GenerationForm } from './generation-form';
 export function Generation({
   project,
@@ -40,10 +41,11 @@ export function Generation({
   active: boolean;
 }) {
   const [base, setBase] = useState<Run | null>(null),
-    [selected, setSelected] = useState(''),
-    [settingsOpen, setSettingsOpen] = useState<boolean | null>(null);
+    [selected, setSelected] = useState('');
   const client = useQueryClient(),
-    receipt = useRef<{ stamp: string; key: string } | null>(null);
+    receipt = useRef<{ stamp: string; key: string } | null>(null),
+    created = useRef<string | null>(null),
+    outputHeading = useRef<HTMLHeadingElement>(null);
   const history = useQuery({
     queryKey: presentationKeys.runs(project),
     queryFn: ({ signal }) => listRuns(project, signal),
@@ -52,7 +54,22 @@ export function Generation({
   });
   const working = history.data?.find((r) => ['queued', 'running'].includes(r.status));
   const run = history.data?.find((r) => r.id === selected) ?? history.data?.[0];
-  const open = settingsOpen ?? !run;
+  useEffect(() => {
+    if (active && run && created.current === run.id) {
+      created.current = null;
+      outputHeading.current?.focus();
+    }
+  }, [active, run]);
+  const onCreated = (r: Run) => {
+    created.current = r.id;
+    setBase(null);
+    setSelected(r.id);
+    client.setQueryData<Run[]>(presentationKeys.runs(project), (rows) => [
+      r,
+      ...(rows ?? []).filter((v) => v.id !== r.id),
+    ]);
+    void client.invalidateQueries({ queryKey: presentationKeys.all });
+  };
   const refresh = () => void client.invalidateQueries({ queryKey: presentationKeys.all });
   const command = useMutation({
     mutationFn: ({ run, action }: { run: Run; action: 'cancel' | 'retry' }) => {
@@ -75,79 +92,48 @@ export function Generation({
           <p className="muted">슬라이드를 확인하고 내용·메모와 참고 자료를 함께 검토하세요.</p>
         </div>
       </header>
-      <Collapsible className="presentation-settings" open={open} onOpenChange={setSettingsOpen}>
-        <div className="presentation-command-row">
-          {!!history.data?.length && (
-            <div className="presentation-history">
-              <Label htmlFor="presentation-history">만든 발표자료</Label>
-              <Select value={run?.id ?? ''} onValueChange={setSelected}>
-                <SelectTrigger id="presentation-history">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {history.data.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.title} · {new Date(r.created_at).toLocaleString('ko-KR')} ·{' '}
-                      {
-                        (
-                          {
-                            succeeded: '완료',
-                            failed: '확인 필요',
-                            cancelled: '중단',
-                            queued: '대기',
-                            running: '만드는 중',
-                          } as const
-                        )[r.status]
-                      }
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <CollapsibleTrigger asChild>
-            <Button variant="secondary">
-              <Settings2 aria-hidden="true" />
-              PPT 생성 설정
-              <ChevronDown aria-hidden="true" />
-            </Button>
-          </CollapsibleTrigger>
-          {run?.status === 'succeeded' && (
-            <Button
-              variant="ghost"
-              disabled={!editable || !!working}
-              onClick={() => {
-                setBase(run);
-                setSettingsOpen(true);
-              }}
-            >
-              이 발표자료 새 버전 만들기
-            </Button>
-          )}
-        </div>
-        <CollapsibleContent forceMount hidden={!open}>
-          <GenerationForm
-            project={project}
-            name={name}
-            state={state}
-            editable={editable}
-            active={active}
-            busy={!!working}
-            base={base}
-            onCancelBase={() => setBase(null)}
-            onCreated={(r) => {
-              setBase(null);
-              setSelected(r.id);
-              setSettingsOpen(false);
-              client.setQueryData<Run[]>(presentationKeys.runs(project), (rows) => [
-                r,
-                ...(rows ?? []).filter((v) => v.id !== r.id),
-              ]);
-              refresh();
+      <div className="presentation-command-row">
+        {!!history.data?.length && (
+          <div className="presentation-history">
+            <Label htmlFor="presentation-history">만든 발표자료</Label>
+            <Select value={run?.id ?? ''} onValueChange={setSelected}>
+              <SelectTrigger id="presentation-history">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {history.data.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.title} · {new Date(r.created_at).toLocaleString('ko-KR')} ·{' '}
+                    {
+                      (
+                        {
+                          succeeded: '완료',
+                          failed: '확인 필요',
+                          cancelled: '중단',
+                          queued: '대기',
+                          running: '만드는 중',
+                        } as const
+                      )[r.status]
+                    }
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {run?.status === 'succeeded' && (
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={!editable || !!working}
+            onClick={() => {
+              setBase(run);
             }}
-          />
-        </CollapsibleContent>
-      </Collapsible>
+          >
+            이 발표자료 새 버전 만들기
+          </Button>
+        )}
+      </div>
       {history.isError && (
         <p role="alert">
           {errorMessage(history.error)}{' '}
@@ -161,7 +147,9 @@ export function Generation({
         <>
           <div className="presentation-run-status">
             <div>
-              <strong>{run.title}</strong>
+              <h3 ref={outputHeading} tabIndex={-1}>
+                {run.title}
+              </h3>
               <p role="status">{status(run)}</p>
             </div>
             {run.status === 'succeeded' ? (
@@ -189,12 +177,14 @@ export function Generation({
               </Button>
             )}
           </div>
+          <WorkflowStatus run={run} />
+          <QualityStatus rows={run.quality} />
           <DeckPreview
             key={run.presentation_id}
             project={project}
             run={run}
             active={active}
-            canEdit={editable}
+            canEdit={editable && !working}
             onResult={(id) => {
               setSelected(id);
               refresh();
@@ -203,12 +193,33 @@ export function Generation({
         </>
       )}
       {command.isError && <p role="alert">{errorMessage(command.error)}</p>}
+      <section className="presentation-composer" aria-label="발표자료 만들기">
+        {run && <h3>{base ? '새 버전 만들기' : '다른 목차로 PPT 만들기'}</h3>}
+        <GenerationForm
+          project={project}
+          name={name}
+          state={state}
+          editable={editable}
+          active={active}
+          busy={!!working}
+          base={base}
+          onCancelBase={() => setBase(null)}
+          onCreated={onCreated}
+        />
+      </section>
     </section>
   );
 }
 function status(run: Run) {
   if (run.status === 'succeeded')
     return '완성되었습니다. PPTX를 내려받아 PowerPoint에서 편집할 수 있습니다.';
+  if (
+    run.status === 'failed' &&
+    ['template_slot_capacity', 'template_material_missing', 'template_text_capacity'].includes(
+      run.error_code ?? '',
+    )
+  )
+    return '선택한 템플릿의 배치에 내용을 담지 못했습니다. 넣을 자료를 줄이거나 다른 템플릿을 선택하세요. 완료한 내용은 보존했습니다.';
   if (run.status === 'failed')
     return '생성을 완료하지 못했습니다. AI 연결·입력과 템플릿을 확인한 뒤 다시 시도하세요. 완료한 내용은 보존했습니다.';
   if (run.status === 'cancelled')

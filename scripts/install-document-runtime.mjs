@@ -93,7 +93,7 @@ try {
     `${createHash('sha256').update(source).digest('hex')}\n`,
   );
   run(node, [path.join(root, 'scripts/prepare-document-runtime.mjs')], {
-    PUPUTYX_BUILD_PYTHON: python,
+    PREM_BUILD_PYTHON: python,
   });
 } finally {
   await fs.rm(scratch, { recursive: true, force: true });

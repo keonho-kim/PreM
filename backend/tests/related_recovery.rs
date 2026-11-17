@@ -10,7 +10,7 @@ mod relation_support;
 #[allow(dead_code)]
 mod space_support;
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use relation_support::*;
 use serde_json::json;
 use std::sync::atomic::Ordering;
@@ -30,8 +30,9 @@ async fn restart_keeps_the_initial_model_and_reuses_finished_results() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
-    let target = setup(&app, 12).await;
     let provider = register(&app, &f).await;
+    let target = setup(&app, 12).await;
+
     f.model.hold.store(true, Ordering::SeqCst);
     let run = start(&app, &target, "efficiency").await;
     let id = run["id"].as_str().unwrap();
@@ -72,8 +73,9 @@ async fn cancel_fences_late_answers_and_retry_is_explicit() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
-    let target = setup(&app, 8).await;
     register(&app, &f).await;
+    let target = setup(&app, 8).await;
+
     f.model.hold.store(true, Ordering::SeqCst);
     let run = start(&app, &target, "efficiency").await;
     let id = run["id"].as_str().unwrap();

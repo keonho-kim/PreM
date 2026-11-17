@@ -2,7 +2,7 @@
 // Pattern: Sample search read model with explicit selection commands and immutable source IDs.
 // Usage: Composed by the content feature; file previews never read selected user files.
 // Related: mock/js/views/content.js, mock/js/workflow.js, mock/styles/asset-search.css.
-window.PuPuTyXModules.assetSearch = (c) => {
+window.PreMModules.assetSearch = (c) => {
   const {
     esc,
     icon,
@@ -183,7 +183,7 @@ window.PuPuTyXModules.assetSearch = (c) => {
     return (
       pageHeading('템플릿 찾기', '미리보기를 보고 발표에 어울리는 디자인을 고르세요.') +
       searchForm('templates') +
-      `<div class="asset-gallery">${found.map((t) => `<article class="asset-result"><button type="button" class="asset-visual" data-action="template-layouts" data-id="${t.id}" aria-label="${esc(t.name)} 미리보기"><div class="slide-fit" data-slide-fit><div class="template-sample ${t.theme}" aria-hidden="true"><span>PuPuTyX</span><strong>근거가 이어지는<br />문서의 다음 장</strong></div></div></button><h2>${esc(t.name)}</h2><p>${esc(t.note)}</p><p>${t.layouts.length}장 · 샘플 디자인</p><button type="button" class="button" data-action="select-template" data-id="${t.id}" aria-pressed="${project().template === t.id}">${project().template === t.id ? '선택됨' : '이 디자인 사용'}</button></article>`).join('') || '<p>일치하는 디자인이 없습니다.</p>'}</div>`
+      `<div class="asset-gallery">${found.map((t) => `<article class="asset-result"><button type="button" class="asset-visual" data-action="template-layouts" data-id="${t.id}" aria-label="${esc(t.name)} 미리보기"><div class="slide-fit" data-slide-fit><div class="template-sample ${t.theme}" aria-hidden="true"><span>PreM</span><strong>근거가 이어지는<br />문서의 다음 장</strong></div></div></button><h2>${esc(t.name)}</h2><p>${esc(t.note)}</p><p>${t.layouts.length}장 · 샘플 디자인</p><button type="button" class="button" data-action="select-template" data-id="${t.id}" aria-pressed="${project().template === t.id}">${project().template === t.id ? '선택됨' : '이 디자인 사용'}</button></article>`).join('') || '<p>일치하는 디자인이 없습니다.</p>'}</div>`
     );
   }
   const handlers = {

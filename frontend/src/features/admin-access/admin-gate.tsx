@@ -94,27 +94,10 @@ export function AdminGate({ children }: { children: ReactNode }) {
       if (!pending.signal.aborted) setBusy(false);
     }
   }
-  if (authorized)
-    return (
-      <>
-        <div className="container admin-access-bar">
-          <span>Admin 접근 허용</span>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              clearAdminAccess();
-              setError('');
-            }}
-          >
-            Admin 잠그기
-          </Button>
-        </div>
-        {children}
-      </>
-    );
+  if (authorized) return <>{children}</>;
   return (
     <main className="container workspace">
-      <title>Admin 접근 확인 · PuPuTyX</title>
+      <title>Admin 접근 확인 · PreM</title>
       <section className="admin-access-form">
         <LockKeyhole aria-hidden="true" size={28} />
         <h1>Admin 접근 확인</h1>

@@ -155,7 +155,7 @@ export function AssetDialog({
                 maxLength={320}
                 onChange={(event) => setTags(event.target.value)}
               />
-              <p className="muted">쉼표로 구분 · 최대 12개 · 태그당 24자</p>
+              <p className="field-hint">쉼표로 구분 · 최대 12개 · 태그당 24자</p>
             </>
           ) : (
             <strong>{base.title}</strong>

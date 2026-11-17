@@ -1,6 +1,6 @@
 // Purpose: Verify the health screen's real response boundary and query cancellation.
 // Pattern: Isolated Query clients, DOM interaction and a controlled Axios adapter.
-// Usage: pnpm --filter @puputyx/frontend test.
+// Usage: pnpm --filter @prem/frontend test.
 // Related: pages/home-page.tsx, lib/api.ts, vitest.config.ts.
 import '@testing-library/jest-dom/vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -46,7 +46,7 @@ describe('service connection', () => {
       .mockResolvedValueOnce({ status: 200, data: { status: 'ok', service: 'Wrong service' } })
       .mockResolvedValueOnce({
         status: 200,
-        data: { status: 'ok', service: 'PuPuTyX', version: '0.1.0' },
+        data: { status: 'ok', service: 'PreM', version: '0.1.0' },
       });
     const user = userEvent.setup();
     mount();

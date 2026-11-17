@@ -1,5 +1,5 @@
 /* Hallmark · Folio: paper slide previews and quiet authoring controls. */
-/* Purpose: Arrange template choice, generation settings and real presentation output.
+/* Purpose: Arrange template choice, inline creation and real presentation output.
  * Pattern: Responsive task surfaces and a dedicated slide strip, without nested cards.
  * Usage: Studio evidence/template/generation steps.
  * Related: design/refract.tokens.json, generation.tsx, deck-preview.tsx. */
@@ -81,7 +81,7 @@
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 20px;
-  max-inline-size: 900px;
+  inline-size: 100%;
 }
 .presentation-form > div {
   display: grid;
@@ -169,9 +169,28 @@
   max-inline-size: 480px;
   min-inline-size: min(260px, 100%);
 }
-.presentation-settings > [data-state="open"] {
-  padding-block: 24px;
-  border-block-end: 1px solid var(--color-rule);
+.presentation-composer {
+  min-inline-size: 0;
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--color-rule);
+}
+.presentation-composer > h3 {
+  margin-block: 0 20px;
+}
+.presentation-composer .presentation-form {
+  padding-block-start: 20px;
+}
+.presentation-form .generation-details {
+  align-content: start;
+  gap: 20px;
+}
+.generation-details > div {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.presentation-run-status h3 {
+  margin-block: 0;
 }
 @media (max-width: 640px) {
   .presentation-command-row {

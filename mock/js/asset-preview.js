@@ -2,7 +2,7 @@
 // Pattern: Read-only sample view with local selection; the shared native dialog owns focus and dismissal.
 // Usage: Space and Studio pass explicit asset metadata; uploads are never read or persisted.
 // Related: space.js, ui.js, styles/asset-preview.css, mock/index.html.
-window.PuPuTyXModules.assetPreview = (capabilities) => {
+window.PreMModules.assetPreview = (capabilities) => {
   'use strict';
   const { $, esc, icon, openDialog, renderSlide, fitSlides, templateLibrary } = capabilities;
   let current = null;

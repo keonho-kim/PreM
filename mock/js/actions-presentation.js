@@ -2,7 +2,7 @@
 // Pattern: Feature factory with an explicit application context.
 // Usage: Registered before mock/app.js by mock/index.html.
 // Related: mock/app.js, mock/index.html.
-window.PuPuTyXModules['actions-presentation'] = (context) => {
+window.PreMModules['actions-presentation'] = (context) => {
   'use strict';
   const {
     clone,
@@ -71,7 +71,7 @@ window.PuPuTyXModules['actions-presentation'] = (context) => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'PuPuTyX-mock-presentation.json';
+      link.download = 'PreM-mock-presentation.json';
       document.body.append(link);
       link.click();
       link.remove();

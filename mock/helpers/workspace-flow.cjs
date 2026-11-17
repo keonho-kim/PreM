@@ -17,7 +17,7 @@ const { openBrowser, baseURL, artifacts, projectRoot } = require('./browser.cjs'
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  const snapshot = () => page.evaluate(() => window.PuPuTyXMock.snapshot());
+  const snapshot = () => page.evaluate(() => window.PreMMock.snapshot());
   const nav = () =>
     page.$$eval('#global-navigation a', (nodes) => nodes.map((node) => node.textContent));
   const route = async (view, extra = '') => {
@@ -113,12 +113,12 @@ const { openBrowser, baseURL, artifacts, projectRoot } = require('./browser.cjs'
     await new Promise((resolve) => setTimeout(resolve, 1350));
     assert.equal((await snapshot()).spaceAssets[0].step, pausedStep);
     await page.click('[data-action="asset-toggle"]');
-    await page.waitForFunction(() => window.PuPuTyXMock.snapshot().spaceAssets[0].step >= 1);
+    await page.waitForFunction(() => window.PreMMock.snapshot().spaceAssets[0].step >= 1);
     await page.click('[data-action="asset-cancel"]');
     assert.equal((await snapshot()).spaceAssets[0].status, 'cancelled');
     await page.click('[data-action="asset-toggle"]');
     await page.waitForFunction(
-      () => window.PuPuTyXMock.snapshot().spaceAssets[0].status === 'completed',
+      () => window.PreMMock.snapshot().spaceAssets[0].status === 'completed',
     );
     assert.equal((await snapshot()).spaceAssets[0].step, 3);
     assert.equal(
@@ -134,7 +134,7 @@ const { openBrowser, baseURL, artifacts, projectRoot } = require('./browser.cjs'
     await (await page.$('#asset-files')).uploadFile(template);
     await page.click('#app-dialog button[type="submit"]');
     await page.waitForSelector('[data-action="asset-toggle"]');
-    await page.waitForFunction(() => window.PuPuTyXMock.snapshot().spaceAssets[0].step >= 1);
+    await page.waitForFunction(() => window.PreMMock.snapshot().spaceAssets[0].step >= 1);
     await page.click('[data-action="asset-toggle"]');
     const captures = path.join(projectRoot, 'mock/captures/folio');
     await page.screenshot({

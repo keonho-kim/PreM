@@ -5,7 +5,7 @@
 use super::space_support::upload;
 use super::{common, space_support};
 use axum::http::StatusCode;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use uuid::Uuid;
 #[tokio::test]
 async fn supported_formats_and_invalid_files_are_separated() {

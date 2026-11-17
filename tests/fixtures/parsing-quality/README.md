@@ -1,6 +1,6 @@
 # 파싱 품질 검증 세트
 
-실제 PuPuTyX 업로드·추출·저장·조회 경로의 손실을 찾기 위한 작은 진단 세트다. 모델 정확도, 전체 문서 호환성이나 운영 성능을 대표하는 벤치마크가 아니다. 업무 원본이나 실제 개인정보를 포함하지 않는다.
+실제 PreM 업로드·추출·저장·조회 경로의 손실을 찾기 위한 작은 진단 세트다. 모델 정확도, 전체 문서 호환성이나 운영 성능을 대표하는 벤치마크가 아니다. 업무 원본이나 실제 개인정보를 포함하지 않는다.
 
 | 문서                      | 출처                         | 검증 내용                                                     |
 | ------------------------- | ---------------------------- | ------------------------------------------------------------- |
@@ -18,7 +18,7 @@
 
 - 공개 HWP/HWPX는 [Kordoc textbox-nested](https://github.com/chrisryugj/kordoc/tree/9369148f06b2bd704c6df3f5e9930773a612b46f/tests/fixtures/textbox-nested)에서 가져왔다. upstream 설명에 따라 모든 글이 합성임을 확인했다. MIT 고지는 `KORDOC-LICENSE.txt`에 보존했다.
 - PDF/스캔에는 Google Fonts의 NanumGothic-Regular를 사용한다. 원본 폰트와 SIL OFL 고지를 `fonts/`에 보존했다. OS 전용 폰트에 의존하지 않는다.
-- `sources.json`은 공개 자산의 고정 commit URL과 SHA-256을 기록한다. `generated.json`은 합성 결과물의 SHA-256을 기록한다. 합성 문서는 PuPuTyX 검증용으로 작성했고, upstream 문서 본문을 복사하지 않았다.
+- `sources.json`은 공개 자산의 고정 commit URL과 SHA-256을 기록한다. `generated.json`은 합성 결과물의 SHA-256을 기록한다. 합성 문서는 PreM 검증용으로 작성했고, upstream 문서 본문을 복사하지 않았다.
 
 ## 실행
 

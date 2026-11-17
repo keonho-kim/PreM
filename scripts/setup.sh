@@ -4,8 +4,8 @@
 # Usage: ./scripts/setup.sh from a prepared Rust/Node development host.
 # Related: scripts/rust-tools.mjs, scripts/dev-tools.json, package.json.
 set -euo pipefail
-PUPUTYX_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PUPUTYX_ROOT"
+PREM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PREM_ROOT"
 pnpm install --frozen-lockfile
 cargo fetch --locked
 pnpm tools:install

@@ -2,11 +2,15 @@
 // Pattern: Typed commands, optimistic versions, idempotency and no-store output responses.
 // Usage: Studio evidence/template/generation steps; all visitors share project state.
 // Related: modules/presentations/, frontend/features/presentations/.
+mod canvas;
+mod editor_history;
+mod references;
+mod scope;
 use crate::modules::presentations::{Design, EditRequest, Error, Generate, Presentations};
 use axum::{
     Json, Router,
     body::Body,
-    extract::{DefaultBodyLimit, Path, State, rejection::JsonRejection},
+    extract::{DefaultBodyLimit, Path, Query, State, rejection::JsonRejection},
     http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Response},
     routing::{get, post},
@@ -15,6 +19,20 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 pub(super) fn router(s: Presentations) -> Router {
     Router::new()
+        .merge(editor_history::routes())
+        .merge(canvas::routes())
+        .merge(references::routes())
+        .merge(scope::routes())
+        .route(
+            "/api/v1/projects/{p}/presentation-media",
+            get(media)
+                .post(upload_image)
+                .layer(DefaultBodyLimit::max(5 * 1024 * 1024)),
+        )
+        .route(
+            "/api/v1/projects/{p}/presentation-media/{id}",
+            get(media_image),
+        )
         .route(
             "/api/v1/projects/{p}/presentations/{id}/slides/{slide}/edits",
             get(edits).post(edit),
@@ -143,6 +161,7 @@ async fn slides(
 #[serde(deny_unknown_fields)]
 struct Version {
     expected_version: i64,
+    editor_session_id: Option<Uuid>,
 }
 async fn command(
     State(s): State<Presentations>,
@@ -175,7 +194,7 @@ async fn output(
     if slide.is_none() {
         h.insert(
             header::CONTENT_DISPOSITION,
-            format!("attachment; filename=\"PuPuTyX-{id}.pptx\"")
+            format!("attachment; filename=\"PreM-{id}.pptx\"")
                 .parse()
                 .map_err(|_| ApiError(Error::Storage))?,
         );
@@ -225,9 +244,52 @@ async fn edit_command(
     h: HeaderMap,
     i: Result<Json<Version>, JsonRejection>,
 ) -> Result<Response, ApiError> {
+    let i = body(i)?;
     Ok(json(
         StatusCode::OK,
-        s.edit_command(p, id, key(&h)?, body(i)?.expected_version, action)
-            .await?,
+        s.edit_command(
+            p,
+            id,
+            key(&h)?,
+            i.expected_version,
+            action,
+            i.editor_session_id,
+        )
+        .await?,
     ))
+}
+
+async fn media(State(s): State<Presentations>, Path(p): Path<Uuid>) -> Result<Response, ApiError> {
+    Ok(json(StatusCode::OK, s.media(p).await?))
+}
+#[derive(Deserialize)]
+struct ImageName {
+    name: String,
+}
+async fn upload_image(
+    State(s): State<Presentations>,
+    Path(p): Path<Uuid>,
+    Query(n): Query<ImageName>,
+    h: HeaderMap,
+    bytes: axum::body::Bytes,
+) -> Result<Response, ApiError> {
+    Ok(json(
+        StatusCode::CREATED,
+        s.upload_image(p, key(&h)?, n.name, bytes.to_vec()).await?,
+    ))
+}
+async fn media_image(
+    State(s): State<Presentations>,
+    Path((p, id)): Path<(Uuid, Uuid)>,
+) -> Result<Response, ApiError> {
+    let (reader, _file) = s.media_file(p, id).await?;
+    Ok((
+        [
+            (header::CONTENT_TYPE, "image/png"),
+            (header::CACHE_CONTROL, "no-store"),
+            (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
+        ],
+        Body::from_stream(tokio_util::io::ReaderStream::new(reader)),
+    )
+        .into_response())
 }

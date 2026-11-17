@@ -3,6 +3,7 @@
 // Usage: Mounted inside app providers, outside route changes and modal contents.
 // Related: shared/notifications.ts, features/space/index.ts, feedback.css.
 import { lazy, Suspense, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { startNotifications } from '@/shared/notifications';
 import { useWorkPanelState } from '@/shared/work-panel-state';
@@ -28,19 +29,22 @@ export function Feedback() {
       <Suspense fallback={null}>
         <UploadWorkPanel />
       </Suspense>
-      <Toaster
-        position="bottom-right"
-        closeButton
-        duration={5000}
-        visibleToasts={1}
-        containerAriaLabel="알림"
-        offset={{ bottom, right: 'max(16px, env(safe-area-inset-right))' }}
-        mobileOffset={{ bottom, right: '16px', left: '16px' }}
-        toastOptions={{
-          closeButtonAriaLabel: '알림 닫기',
-          classNames: { toast: 'feedback-toast', description: 'feedback-toast-description' },
-        }}
-      />
+      {createPortal(
+        <Toaster
+          position="bottom-right"
+          closeButton
+          duration={5000}
+          visibleToasts={1}
+          containerAriaLabel="알림"
+          offset={{ bottom, right: 'max(16px, env(safe-area-inset-right))' }}
+          mobileOffset={{ bottom, right: '16px', left: '16px' }}
+          toastOptions={{
+            closeButtonAriaLabel: '알림 닫기',
+            classNames: { toast: 'feedback-toast', description: 'feedback-toast-description' },
+          }}
+        />,
+        document.body,
+      )}
     </>
   );
 }

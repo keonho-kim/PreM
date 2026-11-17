@@ -35,6 +35,7 @@ pub(super) fn get(
         Err(e) => return Err(e),
     };
     Ok(Some(Run {
+        steps: execution::steps(db, uuid(id.clone())?)?,
         id: uuid(id.clone())?,
         project_id: project,
         query,

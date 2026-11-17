@@ -2,73 +2,57 @@
 // Pattern: Safe text only; successful rendering is distinct from accepting a proposal.
 // Usage: SlideChat supplies immutable edit data and shared command state.
 // Related: edit-api.ts, slide-chat.tsx, presentation revision history.
+import { WorkflowStages } from '@/shared/ui/workflow-stages';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { QualityStatus } from './quality-status';
 import type { Edit } from './edit-api';
-const labels: Record<string, string> = { title: '제목', bullets: '본문', notes: '발표 메모' };
 export function EditProposal({
   edit,
   current,
   pending,
   onCommand,
-  onResult,
 }: {
   edit: Edit;
   current: boolean;
   pending: boolean;
   onCommand: (action: 'apply' | 'reject' | 'retry' | 'cancel') => void;
-  onResult: (id: string) => void;
 }) {
   const status = edit.status;
   return (
     <div className="slide-edit-proposal">
+      <WorkflowStages
+        steps={edit.steps}
+        status={status}
+        name="수정안 준비 단계"
+        labels={{ propose: '수정안 작성', render: '미리보기 준비' }}
+      />
+      <QualityStatus rows={edit.quality} />
+      {(edit.targets?.length ?? 0) > 1 && (
+        <p role="status">
+          {edit.targets?.filter((t) => t.completed).length}/{edit.targets?.length}장 수정안 준비
+          {status === 'ready' ? ' · 적용하면 함께 저장됩니다.' : ''}
+        </p>
+      )}
       {status === 'queued' || status === 'running' ? (
         <>
           <p role="status">
             {status === 'queued'
               ? '수정 순서를 기다리고 있습니다.'
-              : '선택한 내용을 바탕으로 수정안을 작성하고 있습니다.'}
+              : edit.targets?.length && edit.targets.every((t) => t.completed)
+                ? '장표 미리보기를 준비하고 있습니다.'
+                : '선택한 내용을 바탕으로 수정안을 작성하고 있습니다.'}
           </p>
           <Button variant="ghost" disabled={pending} onClick={() => onCommand('cancel')}>
             수정 요청 취소
           </Button>
         </>
       ) : null}
-      {edit.proposal && (
-        <Collapsible defaultOpen={status === 'ready'}>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost">수정 전후 보기</Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <dl className="slide-edit-difference">
-              {edit.fields.map((field) => {
-                const before =
-                  field === 'title'
-                    ? edit.before.title
-                    : field === 'bullets'
-                      ? edit.before.bullets.join('\n')
-                      : edit.before.notes;
-                const after =
-                  field === 'title'
-                    ? edit.proposal?.title
-                    : field === 'bullets'
-                      ? edit.proposal?.bullets.join('\n')
-                      : edit.proposal?.notes;
-                return (
-                  <div key={field}>
-                    <dt>{labels[field]}</dt>
-                    <dd>
-                      <span>수정 전</span>
-                      <p>{before || '없음'}</p>
-                      <span>수정 후</span>
-                      <p>{after || '없음'}</p>
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-          </CollapsibleContent>
-        </Collapsible>
+      {status === 'ready' && (
+        <p>
+          {edit.preview
+            ? '가운데 장표에서 수정안을 확인하세요. 비교 아이콘을 누르고 있으면 이전 모습이 보입니다.'
+            : '수정안이 준비됐습니다.'}
+        </p>
       )}
       {status === 'ready' && (
         <>
@@ -105,21 +89,13 @@ export function EditProposal({
       )}
       {status === 'rejected' && <p className="field-hint">이 수정안은 적용하지 않았습니다.</p>}
       {edit.applied_run_id && (
-        <>
-          <p role="status">
-            {edit.render_status === 'succeeded'
-              ? '새 버전에 반영했습니다.'
-              : ['failed', 'cancelled'].includes(edit.render_status ?? '')
-                ? '파일 생성을 완료하지 못했습니다. 생성 화면에서 이어서 만들 수 있습니다.'
-                : '수정한 내용으로 PPT 파일을 만들고 있습니다.'}
-          </p>
-          <Button
-            variant="secondary"
-            onClick={() => edit.applied_run_id && onResult(edit.applied_run_id)}
-          >
-            수정 결과 보기
-          </Button>
-        </>
+        <p role="status">
+          {edit.render_status === 'succeeded'
+            ? '새 버전에 반영했습니다.'
+            : ['failed', 'cancelled'].includes(edit.render_status ?? '')
+              ? '파일 생성을 완료하지 못했습니다. 생성 화면에서 이어서 만들 수 있습니다.'
+              : '수정한 내용으로 PPT 파일을 만들고 있습니다.'}
+        </p>
       )}
     </div>
   );

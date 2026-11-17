@@ -66,10 +66,10 @@ def run(binary):
                             time.sleep(0.1)
                     else:
                         raise RuntimeError('Server did not become ready.')
-                    check(health['service'] == 'PuPuTyX' and health['status'] == 'ok', 'Invalid health response.')
+                    check(health['service'] == 'PreM' and health['status'] == 'ok', 'Invalid health response.')
                     with urlopen(base + '/home', timeout=5) as response:
                         html = response.read().decode()
-                    check('<title>PuPuTyX</title>' in html, 'Embedded frontend is missing.')
+                    check('<title>PreM</title>' in html, 'Embedded frontend is missing.')
                     for asset in re.findall(r'(?:src|href)="(/home/assets/[^\"]+)"', html):
                         with urlopen(base + asset, timeout=5) as response:
                             check(response.status == 200, f'Missing frontend asset: {asset}')
@@ -83,7 +83,7 @@ def run(binary):
                     check(duplicate.returncode != 0, 'A second instance used the same storage.')
                     check(marker.read_text(encoding='utf-8') == 'keep existing data', 'Existing data was modified.')
                     check((data / 'blobs' / 'sha256').is_dir(), 'Storage directories are missing.')
-                    print(f'PuPuTyX smoke {attempt + 1}/2: HTTP, embedded UI, assets, lock and storage passed.')
+                    print(f'PreM smoke {attempt + 1}/2: HTTP, embedded UI, assets, lock and storage passed.')
                 except Exception:
                     log.flush()
                     log.seek(0)

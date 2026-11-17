@@ -12,7 +12,7 @@ const { openBrowser, baseURL, projectRoot } = require('./browser.cjs');
     p.on('pageerror', (error) => errors.push(error.message));
     await p.setViewport({ width: 1440, height: 1100 });
     await p.goto(baseURL + '#view=projects', { waitUntil: 'networkidle0' });
-    const state = () => p.evaluate(() => PuPuTyXMock.snapshot());
+    const state = () => p.evaluate(() => PreMMock.snapshot());
     const dateValue = (selector, value) =>
       p.$eval(
         selector,
@@ -49,7 +49,7 @@ const { openBrowser, baseURL, projectRoot } = require('./browser.cjs');
       fullPage: true,
     });
     await p.click('#app-dialog button[type="submit"]');
-    await p.waitForFunction(() => PuPuTyXMock.snapshot().projects.length === 4);
+    await p.waitForFunction(() => PreMMock.snapshot().projects.length === 4);
     assert.equal((await state()).projects[0].endDate, '2030-01-16');
     await p.evaluate(() => {
       location.hash = 'view=projects';
@@ -128,7 +128,7 @@ const { openBrowser, baseURL, projectRoot } = require('./browser.cjs');
     for (const timezone of ['Asia/Seoul', 'America/Los_Angeles']) {
       await p.emulateTimezone(timezone);
       const result = await p.evaluate(() => {
-        const dates = PuPuTyXModules.projectDates;
+        const dates = PreMModules.projectDates;
         const native = dates.difference('2026-03-09', '2026-03-07');
         const temporal = globalThis.Temporal;
         globalThis.Temporal = undefined;

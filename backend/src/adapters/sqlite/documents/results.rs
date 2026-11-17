@@ -22,6 +22,9 @@ pub(super) fn cached(db: &mut rusqlite::Connection, job: Job) -> Result<Option<U
         )
         .map_err(failure)?;
     }
+    if id.is_some() {
+        execution::extracted(&tx, &job)?;
+    }
     tx.commit().map_err(failure)?;
     id.map(|s| Uuid::parse_str(&s).map_err(|_| Error::Storage))
         .transpose()
@@ -59,6 +62,7 @@ pub(super) fn extraction(
         params![id.to_string(), now(), job.id.to_string()],
     )
     .map_err(failure)?;
+    execution::extracted(&tx, &job)?;
     queries::event(&tx, job.id, "extracted")?;
     tx.commit().map_err(failure)?;
     Ok(id)

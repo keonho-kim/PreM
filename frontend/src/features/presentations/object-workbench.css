@@ -1,0 +1,123 @@
+/* Hallmark · Folio: native slide selection and plain data review. */
+/* Purpose: Expose object selection, image choices and batch scope within the existing editor.
+ * Pattern: Passive content planes with accessible control overlays and bounded data tables.
+ * Usage: deck-preview.tsx; shares existing Folio tokens and responsive panel placement.
+ * Related: object-selection.tsx, object-tools.tsx, slide-difference.tsx. */
+.presentation-canvas-paper {
+  position: relative;
+}
+.slide-object-selection {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.slide-object-selection button {
+  position: absolute;
+  pointer-events: auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  min-width: 0;
+  min-height: 0;
+}
+.slide-object-selection button:hover {
+  background: transparent;
+  border-color: var(--color-ink);
+}
+.slide-object-selection button[aria-pressed="true"] {
+  border: 2px solid var(--color-accent);
+  background: transparent;
+}
+.slide-object-selection button span {
+  position: absolute;
+  inset-block-start: -24px;
+  inset-inline-start: 0;
+  background: var(--color-paper);
+  padding: 2px 6px;
+  color: var(--color-ink);
+  font-size: 12px;
+  opacity: 0;
+}
+.slide-object-selection button:is(:focus-visible, [aria-pressed="true"]) span {
+  opacity: 1;
+}
+.slide-batch-actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+.slide-batch-actions button {
+  padding-inline: 6px;
+  font-size: 12px;
+}
+.presentation-slide-thumb[data-batch-selected="true"] {
+  border-inline-start: 3px solid var(--color-accent);
+}
+.slide-object-tools,
+.slide-object-tools form {
+  display: grid;
+  gap: 12px;
+  min-inline-size: 0;
+}
+.slide-object-tools form {
+  padding-block: 20px;
+  border-block-start: 1px solid var(--color-rule);
+}
+.slide-object-list {
+  display: grid;
+  gap: 4px;
+}
+.slide-object-list button {
+  justify-content: space-between;
+  white-space: normal;
+  min-block-size: 44px;
+}
+.slide-object-list button[aria-pressed="true"] {
+  background: var(--color-paper-3);
+  border-inline-start: 3px solid var(--color-accent);
+}
+.slide-media-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.slide-media-gallery button {
+  display: grid;
+  block-size: auto;
+  white-space: normal;
+  padding: 8px;
+}
+.slide-media-gallery img {
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: white;
+}
+.slide-media-gallery span {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+@media (forced-colors: active) {
+  .slide-object-selection button:is(:focus-visible, [aria-pressed="true"]),
+  .presentation-slide-thumb[data-batch-selected="true"] {
+    border-color: Highlight;
+  }
+}
+.presentation-thumb-entry {
+  position: relative;
+  flex: none;
+}
+.slide-batch-toggle {
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-end: 4px;
+  background: var(--color-paper);
+}
+@media (max-width: 640px) {
+  .presentation-thumb-entry {
+    inline-size: 144px;
+  }
+  .presentation-thumb-entry .presentation-slide-thumb {
+    inline-size: 100%;
+  }
+}

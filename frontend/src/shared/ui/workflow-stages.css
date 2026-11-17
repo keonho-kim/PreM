@@ -1,0 +1,32 @@
+/* Hallmark · Folio: quiet, committed task checkpoints. */
+/* Purpose: Keep task state readable in narrow workspaces and forced colors.
+ * Pattern: Shrinkable semantic rows without animated time estimates.
+ * Usage: WorkflowStages shared presentation component.
+ * Related: workflow-stages.tsx, Folio tokens. */
+.workflow-stages {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.workflow-stages li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.workflow-stages svg {
+  inline-size: 16px;
+  block-size: 16px;
+}
+.workflow-stages [aria-current="step"] {
+  font-weight: 600;
+}
+@media (forced-colors: active) {
+  .workflow-stages [aria-current="step"] {
+    outline: 1px solid Highlight;
+  }
+}

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { WorkflowStages } from '@/shared/ui/workflow-stages';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { errorMessage } from '@/shared/api/http';
 import { getRun, search, command, terminal, relationKeys, type SearchInput } from './api';
@@ -144,6 +145,16 @@ export function RelatedDocuments({
             )}
             {run && (
               <div className="related-progress">
+                <WorkflowStages
+                  steps={run.steps}
+                  status={run.status}
+                  name="자료 찾기 단계"
+                  labels={{
+                    retrieve: '후보 찾기',
+                    review: '내용 비교·추가 확인',
+                    publish: '결과 정리',
+                  }}
+                />
                 <p className="field-hint">
                   검색 기준: {run.query || '현재 원본과 작성 방향'} ·{' '}
                   {run.options.previous_versions ? '이전 버전 포함' : '최신 파일 버전'} ·{' '}
@@ -185,7 +196,7 @@ export function RelatedDocuments({
                   </p>
                 )}
                 {run.status === 'waiting_configuration' && (
-                  <Link to="/admin?section=related">Admin에서 사용할 AI 선택</Link>
+                  <Link to="/admin?section=decision">Admin에서 사용할 AI 선택</Link>
                 )}
                 {run.stale && (
                   <p role="status">

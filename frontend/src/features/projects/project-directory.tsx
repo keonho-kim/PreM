@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Folder, RefreshCw, Plus } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { notify } from '@/shared/notifications';
@@ -76,10 +76,9 @@ export function ProjectDirectory({ filters, offset, onFilter, onPage }: Props) {
     <>
       <ProjectContextMenu onCommand={command}>
         <main className="container workspace project-workspace">
-          <title>프로젝트 | PuPuTyX</title>
+          <title>프로젝트 | PreM</title>
           <div className="projects-heading">
             <div>
-              <p className="workspace-label">공유 워크스페이스</p>
               <h1 ref={heading} tabIndex={-1}>
                 프로젝트
               </h1>
@@ -195,10 +194,6 @@ export function ProjectDirectory({ filters, offset, onFilter, onPage }: Props) {
               </PaginationContent>
             </Pagination>
           )}
-          <footer className="projects-footer">
-            <span>프로젝트 변경은 모든 접속자에게 반영됩니다.</span>
-            <Link to="/system">서버 연결 상태</Link>
-          </footer>
         </main>
       </ProjectContextMenu>
       {session && ['create', 'rename', 'copy'].includes(session.command) && (

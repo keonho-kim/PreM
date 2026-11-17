@@ -16,6 +16,7 @@ type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   headers?: HeadersInit;
   body?: string;
+  binaryBody?: Blob;
   signal?: AbortSignal;
   timeout?: number;
 };
@@ -39,11 +40,11 @@ export async function request<T>(
   const adminToken = path.startsWith('/api/v1/admin/') ? readAdminToken() : null;
   if (adminToken && !headers.has('Authorization'))
     headers.set('Authorization', `Bearer ${adminToken}`);
-  if (init.body !== undefined) headers.set('Content-Type', 'application/json');
+  if (typeof init.body === 'string') headers.set('Content-Type', 'application/json');
   const response = await client.request<unknown>({
     url: path,
     method: init.method ?? 'GET',
-    data: init.body,
+    data: init.binaryBody ?? init.body,
     headers: Object.fromEntries(headers),
     signal: init.signal,
     timeout: init.timeout ?? 10_000,

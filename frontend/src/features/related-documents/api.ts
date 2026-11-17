@@ -13,6 +13,7 @@ const options = z.object({
 });
 export type SearchInput = { query: string; options: z.infer<typeof options> };
 const runSchema = z.object({
+  steps: z.array(z.object({ key: z.string(), state: z.string(), attempt: z.number() })).optional(),
   id: z.uuid(),
   project_id: z.uuid(),
   query: z.string(),
@@ -75,11 +76,6 @@ const item = z.object({
 });
 export type RelatedItem = z.infer<typeof item>;
 const results = z.object({ total: z.number(), offset: z.number(), items: z.array(item) });
-const settings = z.object({
-  version: z.number(),
-  connection_id: z.uuid().nullable(),
-  planner_connection_id: z.uuid().nullable().optional(),
-});
 export const relationKeys = {
   all: ['relations'] as const,
   run: (p: string, id: string | null) => ['relations', 'run', p, id] as const,
@@ -137,18 +133,6 @@ export const selectItem = (p: string, value: RelatedItem) =>
       }),
     },
   );
-export const getSettings = (signal: AbortSignal) =>
-  request('/api/v1/admin/related-search/settings', settings, { signal });
-export const saveSettings = (
-  expected_version: number,
-  connection_id: string | null,
-  planner_connection_id: string | null = null,
-) =>
-  request('/api/v1/admin/related-search/settings', settings, {
-    method: 'PUT',
-    body: JSON.stringify({ expected_version, connection_id, planner_connection_id }),
-  });
-
 export const getEvidence = (project: string, candidate: string, signal: AbortSignal) =>
   request(
     `${base(project)}/related-candidates/${candidate}/evidence`,

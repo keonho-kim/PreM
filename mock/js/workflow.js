@@ -2,7 +2,7 @@
 // Pattern: Feature factory with an explicit application context.
 // Usage: Registered before mock/app.js by mock/index.html.
 // Related: mock/app.js, mock/index.html.
-window.PuPuTyXModules.workflow = (context) => {
+window.PreMModules.workflow = (context) => {
   'use strict';
   const { $, $$, clone, uid, makeSlides, ui, project, announce, route, render, closeDialog } =
     context;

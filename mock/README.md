@@ -1,4 +1,4 @@
-# PuPuTyX UI 목업
+# PreM UI 목업
 
 브라우저에서 제품 흐름과 슬라이드 편집을 확인하는 독립적인 HTML/CSS/JavaScript 애플리케이션이다. 프레임워크·빌드·DB·업무 서버 없이 실행한다.
 

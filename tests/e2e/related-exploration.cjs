@@ -39,15 +39,20 @@ async function click(page, name, role = 'button') {
       );
       await ready(server.base, past.id, item);
     }
-    await json(server.base, `/api/v1/admin/llm/providers/${crypto.randomUUID()}`, 'PUT', {
-      expected_version: 0,
-      name: '추가 검색 AI',
-      provider_type: 'lm_studio',
-      base_url: fixture.base,
-      model_identifier: 'planner',
-      timeout_seconds: 30,
-      enabled: true,
-    });
+    const planner = await json(
+      server.base,
+      `/api/v1/admin/llm/providers/${crypto.randomUUID()}`,
+      'PUT',
+      {
+        expected_version: 0,
+        name: '추가 검색 AI',
+        provider_type: 'lm_studio',
+        base_url: fixture.base,
+        model_identifier: 'planner',
+        timeout_seconds: 30,
+        enabled: true,
+      },
+    );
     session = await openBrowser('related-exploration');
     const a = await (await session.browser.createBrowserContext()).newPage(),
       b = await (await session.browser.createBrowserContext()).newPage();
@@ -60,14 +65,13 @@ async function click(page, name, role = 'button') {
     await a.setViewport({ width: 1440, height: 1000 });
     await a.goto(server.base + '/home/admin?section=related', { waitUntil: 'networkidle0' });
     await server.unlock(a);
-    await click(a, '자료 비교에 사용할 AI', 'combobox');
-    await click(a, '자료 비교 AI · Decision', 'option');
-    await click(a, '추가 검색어를 구성할 LLM (선택)', 'combobox');
-    await click(a, '추가 검색 AI', 'option');
-    await click(a, '설정 저장');
-    await a.waitForFunction(() =>
-      document.querySelector('.processing-settings')?.textContent.includes('설정을 저장했습니다'),
-    );
+    await a.waitForSelector('#processing-model');
+    const prior = await json(server.base, '/api/v1/admin/related-search/settings');
+    await json(server.base, '/api/v1/admin/related-search/settings', 'PUT', {
+      expected_version: prior.version,
+      connection_id: prior.connection_id,
+      planner_connection_id: planner.id,
+    });
     await a.screenshot({
       path: path.join(projectRoot, 'mock/captures/folio/related-exploration-settings.png'),
       fullPage: true,

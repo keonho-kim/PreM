@@ -45,9 +45,9 @@ async function click(page, name, role = 'button') {
     assert.match(await a.$eval('.processing-blocks', (node) => node.textContent), /코드/);
     assert.match(
       await a.$eval('.processing-blocks', (node) => node.textContent),
-      /window.puputyxMarkdownExecuted/,
+      /window.premMarkdownExecuted/,
     );
-    assert.equal(await a.evaluate(() => window.puputyxMarkdownExecuted), undefined);
+    assert.equal(await a.evaluate(() => window.premMarkdownExecuted), undefined);
     assert.equal(
       await a.$('.processing-blocks img, .processing-blocks iframe, .processing-blocks script'),
       null,
@@ -111,7 +111,7 @@ async function click(page, name, role = 'button') {
     await a.waitForSelector('.studio-source-preview');
     await a.click('.studio-source-preview');
     await a.waitForSelector('.processing-block');
-    assert.equal(await a.evaluate(() => window.puputyxMarkdownExecuted), undefined);
+    assert.equal(await a.evaluate(() => window.premMarkdownExecuted), undefined);
     assert.deepEqual(external, []);
     assert.deepEqual(errors, []);
     console.log(

@@ -18,6 +18,9 @@ import {
   getHistory,
   testProvider,
 } from '@/features/providers/api';
+vi.mock('@/features/document-processing', () => ({
+  ProcessingSettings: () => <p>공통 판정 모델</p>,
+}));
 vi.mock('@/features/providers/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/providers/api')>()),
   listProviders: vi.fn(),
@@ -77,7 +80,7 @@ it('does not query hidden history and keeps a running test alive when switching 
   await waitFor(() => expect(getHistory).toHaveBeenCalled());
   expect(signal?.aborted).toBe(false);
   finish({
-    text: 'PuPuTyX connection OK',
+    text: 'PreM connection OK',
     request: {
       id: provider.id,
       config_id: provider.config_id,
@@ -91,7 +94,7 @@ it('does not query hidden history and keeps a running test alive when switching 
     },
   });
   await user.click(screen.getByRole('tab', { name: '연결 테스트' }));
-  await screen.findByText('PuPuTyX connection OK');
+  await screen.findByText('PreM connection OK');
   expect(testProvider).toHaveBeenCalledOnce();
   expect(document.querySelectorAll('main')).toHaveLength(1);
 });
@@ -111,12 +114,16 @@ it('blocks setup until the server catalog loads and offers an explicit retry aft
     </MemoryRouter>,
   );
   await screen.findByRole('button', { name: '다시 시도' });
-  expect(screen.getByRole('tab', { name: 'Decision' })).toBeDisabled();
+  expect(screen.queryByRole('combobox', { name: 'Provider' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'AI 모델 추가' })).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: '다시 시도' }));
-  await waitFor(() => expect(screen.getByRole('tab', { name: 'Decision' })).toBeEnabled());
-  await userEvent.click(screen.getByRole('tab', { name: 'Decision' }));
-  await screen.findByText('Decision 모델은 문서 분류와 판단에 사용합니다.');
-  expect(screen.getByRole('combobox', { name: 'Provider' })).toHaveTextContent('TypeSafe Jev');
-  expect(screen.getByRole('button', { name: '모델 목록 조회' })).toBeInTheDocument();
+  await waitFor(() =>
+    expect(screen.getByRole('link', { name: 'Decision Model 연결' })).toBeEnabled(),
+  );
+  await userEvent.click(screen.getByRole('link', { name: 'Decision Model 연결' }));
+  await screen.findByText('문서 처리와 자료 찾기에 사용할 모델입니다.');
+  expect(screen.getByRole('combobox', { name: 'Provider' })).toHaveTextContent(
+    'LM Studio · OpenAI 호환',
+  );
+  expect(screen.getByRole('combobox', { name: '사용할 모델 · 필수' })).toBeEnabled();
 });

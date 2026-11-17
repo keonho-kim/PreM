@@ -52,7 +52,7 @@ export function GeneralSettings() {
   });
   return (
     <section className="admin-general">
-      <title>일반 설정 · Admin | PuPuTyX</title>
+      <title>일반 설정 · Admin | PreM</title>
       <header>
         <p className="muted">Admin</p>
         <h1 tabIndex={-1}>일반 설정</h1>

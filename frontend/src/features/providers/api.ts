@@ -15,6 +15,7 @@ const providerSchema = z.object({
   base_url: z.string(),
   model_identifier: z.string(),
   timeout_seconds: z.number().int(),
+  max_output_tokens: z.number().int().min(256).max(65536).nullish(),
   enabled: z.boolean(),
   has_secret: z.boolean(),
   created_at: z.number(),
@@ -22,7 +23,13 @@ const providerSchema = z.object({
 export type Provider = z.infer<typeof providerSchema>;
 export type ProviderDraft = Pick<
   Provider,
-  'name' | 'provider_type' | 'base_url' | 'model_identifier' | 'timeout_seconds' | 'enabled'
+  | 'name'
+  | 'provider_type'
+  | 'base_url'
+  | 'model_identifier'
+  | 'timeout_seconds'
+  | 'max_output_tokens'
+  | 'enabled'
 >;
 export const recordSchema = z.object({
   id: z.uuid(),
@@ -61,6 +68,7 @@ export const saveProvider = (
       base_url: draft.base_url,
       model_identifier: draft.model_identifier,
       timeout_seconds: draft.timeout_seconds,
+      max_output_tokens: draft.max_output_tokens ?? null,
       enabled: draft.enabled,
       expected_version,
       api_key,

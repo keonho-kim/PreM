@@ -4,7 +4,7 @@
 // Related: migrations/V2__project_home.sql, adapters/http/projects.rs.
 mod common;
 use axum::http::StatusCode;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::Connection;
 use serde_json::json;
 use uuid::Uuid;

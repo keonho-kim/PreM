@@ -35,6 +35,7 @@ pub(crate) struct Settings {
     pub base_url: String,
     pub model_identifier: String,
     pub timeout_seconds: u32,
+    pub max_output_tokens: Option<u32>,
     pub enabled: bool,
 }
 impl Settings {
@@ -57,8 +58,21 @@ impl Settings {
                 "서버가 제공하는 모델 ID를 1~200자로 입력하세요.",
             ));
         }
-        if !(5..=180).contains(&self.timeout_seconds) {
-            return Err(Error::Invalid("제한 시간은 5~180초입니다."));
+        if !(5..=900).contains(&self.timeout_seconds) {
+            return Err(Error::Invalid("제한 시간은 5~900초입니다."));
+        }
+        if self
+            .max_output_tokens
+            .is_some_and(|n| !(256..=65536).contains(&n))
+        {
+            return Err(Error::Invalid(
+                "출력 한도는 256~65,536토큰이거나 빈 값이어야 합니다.",
+            ));
+        }
+        if self.provider_type.is_system() && self.max_output_tokens.is_some() {
+            return Err(Error::Invalid(
+                "판정 전용 연결에는 작성 출력 한도를 지정하지 않습니다.",
+            ));
         }
         self.base_url = normalize_base_url(&self.base_url)?;
         Ok(self)
@@ -80,6 +94,7 @@ pub(crate) struct Credentials {
     pub base_url: String,
     pub model_identifier: String,
     pub timeout_seconds: u32,
+    pub max_output_tokens: Option<u32>,
     pub token: Option<SecretString>,
 }
 #[derive(Clone)]
@@ -193,6 +208,7 @@ impl Registry {
             base_url: provider.settings.base_url,
             model_identifier: provider.settings.model_identifier,
             timeout_seconds: provider.settings.timeout_seconds,
+            max_output_tokens: provider.settings.max_output_tokens,
             token,
         })
     }

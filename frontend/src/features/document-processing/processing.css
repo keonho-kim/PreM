@@ -167,14 +167,6 @@
     outline: 1px solid CanvasText;
   }
 }
-.processing-settings {
-  display: grid;
-  gap: 20px;
-  max-width: 800px;
-}
-.processing-settings > button {
-  justify-self: start;
-}
 @media (max-width: 600px) {
   .processing-search {
     grid-template-columns: minmax(0, 1fr) auto;

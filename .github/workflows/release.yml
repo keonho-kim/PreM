@@ -1,0 +1,106 @@
+# Purpose: Build and verify every self-contained date release before publishing it.
+# Pattern: Native target runners upload to a draft; publish only after the entire matrix succeeds.
+# Usage: Push vYYYYMMDD or dispatch with an existing date tag.
+# Related: scripts/package-release.py, scripts/verify-release.py.
+name: Release
+on:
+  push:
+    tags: ['v[0-9]*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing vYYYYMMDD tag
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+      - id: tag
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]{8}$ ]]
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "PreM $TAG" --notes-file scripts/release-notes.md
+          fi
+          test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux-amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux-arm64
+          - runner: macos-15
+            platform: macos-arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      RUSTUP_TOOLCHAIN: '1.99.1'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_RELEASE_DEBUG: '0'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '26.13.0'
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          version: '0.13.6'
+      - name: Build prerequisites
+        run: |
+          npm install --global pnpm@12.16.1
+          rustup toolchain install 1.99.1 --profile minimal
+          pnpm install --frozen-lockfile
+      - name: Install target runtimes and OCR models
+        run: |
+          pnpm runtime:install
+          node scripts/install-release-fonts.mjs
+      - name: Build and test
+        run: |
+          pnpm build
+          pnpm lint
+          pnpm --filter @prem/frontend test
+          cargo test --locked --lib
+          python3 scripts/smoke_test.py "$PWD/target/release/PreM"
+      - name: Package and verify relocated bundle
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          python3 scripts/package-release.py "$TAG"
+          python3 scripts/verify-release.py "release/PreM-$TAG-${{ matrix.platform }}.tar.gz"
+      - name: Upload verified archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: gh release upload "$TAG" release/*.tar.gz release/*.sha256 --clobber
+  verify-assets:
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Confirm complete draft assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          gh release view "$TAG" --json assets --jq '.assets[].name'
+          test "$(gh release view "$TAG" --json assets --jq '.assets | length')" -eq 6

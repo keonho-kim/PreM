@@ -2,7 +2,7 @@
 // Pattern: Feature commands own confirmations; rendering consumes a derived read model.
 // Usage: Composed by app.js; all state stays in the current project in memory.
 // Related: mock/js/chrome.js, mock/js/forms.js, mock/styles/workspace-flow.css.
-window.PuPuTyXModules.studio = (capabilities) => {
+window.PreMModules.studio = (capabilities) => {
   'use strict';
   const { $, readProject, readView, readRuns, esc, icon, href, route, announce } = capabilities;
   const steps = [

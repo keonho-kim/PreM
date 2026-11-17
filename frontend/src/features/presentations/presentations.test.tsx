@@ -10,12 +10,26 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { EvidenceConfirmation } from './evidence-confirmation';
 import { Generation } from './generation';
-import { confirmEvidence, createRun, type Preparation } from './api';
+import { confirmEvidence, createRun, listRuns, type Preparation, type Run } from './api';
 vi.mock('./api', async (original) => ({
   ...(await original<typeof import('./api')>()),
   confirmEvidence: vi.fn(),
   createRun: vi.fn(),
-  listRuns: async () => [],
+  getGenerationScope: async () => ({
+    outline_revision_id: 'revision',
+    sections: [
+      { id: 'a', parent_id: null, title: '현황' },
+      { id: 'b', parent_id: null, title: '계획' },
+    ],
+  }),
+  listRuns: vi.fn(async (): Promise<Run[]> => []),
+}));
+vi.mock('@/features/outlines', () => ({
+  outlineKeys: { all: ['outlines'] },
+  OutlineRevisionDialog: () => null,
+}));
+vi.mock('./deck-preview', () => ({
+  DeckPreview: () => <section aria-label="슬라이드 편집기" />,
 }));
 vi.mock('@/features/providers', () => ({
   authoringModelsKey: ['authoring-models'],
@@ -44,7 +58,16 @@ const methods = [
 const originals = methods.map((name) =>
   Object.getOwnPropertyDescriptor(HTMLElement.prototype, name),
 );
+const resizeObserver = globalThis.ResizeObserver;
 beforeEach(() => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
   for (const name of methods)
     Object.defineProperty(HTMLElement.prototype, name, {
       configurable: true,
@@ -62,9 +85,12 @@ function mount(view: React.ReactNode) {
   );
 }
 afterEach(() => {
+  if (resizeObserver) globalThis.ResizeObserver = resizeObserver;
+  else Reflect.deleteProperty(globalThis, 'ResizeObserver');
   cleanup();
   for (const c of clients.splice(0)) c.clear();
   vi.clearAllMocks();
+  vi.mocked(listRuns).mockResolvedValue([]);
   methods.forEach((name, i) => {
     const original = originals[i];
     if (original) Object.defineProperty(HTMLElement.prototype, name, original);
@@ -84,14 +110,9 @@ it('does not confirm empty additional evidence until the user explicitly continu
 it('retains one generation receipt when a sent request has an uncertain response', async () => {
   vi.mocked(createRun).mockRejectedValue(new Error('temporary failure'));
   mount(<Generation project="p" name="보고서" state={state} editable active />);
-  await userEvent.click(screen.getByRole('combobox', { name: '작성에 사용할 AI' }));
-  await userEvent.click(await screen.findByRole('option', { name: '작성 AI' }));
+  expect(screen.queryByRole('combobox', { name: '작성에 사용할 AI' })).not.toBeInTheDocument();
   await userEvent.type(screen.getByLabelText('이번 발표자료에 추가할 요청 (선택)'), '간결한 구성');
-  await userEvent.click(screen.getByRole('button', { name: 'PPT 생성 설정' }));
-  expect(
-    screen.queryByRole('textbox', { name: '이번 발표자료에 추가할 요청 (선택)' }),
-  ).not.toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'PPT 생성 설정' }));
+  expect(screen.queryByRole('button', { name: 'PPT 생성 설정' })).not.toBeInTheDocument();
   expect(screen.getByLabelText('이번 발표자료에 추가할 요청 (선택)')).toHaveValue('간결한 구성');
   expect(createRun).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole('button', { name: 'PPT 만들기' }));
@@ -99,4 +120,35 @@ it('retains one generation receipt when a sent request has an uncertain response
   await userEvent.click(screen.getByRole('button', { name: 'PPT 만들기' }));
   await waitFor(() => expect(createRun).toHaveBeenCalledTimes(2));
   expect(vi.mocked(createRun).mock.calls[0]).toEqual(vi.mocked(createRun).mock.calls[1]);
+});
+
+it('keeps the current editor ahead of inline creation and opens version authoring directly', async () => {
+  const run: Run = {
+    id: 'run',
+    project_id: 'p',
+    presentation_id: 'deck',
+    presentation_version: 1,
+    is_current: true,
+    title: '현재 발표',
+    status: 'succeeded',
+    stage: 'complete',
+    version: 1,
+    completed: 2,
+    total: 2,
+    error_code: null,
+    created_at: 1,
+  };
+  vi.mocked(listRuns).mockResolvedValue([run]);
+  mount(<Generation project="p" name="보고서" state={state} editable active />);
+  const editor = await screen.findByRole('region', { name: '슬라이드 편집기' });
+  const composer = screen.getByRole('region', { name: '발표자료 만들기' });
+  expect(editor.compareDocumentPosition(composer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('checkbox', { name: '전체 목차' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'PPT 생성 설정' })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: '이 발표자료 새 버전 만들기' }));
+  expect(screen.queryByRole('tab', { name: '직접 작성' })).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByLabelText('발표자료 제목')).toHaveFocus());
+  expect(screen.getByLabelText('발표자료 제목')).toHaveValue('현재 발표');
+  expect(screen.getByRole('button', { name: '새 버전 만들기' })).toBeVisible();
+  expect(createRun).not.toHaveBeenCalled();
 });

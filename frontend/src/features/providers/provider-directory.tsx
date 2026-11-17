@@ -13,20 +13,19 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { notify } from '@/shared/notifications';
 import { errorMessage } from '@/shared/api/http';
 import { getProviderCatalog, listProviders, providerKeys, type Provider } from './api';
 import { ProviderForm } from './provider-form';
 import { ProviderPanels, type ProviderTab } from './provider-panels';
 import './providers.css';
-import { authoringModelsKey } from './authoring-api';
 export function ProviderDirectory({
+  family,
   selectedId,
   tab,
   onSelect,
   onTabChange,
 }: {
+  family: 'llm' | 'system';
   selectedId: string | null;
   tab: ProviderTab;
   onSelect: (id: string, tab?: ProviderTab) => void;
@@ -44,14 +43,21 @@ export function ProviderDirectory({
     refetchOnWindowFocus: true,
     refetchInterval: 15000,
   });
-  const saved = result.data?.find((p) => p.id === selectedId);
-  const requestedKind = selectedId?.startsWith('new:') ? selectedId.slice(4) : null;
-  const provider = saved ?? (requestedKind ? null : result.data?.[0]);
+  const eligible = (kind: string) =>
+    catalog.data?.some(
+      (c) =>
+        c.id === kind &&
+        (family === 'llm' ? c.category === 'llm' : c.category === 'system' || c.structured),
+    );
+  const saved = result.data?.find((p) => p.id === selectedId && eligible(p.provider_type));
+  const requestedKind =
+    selectedId?.startsWith('new:') && eligible(selectedId.slice(4)) ? selectedId.slice(4) : null;
+  const provider =
+    saved ?? (requestedKind ? null : result.data?.find((p) => eligible(p.provider_type)));
   const option =
     catalog.data?.find((item) => item.id === (provider?.provider_type ?? requestedKind)) ??
-    catalog.data?.[0];
-  const category = option?.category ?? 'llm';
-  const choices = catalog.data?.filter((item) => item.category === category) ?? [];
+    catalog.data?.find((c) => eligible(c.id));
+  const choices = catalog.data?.filter((item) => eligible(item.id)) ?? [];
   const connections = result.data?.filter((item) => item.provider_type === option?.id) ?? [];
   const retry = () => {
     void catalog.refetch();
@@ -66,127 +72,97 @@ export function ProviderDirectory({
     ]);
     if (!provider) onSelect(updated.id, 'settings');
     void cache.invalidateQueries({ queryKey: providerKeys.all });
-    void cache.invalidateQueries({ queryKey: authoringModelsKey });
-    notify('모델 연결 설정을 저장했습니다.');
   };
   return (
     <section className="provider-workspace" aria-label="모델 연결 관리">
-      <title>모델 연결 · Admin | PuPuTyX</title>
+      <title>모델 연결 · Admin | PreM</title>
       <header className="provider-heading">
         <div>
-          <p className="muted">Admin</p>
-          <h1 tabIndex={-1}>모델 연결</h1>
-          <p>Provider에 연결해 모델을 조회하고, 사용할 모델을 선택하세요.</p>
+          <h1 tabIndex={-1}>{family === 'llm' ? 'LLM 연결' : 'Decision Model 연결'}</h1>
+          <p>
+            {family === 'system'
+              ? '문서 처리와 자료 찾기에 사용할 모델입니다.'
+              : '문서 작성과 요약에 사용할 모델입니다.'}
+          </p>
         </div>
         <Button variant="ghost" size="icon" aria-label="연결 목록 새로고침" onClick={retry}>
           <RefreshCw aria-hidden="true" />
         </Button>
       </header>
-      <Tabs
-        className="provider-families"
-        value={category}
-        activationMode="manual"
-        onValueChange={(family) => {
-          const current = result.data?.find(
-            (p) => catalog.data?.find((c) => c.id === p.provider_type)?.category === family,
-          );
-          const preferred =
-            catalog.data?.find(
-              (c) => c.id === (family === 'system' ? 'lm_studio_decision' : 'lm_studio_native'),
-            ) ?? catalog.data?.find((c) => c.category === family);
-          if (current) onSelect(current.id, 'settings');
-          else if (preferred) onSelect(`new:${preferred.id}`, 'settings');
-        }}
-      >
-        <TabsList aria-label="모델 종류" className="provider-family-tabs">
-          <TabsTrigger value="llm" data-family="llm" disabled={!catalog.data}>
-            LLM
-          </TabsTrigger>
-          <TabsTrigger value="system" data-family="system" disabled={!catalog.data}>
-            Decision
-          </TabsTrigger>
-        </TabsList>
-        {['llm', 'system'].map((family) => (
-          <TabsContent key={family} value={family}>
-            {catalog.isError || result.isError ? (
-              <div role="status">
-                <p>{errorMessage(catalog.error ?? result.error)}</p>
-                <Button variant="secondary" onClick={retry}>
-                  다시 시도
-                </Button>
-              </div>
-            ) : catalog.isPending || result.isPending ? (
-              <p role="status">연결 설정을 불러옵니다.</p>
-            ) : (
-              option && (
-                <>
-                  <p className="provider-family-help">
-                    {family === 'system'
-                      ? 'Decision 모델은 문서 분류와 판단에 사용합니다.'
-                      : 'LLM은 문서 작성과 요약에 사용합니다.'}
-                  </p>
-                  <div className="provider-choice-fields">
-                    <div>
-                      <Label htmlFor={`provider-${family}`}>Provider</Label>
-                      <Select value={option.id} onValueChange={selectKind}>
-                        <SelectTrigger id={`provider-${family}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {choices.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {connections.length > 0 && (
-                      <div>
-                        <Label htmlFor={`connection-${family}`}>연결 설정</Label>
-                        <Select
-                          value={provider?.id ?? `new:${option.id}`}
-                          onValueChange={(id) => onSelect(id, 'settings')}
-                        >
-                          <SelectTrigger id={`connection-${family}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {connections.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.model_identifier} · {p.name}
-                              </SelectItem>
-                            ))}
-                            <SelectItem value={`new:${option.id}`}>다른 모델 설정</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
+      <div className="provider-families">
+        {catalog.isError || result.isError ? (
+          <div role="status">
+            <p>{errorMessage(catalog.error ?? result.error)}</p>
+            <Button variant="secondary" onClick={retry}>
+              다시 시도
+            </Button>
+          </div>
+        ) : catalog.isPending || result.isPending ? (
+          <p role="status">연결 설정을 불러옵니다.</p>
+        ) : (
+          option && (
+            <>
+              <div className="provider-choice-fields">
+                <div>
+                  <Label htmlFor={`provider-${family}`}>Provider</Label>
+                  <Select value={option.id} onValueChange={selectKind}>
+                    <SelectTrigger id={`provider-${family}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {choices.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {connections.length > 0 && (
+                  <div>
+                    <Label htmlFor={`connection-${family}`}>저장된 연결</Label>
+                    <Select
+                      value={provider?.id ?? `new:${option.id}`}
+                      onValueChange={(id) => onSelect(id, 'settings')}
+                    >
+                      <SelectTrigger id={`connection-${family}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {connections.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name} · {p.model_identifier}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value={`new:${option.id}`}>다른 모델 설정</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  {provider ? (
-                    <ProviderPanels
-                      key={provider.id}
-                      provider={provider}
-                      option={option}
-                      catalog={[option]}
-                      tab={tab}
-                      onTabChange={onTabChange}
-                      onSaved={onSaved}
-                    />
-                  ) : (
-                    <ProviderForm
-                      key={`new:${option.id}`}
-                      provider={null}
-                      catalog={[option]}
-                      onSaved={onSaved}
-                    />
-                  )}
-                </>
-              )
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+                )}
+              </div>
+              {provider ? (
+                <ProviderPanels
+                  key={provider.id}
+                  provider={provider}
+                  option={option}
+                  catalog={[option]}
+                  decision={family === 'system'}
+                  tab={family === 'llm' && tab === 'decision' ? 'settings' : tab}
+                  onTabChange={onTabChange}
+                  onSaved={onSaved}
+                />
+              ) : (
+                <ProviderForm
+                  key={`new:${option.id}`}
+                  provider={null}
+                  catalog={[option]}
+                  onSaved={onSaved}
+                />
+              )}
+            </>
+          )
+        )}
+      </div>
     </section>
   );
 }

@@ -2,7 +2,7 @@
 // Pattern: Shadcn controls with explicit loading, cancellation, empty and retry states.
 // Usage: Connection form passes only model IDs and local discovery status.
 // Related: use-model-discovery.ts, provider-form.tsx, api.ts.
-import { Search, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,9 +22,11 @@ export function ModelPicker({
   cancelled,
   disabled,
   onLoad,
+  kind,
   onCancel,
   onSelect,
 }: {
+  kind: string;
   prefix: string;
   value: string;
   models: string[] | null;
@@ -38,38 +40,50 @@ export function ModelPicker({
 }) {
   return (
     <div className="model-picker">
-      <div className="provider-actions">
-        <Button type="button" variant="secondary" disabled={disabled || pending} onClick={onLoad}>
-          <Search aria-hidden="true" />
-          {pending ? '모델 목록 조회 중…' : '모델 목록 조회'}
-        </Button>
-        {pending && (
+      {pending && (
+        <div className="provider-actions">
           <Button type="button" variant="ghost" onClick={onCancel}>
             <X aria-hidden="true" />
             조회 취소
           </Button>
-        )}
-      </div>
+        </div>
+      )}
       <Label htmlFor={`${prefix}-model`}>사용할 모델 · 필수</Label>
       <Select
         value={value}
-        disabled={disabled || pending || !models?.length}
+        disabled={disabled}
+        onOpenChange={(open) => {
+          if (open && !pending) onLoad();
+        }}
         onValueChange={onSelect}
       >
         <SelectTrigger id={`${prefix}-model`} aria-describedby={`${prefix}-models-help`}>
-          <SelectValue placeholder="연결 정보를 입력한 뒤 모델을 조회하세요" />
+          <SelectValue placeholder="눌러서 모델 목록 조회" />
         </SelectTrigger>
         <SelectContent>
+          {pending && (
+            <p role="status" className="field-hint">
+              모델을 불러오는 중…
+            </p>
+          )}
+          {!pending && !models?.length && (
+            <p className="field-hint">
+              {error
+                ? '조회에 실패했습니다. 닫고 다시 열어 재시도하세요.'
+                : '선택할 모델이 없습니다.'}
+            </p>
+          )}
           {value && !models?.includes(value) && (
             <SelectItem value={value} disabled>
               {value} · 저장된 모델
             </SelectItem>
           )}
-          {models?.map((model) => (
-            <SelectItem key={model} value={model}>
-              {model}
-            </SelectItem>
-          ))}
+          {!pending &&
+            models?.map((model) => (
+              <SelectItem key={model} value={model}>
+                {model} · {kind}
+              </SelectItem>
+            ))}
         </SelectContent>
       </Select>
       <p
@@ -87,7 +101,7 @@ export function ModelPicker({
                 ? '선택할 모델이 없습니다. 서버에 사용할 모델이 준비되어 있는지 확인하세요.'
                 : models
                   ? `${models.length}개 모델을 찾았습니다. 사용할 모델을 선택하세요.`
-                  : '주소나 API Key를 변경했다면 다시 조회하세요. 목록 조회만으로 모델을 로드하거나 설정을 저장하지 않습니다.'}
+                  : '목록을 열면 서버에서 모델을 조회합니다.'}
       </p>
     </div>
   );

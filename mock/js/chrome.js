@@ -2,7 +2,7 @@
 // Pattern: One semantic link tree driven by a narrow session read model.
 // Usage: Owned by app.js; demo roles never represent server authorization.
 // Related: mock/index.html, mock/js/studio.js, mock/styles/workspace-flow.css.
-window.PuPuTyXModules.chrome = (capabilities) => {
+window.PreMModules.chrome = (capabilities) => {
   'use strict';
   const { $, $$, icon, href, readState, revealActiveStrips } = capabilities;
   const header = $('.app-header');

@@ -16,6 +16,7 @@ export function StudioStepper({
   evidence = false,
   template = false,
   generated = false,
+  manualEntry = false,
   onSelect,
 }: {
   step: StudioStep;
@@ -27,6 +28,7 @@ export function StudioStepper({
   evidence?: boolean;
   template?: boolean;
   generated?: boolean;
+  manualEntry?: boolean;
   onSelect: (step: StudioStep) => void;
 }) {
   const chrome = useStudioChrome();
@@ -45,8 +47,8 @@ export function StudioStepper({
               type="button"
               disabled={
                 (i === 4 && !evidence) ||
-                (i === 5 && !template) ||
-                (i > 0 && !source && i !== current) ||
+                (i === 5 && !template && !manualEntry) ||
+                (i > 0 && !source && i !== current && !(i === 5 && manualEntry)) ||
                 (dirty && i !== current) ||
                 (i >= 3 && unsavedOutline)
               }

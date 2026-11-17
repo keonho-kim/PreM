@@ -11,6 +11,15 @@ const { openBrowser, projectRoot } = require('../../mock/helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 const { adminNavigation } = require('./admin-navigation.cjs');
 async function click(page, name, role = 'button') {
+  if (name === '모델 목록 조회' && (await page.$('.provider-form:not([hidden]) .model-picker'))) {
+    await click(page, '사용할 모델 · 필수', 'combobox');
+    await page.waitForFunction(
+      () => !document.querySelector('.model-picker')?.textContent.includes('조회 취소'),
+    );
+    await page.keyboard.press('Escape');
+    return;
+  }
+
   const target = await page.waitForSelector(`::-p-aria(${name}[role="${role}"])`, {
     visible: true,
   });
@@ -29,7 +38,13 @@ async function click(page, name, role = 'button') {
 }
 async function choose(page, label, option) {
   await click(page, label, 'combobox');
-  await click(page, option, 'option');
+  await click(
+    page,
+    label === '사용할 모델 · 필수'
+      ? option + (option === 'd3-flash-artemis' ? ' · Decision' : ' · LLM')
+      : option,
+    'option',
+  );
   await page.waitForFunction(
     (label, option) => {
       const field = [...document.querySelectorAll('label')].find(
@@ -41,12 +56,19 @@ async function choose(page, label, option) {
     label,
     option,
   );
+  await page.waitForNetworkIdle({ idleTime: 250 });
 }
 async function field(page, name, value) {
+  if (['base_url', 'api_key'].includes(name) && !(await page.$(`input[name="${name}"]`)))
+    await click(page, '연결 주소·인증 변경');
   const input = await page.waitForSelector(`input[name="${name}"]`, { visible: true });
   await input.evaluate((e) => e.select());
   await page.keyboard.press('Backspace');
   await input.type(value);
+}
+async function openOptions(page) {
+  const input = await page.$('input[name="timeout_seconds"]');
+  if (!input || !(await input.boundingBox())) await click(page, '추가 연결 설정');
 }
 (async () => {
   let inventoryCalls = 0;
@@ -80,7 +102,7 @@ async function field(page, name, value) {
     if (req.url === '/api/v1/chat') {
       res.end(
         JSON.stringify({
-          output: [{ type: 'message', content: 'PuPuTyX connection OK' }],
+          output: [{ type: 'message', content: 'PreM connection OK' }],
           stats: { input_tokens: 12, total_output_tokens: 5 },
         }),
       );
@@ -92,7 +114,7 @@ async function field(page, name, value) {
           {
             finish_reason: 'stop',
             message: {
-              content: body.response_format ? '{"status":"ok"}' : 'PuPuTyX connection OK',
+              content: body.response_format ? '{"status":"ok"}' : 'PreM connection OK',
             },
           },
         ],
@@ -119,8 +141,8 @@ async function field(page, name, value) {
     }
     await a.goto(server.base + '/home/admin', { waitUntil: 'networkidle0' });
     await server.unlock(a);
-    assert.ok(await a.$('::-p-aria(LLM[role="tab"])'));
-    assert.ok(await a.$('::-p-aria(Decision[role="tab"])'));
+    assert.ok(await a.$('::-p-aria(LLM 연결[role="link"])'));
+    assert.ok(await a.$('::-p-aria(Decision Model 연결[role="link"])'));
     assert.equal(await a.$('::-p-aria(AI 모델 추가[role="button"])'), null);
     assert.equal(await a.$('input[name="model_identifier"]'), null);
     await choose(a, 'Provider', 'LM Studio · OpenAI 호환');
@@ -129,17 +151,27 @@ async function field(page, name, value) {
     await click(a, '모델 목록 조회');
     await choose(a, '사용할 모델 · 필수', 'ornith-1.5-35b-a3b');
     assert.equal((await list()).length, 0);
+    await openOptions(a);
+    await field(a, 'max_output_tokens', '30000');
+    await field(a, 'timeout_seconds', '600');
+    await a.$eval('input[name="max_output_tokens"]', (n) => n.scrollIntoView({ block: 'center' }));
+    await a.screenshot({
+      path: path.join(projectRoot, 'mock/captures/folio/output-budget-admin.png'),
+    });
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
     const first = (await list())[0];
     assert.equal(first.model_identifier, 'ornith-1.5-35b-a3b');
     assert.equal(first.base_url, endpoint + '/v1/');
+    assert.equal(first.max_output_tokens, 30000);
+    assert.equal(first.timeout_seconds, 600);
+    await click(a, '연결 주소·인증 변경');
     assert.equal(await a.$eval('input[name="base_url"]', (n) => n.value), '');
     assert.equal(await a.$eval('input[name="api_key"]', (n) => n.value), '');
     await click(a, '연결 테스트', 'tab');
     await click(a, '텍스트 테스트');
     await a.waitForFunction(() =>
-      document.querySelector('.provider-result')?.textContent.includes('PuPuTyX connection OK'),
+      document.querySelector('.provider-result')?.textContent.includes('PreM connection OK'),
     );
     await click(a, '구조화 응답 테스트');
     await a.waitForFunction(() =>
@@ -150,7 +182,7 @@ async function field(page, name, value) {
     await b.waitForSelector('.provider-summary');
     await a.bringToFront();
     await click(a, '연결 설정', 'tab');
-    await click(a, '추가 연결 설정');
+    await openOptions(a);
     await field(a, 'name', '내 연결 설정');
     const change = await fetch(`${server.base}/api/v1/admin/llm/providers/${first.id}`, {
       method: 'PUT',
@@ -162,6 +194,7 @@ async function field(page, name, value) {
         base_url: first.base_url,
         model_identifier: first.model_identifier,
         timeout_seconds: first.timeout_seconds,
+        max_output_tokens: first.max_output_tokens,
         enabled: true,
       }),
     });
@@ -178,7 +211,7 @@ async function field(page, name, value) {
     await click(a, '변경 사항 저장');
     await click(a, '확인하고 저장');
     await a.waitForFunction(() =>
-      document.querySelector('.provider-summary')?.textContent.includes('v3'),
+      document.querySelector('.provider-summary')?.textContent.includes('내 연결 설정'),
     );
     await click(a, '연결 테스트', 'tab');
     await click(a, '구조화 응답 테스트');
@@ -230,15 +263,16 @@ async function field(page, name, value) {
     await click(a, '모델 목록 조회');
     await choose(a, '사용할 모델 · 필수', 'ornith-1.5-35b-a3b');
     await click(a, '설정 저장');
-    await a.waitForFunction(() =>
-      document.querySelector('.provider-summary')?.textContent.includes('Native Chat'),
+    await a.waitForFunction(
+      () => document.querySelector('#provider-llm')?.textContent === 'LM Studio Native',
     );
     await click(a, '연결 테스트', 'tab');
     await click(a, '텍스트 테스트');
     await a.waitForFunction(() =>
-      document.querySelector('.provider-result')?.textContent.includes('PuPuTyX connection OK'),
+      document.querySelector('.provider-result')?.textContent.includes('PreM connection OK'),
     );
-    await click(a, 'Decision', 'tab');
+    await click(a, 'Decision Model 연결', 'link');
+    await choose(a, 'Provider', 'LM Studio');
     await field(a, 'base_url', endpoint + '/v1');
     await click(a, '모델 목록 조회');
     await choose(a, '사용할 모델 · 필수', 'd3-flash-artemis');

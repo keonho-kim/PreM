@@ -140,7 +140,7 @@ export function App() {
             path="*"
             element={
               <main className="container workspace">
-                <title>페이지를 찾을 수 없습니다 | PuPuTyX</title>
+                <title>페이지를 찾을 수 없습니다 | PreM</title>
                 <h1>페이지를 찾을 수 없습니다</h1>
                 <p>
                   주소를 확인하거나 <Link to="/">홈으로 이동</Link>해 주세요.

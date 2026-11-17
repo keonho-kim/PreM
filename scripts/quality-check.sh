@@ -4,16 +4,16 @@
 # Usage: Invoked by the corresponding pnpm script.
 # Related: package.json, scripts/generate-design-tokens.mjs.
 set -euo pipefail
-PUPUTYX_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PUPUTYX_ROOT"
+PREM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PREM_ROOT"
 pnpm tools:check
 pnpm tokens:check
 node scripts/prepare-document-runtime.mjs
-runtime/node/bin/node --test tests/helpers/kordoc-image-filter.mjs tests/helpers/parsing-checks.test.mjs tests/helpers/document-structure.test.mjs
+runtime/node/bin/node --test tests/helpers/kordoc-image-filter.mjs tests/helpers/parsing-checks.test.mjs tests/helpers/document-structure.test.mjs tests/helpers/presentation-quality.test.mjs
 pnpm format:check
 pnpm lint
-pnpm --filter @puputyx/frontend knip
+pnpm --filter @prem/frontend knip
 pnpm test:rust
 cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
-pnpm --filter @puputyx/frontend test
+pnpm --filter @prem/frontend test
 pnpm check:deps

@@ -68,6 +68,7 @@ pub(super) fn checkpoint(
         [r.id.to_string()],
     )
     .map_err(failure)?;
+    execution::checkpoint(&tx, &r)?;
     tx.commit().map_err(failure)?;
     Ok(())
 }
@@ -144,6 +145,7 @@ pub(super) fn complete(db: &mut rusqlite::Connection, r: Run) -> Result<(), Erro
         draft,
         &r.kind,
     )?;
+    execution::publish(&tx, &r)?;
     tx.execute("UPDATE outline_runs SET status='succeeded',result_revision_id=?,lease=NULL,lease_until=NULL,version=version+1 WHERE id=?",params![revision,r.id.to_string()]).map_err(failure)?;
     tx.commit().map_err(failure)?;
     Ok(())

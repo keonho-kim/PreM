@@ -1,4 +1,18 @@
-# PuPuTyX Folio captures
+# PreM Folio captures
+
+## 중앙 비교·되돌리기
+
+[수정안과 이전 장표 비교](presentation-proposal-before.png) / [확정 후 누름 비교](presentation-published-before.png) / [되돌린 장표](presentation-undo.png)
+
+비교·되돌리기는 확대 버튼 왼쪽의 아이콘으로 제공한다. 비교는 누르는 동안만 표시하고, 되돌리기는 현재 편집 세션의 최근 3단계까지다. Home으로 이탈하면 서버의 되돌리기 참조 캐시가 삭제되는 실제 브라우저 검증을 포함한다. 확정 PPT 파일은 보존된다.
+
+## 제품 객체·일괄 수정
+
+[객체 수정안](object-proposal.png) / [이미지·차트·도형 적용](object-edited.png) / [모바일 객체 대화](object-phone.png)
+
+[Ornith 수정안](ornith-object-proposal.png) / [Ornith 적용 결과](ornith-object-edited.png) / [Ornith 모바일](ornith-object-phone.png)
+
+격리된 실제 서버와 합성 문서로 이미지 등록, 두 장표 수정안 검토·한 번에 적용, 객체 선택을 확인한다. 합성 모델의 기본 캡처와 `ornith-` 접두사의 실모델 캡처를 구분한다. 생성한 차트는 PPTX 내부 데이터와 함께 편집 가능하며 캔버스 드래그 조작은 이 구현 범위가 아니다.
 
 2026-11-15 / current Folio app: Home, Studio review stepper, Space processing, and Admin preview; light only.
 
@@ -6,22 +20,22 @@ Desktop: 1440px wide. Phone: 390px wide. Full page screenshots preserve scrollab
 
 | Screen | Desktop | Phone |
 | --- | --- | --- |
-| Home | [PNG](screens/PuPuTyX--view-projects-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-projects-project-platform-phone.png) |
-| 프로젝트 개요 | [PNG](screens/PuPuTyX--view-overview-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-overview-project-platform-phone.png) |
-| 원본 문서 | [PNG](screens/PuPuTyX--view-documents-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-documents-project-platform-phone.png) |
-| 작성 방향 | [PNG](screens/PuPuTyX--view-guide-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-guide-project-platform-phone.png) |
-| 목차 정리 | [PNG](screens/PuPuTyX--view-outline-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-outline-project-platform-phone.png) |
-| 참고 자료 찾기 | [PNG](screens/PuPuTyX--view-references-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-references-project-platform-phone.png) |
-| 템플릿 탐색 | [PNG](screens/PuPuTyX--view-templates-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-templates-project-platform-phone.png) |
-| PPT 생성과 목록 | [PNG](screens/PuPuTyX--view-presentations-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-presentations-project-platform-phone.png) |
-| PPT 편집기 | [PNG](screens/PuPuTyX--view-editor-project-platform-deck-deck1-desktop.png) | [PNG](screens/PuPuTyX--view-editor-project-platform-deck-deck1-phone.png) |
-| 작업 이력 | [PNG](screens/PuPuTyX--view-history-project-platform-desktop.png) | [PNG](screens/PuPuTyX--view-history-project-platform-phone.png) |
-| AI 연결 | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-providers-desktop.png) | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-providers-phone.png) |
-| 업무별 AI | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-routing-desktop.png) | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-routing-phone.png) |
-| Space 참고 자료 | [PNG](screens/PuPuTyX--view-space-project-platform-tab-references-desktop.png) | [PNG](screens/PuPuTyX--view-space-project-platform-tab-references-phone.png) |
-| Space 템플릿 | [PNG](screens/PuPuTyX--view-space-project-platform-tab-templates-desktop.png) | [PNG](screens/PuPuTyX--view-space-project-platform-tab-templates-phone.png) |
-| 작업 현황 | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-monitor-desktop.png) | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-monitor-phone.png) |
-| 서비스 상태 | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-system-desktop.png) | [PNG](screens/PuPuTyX--view-admin-project-platform-tab-system-phone.png) |
+| Home | [PNG](screens/PreM--view-projects-project-platform-desktop.png) | [PNG](screens/PreM--view-projects-project-platform-phone.png) |
+| 프로젝트 개요 | [PNG](screens/PreM--view-overview-project-platform-desktop.png) | [PNG](screens/PreM--view-overview-project-platform-phone.png) |
+| 원본 문서 | [PNG](screens/PreM--view-documents-project-platform-desktop.png) | [PNG](screens/PreM--view-documents-project-platform-phone.png) |
+| 작성 방향 | [PNG](screens/PreM--view-guide-project-platform-desktop.png) | [PNG](screens/PreM--view-guide-project-platform-phone.png) |
+| 목차 정리 | [PNG](screens/PreM--view-outline-project-platform-desktop.png) | [PNG](screens/PreM--view-outline-project-platform-phone.png) |
+| 참고 자료 찾기 | [PNG](screens/PreM--view-references-project-platform-desktop.png) | [PNG](screens/PreM--view-references-project-platform-phone.png) |
+| 템플릿 탐색 | [PNG](screens/PreM--view-templates-project-platform-desktop.png) | [PNG](screens/PreM--view-templates-project-platform-phone.png) |
+| PPT 생성과 목록 | [PNG](screens/PreM--view-presentations-project-platform-desktop.png) | [PNG](screens/PreM--view-presentations-project-platform-phone.png) |
+| PPT 편집기 | [PNG](screens/PreM--view-editor-project-platform-deck-deck1-desktop.png) | [PNG](screens/PreM--view-editor-project-platform-deck-deck1-phone.png) |
+| 작업 이력 | [PNG](screens/PreM--view-history-project-platform-desktop.png) | [PNG](screens/PreM--view-history-project-platform-phone.png) |
+| AI 연결 | [PNG](screens/PreM--view-admin-project-platform-tab-providers-desktop.png) | [PNG](screens/PreM--view-admin-project-platform-tab-providers-phone.png) |
+| 업무별 AI | [PNG](screens/PreM--view-admin-project-platform-tab-routing-desktop.png) | [PNG](screens/PreM--view-admin-project-platform-tab-routing-phone.png) |
+| Space 참고 자료 | [PNG](screens/PreM--view-space-project-platform-tab-references-desktop.png) | [PNG](screens/PreM--view-space-project-platform-tab-references-phone.png) |
+| Space 템플릿 | [PNG](screens/PreM--view-space-project-platform-tab-templates-desktop.png) | [PNG](screens/PreM--view-space-project-platform-tab-templates-phone.png) |
+| 작업 현황 | [PNG](screens/PreM--view-admin-project-platform-tab-monitor-desktop.png) | [PNG](screens/PreM--view-admin-project-platform-tab-monitor-phone.png) |
+| 서비스 상태 | [PNG](screens/PreM--view-admin-project-platform-tab-system-desktop.png) | [PNG](screens/PreM--view-admin-project-platform-tab-system-phone.png) |
 
 [Generation dialog](generation-dialog.png) / [Revision comparison](revision-comparison.png)
 
@@ -115,3 +129,50 @@ Space는 검색 홈과 뉴스형 결과·문서 상세를 제공하며 업로드
 [Ornith 수정안 검토](ornith-slide-proposal.png) / [적용 후 장표](ornith-slide-edited.png) / [모바일 대화](ornith-slide-chat-phone.png)
 
 격리된 서버의 합성 발표자료에 Ornith가 실제 응답한 제목 수정이다. 초안은 계약 테스트 모델로 준비했으며 제목 수정만 로컬 LM Studio Native API를 호출했다. 실제 업무 문서나 인증정보는 포함하지 않는다.
+
+## 제품 문서 준비 단계
+
+[설정 대기](document-engine-waiting.png) / [업로드한 탭의 진행 패널](document-engine-panel.png) / [모바일 진행 패널](document-engine-panel-phone.png) / [Studio 원본](studio-document-engine.png) / [분류 중](document-engine-classifying.png) / [강제 종료 후 복구](document-engine-recovered.png)
+
+실제 제품 서버·격리 저장소·합성 문서와 로컬 계약 모델로 확인했다. 다른 브라우저에도 준비 결과를 공유하되 전송 패널은 업로드한 탭에서만 보인다. 모델 정확도나 운영 부하 검증을 대신하지 않는다.
+
+## 제품 목차·내용 연결 실행
+
+[내용 연결 중](outline-engine-mapping.png) / [취소 후](outline-engine-cancelled.png) / [강제 종료 후 복구](outline-engine-recovered.png) / [모바일](outline-engine-phone.png)
+
+실제 제품 Studio·격리 저장소·합성 업무 문서와 계약 모델로 확인했다. 작업 단계는 Studio의 여섯 검토 단계와 구분하며 자동 작업 완료가 사용자의 최종 검토를 대신하지 않는다.
+
+## Reference-enabled PPT generation and conversation
+
+[Visual source selection](reference-selection-dialog.png) / [Native chart/image generation](reference-generated-native.png) / [Reviewed reference-object edit](reference-chat-proposal.png) / [Mobile editor](reference-editor-phone.png) / [Exact source version](reference-source-version.png)
+
+These are real product UI captures from isolated storage and synthetic source/model fixtures. They cover explicit generation choices, additional source slides and approved object placement edits; they do not establish arbitrary Office effect/font fidelity or live model quality.
+
+## 장표별 확인과 렌더링 재사용
+
+[장표 확인 결과](presentation-quality-desktop.png) / [생성된 네이티브 장표](reference-generated-native.png) / [대화 수정안](reference-chat-proposal.png) / [모바일 편집](reference-editor-phone.png)
+
+실제 서버와 합성 자료로 장표별 검사 결과, 이미 확인한 장표의 재사용, 원본 차트·이미지 삽입과 변경한 객체만의 수정안을 확인한다. 화면은 고정 코드의 검사 결과를 업무 언어로 보여주며 정밀한 폰트 조판·시각 모델 평가를 뜻하지 않는다.
+
+## 직접 작성 캔버스
+
+[템플릿 빈 장표](canvas-template-blank.png) / [드래그 중 실제 그림](canvas-drag-live.png) / [직접 편집과 장표 구성](canvas-direct-editing.png) / [모바일](canvas-direct-phone.png)
+
+실제 제품 서버와 합성 템플릿을 사용하는 브라우저 검증 화면이다. 목업 시뮬레이션과 구분하며 임의 원본 PPT 객체의 모든 내부 구조를 직접 편집할 수 있다는 뜻은 아니다.
+
+## 생성할 목차 선택
+
+[본문의 목차·작성 입력](presentation-scope-desktop.png) / [모바일](presentation-scope-phone.png) / [생성된 PPT 편집](presentation-inline-editor.png)
+
+실제 제품 서버와 합성 문서로 부분 선택, 하위 목차 일괄 선택, 키보드·모바일 조작과 선택한 중목차 한 장의 PPTX 출력을 검증한다. 별도 생성 설정 버튼이나 작성 AI 선택란 없이 본문에 생성 범위와 예상 장표 수를 보여주며 선택만으로 작업을 실행하지 않는다. 생성된 자료는 캔버스를 먼저 보여주고 추가 생성 입력은 그 아래에 둔다.
+
+## 공개 원본과 실제 모델
+
+[모델별 출력 한도](output-budget-admin.png) / [Ornith 템플릿 생성](ornith-public-template.png) / [대화 수정 적용](ornith-public-edited.png)
+
+W3C 공식 배포 PDF와 PPTX를 격리된 제품 서버에서 처리하고 실제 Ornith로 작성·수정한 화면이다. 공개 원본의 출처·해시는 `tests/fixtures/presentation-public.json`에 고정한다. 자동 생성 내용은 사용자가 검토하는 초안이며 회사 서식·모든 입력 문서의 내용 정확도를 인증한 화면은 아니다. 원본·산출물과 검사 보고서는 `tests/.artifacts/`에 둔다.
+
+
+[생성 목차의 수정·추가 아이콘](generation-outline-actions.png)
+
+생성 화면 목차 행에서 제목·순서를 수정하고 중목차를 추가한 실제 제품 화면이다. AI/직접 작성 탭은 제공하지 않는다.

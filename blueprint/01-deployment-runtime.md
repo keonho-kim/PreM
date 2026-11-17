@@ -1,16 +1,16 @@
 # 배포 및 실행
 
-PuPuTyX 통합 제품·기술 설계서 v2.0. 원문 **2장**을 수록한다. [문서 색인](README.md)
+PreM 통합 제품·기술 설계서 v2.0. 원문 **2장**을 수록한다. [문서 색인](README.md)
 
 ## 2.1 실행 명령
 
 사용자가 지정해야 하는 필수 실행 옵션은 데이터 저장 경로 하나뿐이다.
 
 ```sh
-./PuPuTyX --data-storage-path /data/PuPuTyX
+./PreM --data-storage-path /data/PreM
 ```
 
-제품명과 실행 파일명은 `PuPuTyX`다. 최초 실행, 일반 실행, 업데이트 후 실행 모두 같은 명령을 사용한다.
+제품명과 실행 파일명은 `PreM`다. 최초 실행, 일반 실행, 업데이트 후 실행 모두 같은 명령을 사용한다.
 
 추가 설정 파일 작성, 수동 DB 생성, 폴더 생성, OCR 모델 설치, 프론트엔드 빌드는 필요하지 않다.
 
@@ -99,7 +99,7 @@ LLM Provider 설정은 환경변수로 주입하지 않고 [Admin UI](06-llm-adm
 
 ```text
 release/
-├── PuPuTyX
+├── PreM
 ├── runtime/
 │   ├── libreoffice/
 │   ├── h2orestart/
@@ -125,7 +125,7 @@ release/
 ## 2.4 데이터 디렉터리
 
 ```text
-/data/PuPuTyX/
+/data/PreM/
 ├── db/
 │   └── app.sqlite
 ├── config/
@@ -170,3 +170,10 @@ Rust 라이브러리는 제품 빌드에, Uppy/shadcn/PDF.js 같은 브라우저
 서버 실행마다 256비트 난수 Admin 토큰을 생성하고 시작 CLI에 한 번 출력한다. 별도 필수 실행 옵션은 추가하지 않는다. 이 토큰은 메모리에만 보관하며 재시작하면 바뀐다. Admin 화면과 모든 Admin API는 토큰을 요구하고, 일반 공유 프로젝트·Studio·Space에는 사용자 로그인을 추가하지 않는다. 리다이렉트한 시작 출력은 비밀 정보를 포함하므로 운영자가 보호한다.
 
 Admin 일반 설정의 토큰 변경은 현재 서버 실행에만 적용한다. 서버를 재시작하면 항상 새 난수 토큰을 CLI에 출력하고 초기 진입 순서를 다시 따른다. 변경한 토큰을 DB/파일에서 복원하거나 이전 토큰을 우회 경로로 허용하지 않는다.
+
+
+## 날짜 버전 릴리스 패키지
+
+태그는 `vYYYYMMDD`다. Release workflow는 macOS arm64, Ubuntu 24.04 arm64/amd64 네이티브 runner에서 번들 런타임을 설치하고 빌드한다. `package-release.py`가 실행 파일·Node·Python·Kordoc·PPT Master·한국어 OCR 모델·한국어 폰트와 라이선스·파일별 해시를 묶는다. 개발 의존성과 앱 데이터는 배포하지 않는다.
+
+`verify-release.py`는 다른 경로에 풀고 PATH에서 개발 도구를 제거한 환경에서 OCR 모델·Sharp·Python 패키지 로딩, PPTX 생성·PNG 렌더링, HTTP 시작과 재시작을 검증한다. 세 archive와 SHA-256 파일이 draft에 모두 도착한 뒤 릴리스를 게시한다. Linux OS 요구사항은 glibc 2.39 이상, macOS는 14 이상이다. libc/OS 프레임워크와 외부 LLM 추론 서비스는 호스트 책임이다. 파일 이름은 `PreM-vYYYYMMDD-{linux-arm64,linux-amd64,macos-arm64}.tar.gz`다.

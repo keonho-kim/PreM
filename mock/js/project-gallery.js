@@ -2,7 +2,7 @@
 // Pattern: Feature read model with separate filter/page commands and owned deadline refresh.
 // Usage: Composed by views/projects.js; project commands remain with their existing owners.
 // Related: project-dates.js, project-menu.js, styles/project-gallery.css.
-window.PuPuTyXModules.projectGallery = ({
+window.PreMModules.projectGallery = ({
   readProjects,
   ui,
   esc,
@@ -11,7 +11,7 @@ window.PuPuTyXModules.projectGallery = ({
   render,
   announce,
 }) => {
-  const dates = window.PuPuTyXModules.projectDates,
+  const dates = window.PreMModules.projectDates,
     size = 6;
   let release = () => {};
   const updated = (p) => p.history[0]?.at ?? p.guides.at(-1)?.at;

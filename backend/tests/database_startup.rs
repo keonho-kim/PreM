@@ -2,7 +2,7 @@
 // Pattern: Real on-disk migration and restart tests with isolated data roots.
 // Usage: cargo nextest run --test database_startup.
 // Related: adapters/sqlite/migrations.rs, app/mod.rs.
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::Connection;
 use std::{fs, path::Path};
 fn directory() -> tempfile::TempDir {

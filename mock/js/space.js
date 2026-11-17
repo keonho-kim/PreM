@@ -2,7 +2,7 @@
 // Pattern: Narrow feature boundary with owned timer, commands, and derived progress.
 // Usage: Composed in app.js; uploads inspect names and sizes only.
 // Related: mock/js/uploads.js, mock/styles/space.css, mock/js/views/content.js.
-window.PuPuTyXModules.space = (capabilities) => {
+window.PreMModules.space = (capabilities) => {
   'use strict';
   const {
     $,
@@ -24,7 +24,7 @@ window.PuPuTyXModules.space = (capabilities) => {
     templateLibrary,
     referenceLibrary,
   } = capabilities;
-  const preview = window.PuPuTyXModules.assetPreview({
+  const preview = window.PreMModules.assetPreview({
     $,
     esc,
     icon,

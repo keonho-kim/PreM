@@ -1,6 +1,6 @@
 // Purpose: Verify the mock's visual asset previews and honest metadata-only upload behavior.
 // Pattern: Real browser over file and HTTP, isolated sample files and explicit cleanup.
-// Usage: PUPUTYX_BROWSER_TOOLS=... node mock/helpers/asset-preview.cjs; static mock server on 5174.
+// Usage: PREM_BROWSER_TOOLS=... node mock/helpers/asset-preview.cjs; static mock server on 5174.
 // Related: mock/js/asset-preview.js, space.js, mock/captures/folio/.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -32,7 +32,7 @@ const { openBrowser, projectRoot } = require('./browser.cjs');
       await page.setViewport({ width: 1440, height: 1000 });
       await page.goto(base + '#view=space&tab=templates', { waitUntil: 'networkidle0' });
       const snapshot = await page.evaluate(() =>
-        JSON.stringify(window.PuPuTyXMock.snapshot().projects),
+        JSON.stringify(window.PreMMock.snapshot().projects),
       );
       const opener = '[data-action="asset-preview"][data-id="library-standard"]';
       await page.click(opener);
@@ -71,7 +71,7 @@ const { openBrowser, projectRoot } = require('./browser.cjs');
       await page.waitForSelector('#app-dialog:not([open])');
       assert.equal(await page.$eval(opener, (n) => n === document.activeElement), true);
       assert.equal(
-        await page.evaluate(() => JSON.stringify(window.PuPuTyXMock.snapshot().projects)),
+        await page.evaluate(() => JSON.stringify(window.PreMMock.snapshot().projects)),
         snapshot,
       );
       await page.setViewport({ width: 1440, height: 1000 });

@@ -3,4 +3,3 @@
 // Usage: Studio and Admin route composition.
 // Related: related-documents.tsx, settings.tsx.
 export { RelatedDocuments } from './related-documents';
-export { RelationSettings } from './settings';

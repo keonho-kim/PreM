@@ -32,7 +32,7 @@ node mock/helpers/editor-chat.cjs
 node mock/helpers/capture.cjs
 ```
 
-브라우저 도구 위치는 `PUPUTYX_BROWSER_TOOLS`, 브라우저 실행 파일은 `CHROME_PATH`, 목업 주소는 `PUPUTYX_MOCK_URL`로 지정한다. 세부 조건은 [브라우저 검사 설정](../../dev-docs/07-quality-readiness.md)에 있다.
+브라우저 도구 위치는 `PREM_BROWSER_TOOLS`, 브라우저 실행 파일은 `CHROME_PATH`, 목업 주소는 `PREM_MOCK_URL`로 지정한다. 세부 조건은 [브라우저 검사 설정](../../dev-docs/07-quality-readiness.md)에 있다.
 
 macOS에서 캡처 모음을 생성하려면:
 

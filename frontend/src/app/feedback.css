@@ -73,3 +73,9 @@
     padding-block-end: var(--work-panel-reserve, 0px);
   }
 }
+
+/* Only the newest notification is visible; avoid faint stacked cards over the workspace. */
+[data-sonner-toast].feedback-toast[data-front="false"] {
+  visibility: hidden;
+  pointer-events: none;
+}

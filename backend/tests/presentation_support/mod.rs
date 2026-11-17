@@ -2,8 +2,9 @@
 // Pattern: Existing public APIs only; all fixtures and models remain local and disposable.
 // Usage: Presentation lifecycle and native template tests.
 // Related: outline_support/, presentations.rs, presentation_templates.rs.
+pub mod edits;
 use crate::{common::request, outline_support::*};
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use std::time::Duration;
 pub async fn preparation(app: &Application, p: &str) -> Value {

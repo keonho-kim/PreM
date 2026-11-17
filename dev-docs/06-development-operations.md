@@ -28,6 +28,7 @@ python3 mock/helpers/serve.py
 
 ```sh
 ./scripts/setup.sh
+pnpm runtime:install
 pnpm dev
 ```
 
@@ -67,7 +68,7 @@ React 접속 주소는 `http://127.0.0.1:5173/home/`이며 공유 프로젝트 �
 
 ```sh
 pnpm build
-./target/release/PuPuTyX --data-storage-path "$PWD/data" --listen-address 127.0.0.1
+./target/release/PreM --data-storage-path "$PWD/data" --listen-address 127.0.0.1
 ```
 
 빌드는 토큰 동기화를 검사하고 React Compiler를 적용한 React를 빌드한 뒤 `embedded-ui` feature로 Rust 실행 파일에 포함한다. 실행 시 프론트엔드를 다시 빌드하지 않는다.
@@ -83,7 +84,7 @@ pnpm build
 | `--port`              | `APP_PORT`           | `8000`         |
 | `--log-level`         | `APP_LOG_LEVEL`      | `info`         |
 
-직접 바이너리를 실행하면 기본 바인딩은 모든 인터페이스다. 개발 실행 스크립트는 loopback으로 고정한다. Blueprint의 Reference·Template·Blob 경로와 Secret 파일 환경변수는 현재 서버에서 구현되지 않았다.
+직접 바이너리를 실행하면 기본 바인딩은 모든 인터페이스다. 개발 실행 스크립트는 loopback으로 고정한다. Blueprint의 별도 Reference·Template·Blob 저장 경로 환경변수는 현재 서버에서 구현되지 않았다. 암호화 키 파일은 `--secret-key-file` 또는 `APP_SECRET_KEY_FILE`로 지정할 수 있다.
 
 ## 진단과 대응
 
@@ -123,13 +124,13 @@ pnpm build
 
 ## Space 저장·장애 처리
 
-제품 Space는 `/home/space`에서 사용한다. 원본은 설정된 데이터 루트의 `blobs/sha256/`에 저장한다. `.staging`도 같은 Blob 파일시스템에 두며 중단 후 재시작에서 소유 임시 파일만 제거한다. 업로드 실패 시 공개 오류·다시 시도·취소를 제공한다. 전송은 새로고침 후 자동 재개하지 않으며 파일을 다시 선택한다. 파일 확정 후 DB 등록에 실패한 고아 Blob은 자동 삭제하지 않는다.
+제품 Space의 검색은 `/home/space`, 등록·관리는 `/home/space/library`에서 사용한다. 원본은 설정된 데이터 루트의 `blobs/sha256/`에 저장한다. `.staging`도 같은 Blob 파일시스템에 두며 중단 후 재시작에서 소유 임시 파일만 제거한다. 업로드 실패 시 공개 오류·다시 시도·취소를 제공한다. 전송은 새로고침 후 자동 재개하지 않으며 파일을 다시 선택한다. 파일 확정 후 DB 등록에 실패한 고아 Blob은 즉시 삭제하지 않고 시작 시 보존기간·참조·백업 검사 정책에 따라 정리한다.
 
-실제 원본과 SQLite를 함께 백업해야 한다. 현재 자동 백업은 Migration 전 DB 백업이며 전체 Blob 일관 스냅샷·복구 자동화는 아직 없다. 업로드 형식 검사는 제한된 구조 검사다. 외부 도구/OCR 실행·프로세스 격리·완전한 악성 파일 검사는 후속 구현이다.
+실제 원본과 SQLite를 함께 백업해야 한다. 현재 자동 백업은 Migration 전 DB 백업이며 전체 Blob 일관 스냅샷·복구 자동화는 아직 없다. 업로드 형식 검사는 제한된 구조 검사다. 문서 추출·OCR은 번들 도구와 제한된 자식 프로세스를 사용하지만 완전한 악성 파일 검사나 운영 격리 검증의 완료를 의미하지 않는다.
 
 ## LM Studio 연결과 키 운영
 
-1. LM Studio의 서버를 켜고 모델을 준비한다. PuPuTyX Admin → 연결 추가에서 Base URL, 서버가 제공한 모델 ID, timeout을 저장한다.
+1. LM Studio의 서버를 켜고 모델을 준비한다. PreM Admin → 모델 연결 → LLM 탭에서 Provider와 Base URL을 지정하고 모델 목록을 조회해 선택·저장한다.
 2. LM Studio Native의 주소는 `http://127.0.0.1:1234/api/v1` (명시적 호환 연결은 `http://127.0.0.1:1234/v1`), 모델 ID는 `ornith-1.5-35b-a3b`다. LM Studio 파일 메타데이터에서 Q4_K_M(35B A3B)을 확인했다. 양자화 이름을 API 모델 ID에 붙이지 않는다.
 3. 모델 목록 조회 후 텍스트 응답을 테스트한다. 구조화 응답은 해당 API가 지원하는 경우에만 테스트한다. 초기 모델 로딩은 응답 제한 시간에 포함된다. LM Studio에서 인증을 켠 경우에만 API Key를 등록한다.
 4. Pod 안의 127.0.0.1은 Pod 자신이므로 별도 PC의 LM Studio를 사용한다면 서버에서 도달 가능한 내부망 주소를 지정한다. 브라우저가 모델 서버에 직접 접속하지 않는다.
@@ -141,13 +142,13 @@ pnpm build
 실제 모델 수용 검사는 운영 데이터 대신 별도 QA 저장소를 사용한다. 외부 모델 호출이므로 기본 테스트에는 포함하지 않는다.
 
 ```sh
-PUPUTYX_LIVE_LLM_PROTOCOL=lm_studio_native \
-PUPUTYX_LIVE_LLM_URL=http://127.0.0.1:1234/api/v1 \
-PUPUTYX_LIVE_LLM_MODEL=ornith-1.5-35b-a3b \
+PREM_LIVE_LLM_PROTOCOL=lm_studio_native \
+PREM_LIVE_LLM_URL=http://127.0.0.1:1234/api/v1 \
+PREM_LIVE_LLM_MODEL=ornith-1.5-35b-a3b \
 node tests/e2e/provider-live.cjs
 ```
 
-네이티브 검사는 text만 실행한다. 명시적 호환 경로의 text/structured 검사는 PUPUTYX_LIVE_LLM_PROTOCOL=lm_studio 및 /v1 URL로 실행한다. 다른 클라우드 키는 Admin에서 입력하며 실제 자격증명 없는 계약 fixture 검사를 실서비스 수용 검사로 간주하지 않는다. V5 데이터의 V6 업그레이드는 백업 뒤 실행되고 기존 설정·암호문·요청 이력을 유지한다.
+네이티브 검사는 text만 실행한다. 명시적 호환 경로의 text/structured 검사는 PREM_LIVE_LLM_PROTOCOL=lm_studio 및 /v1 URL로 실행한다. 다른 클라우드 키는 Admin에서 입력하며 실제 자격증명 없는 계약 fixture 검사를 실서비스 수용 검사로 간주하지 않는다. V5 데이터의 V6 업그레이드는 백업 뒤 실행되고 기존 설정·암호문·요청 이력을 유지한다.
 
 ## 문서 런타임 준비
 
@@ -163,7 +164,7 @@ PPT 추출 구성 파일은 개별 Blob으로 저장하고 레퍼런스·템플�
 
 ## 과거 자료 검색 운영
 
-Admin → 자료 찾기에서 Decision 또는 구조화 출력 가능한 LLM 연결을 선택한다. 문서 목차 판정 연결과는 별도 설정이다. 연결의 동시성·대기열·timeout이 검색에도 적용되며 저장은 이미 완료된 검색을 재실행하지 않는다. Studio → 과거 자료 찾기에서 명시적으로 시작한다.
+Admin → Decision Model 연결에서 Decision 또는 구조화 출력 가능한 LLM 연결을 선택한다. 문서 목차 판정과 같은 공통 연결을 사용한다. 연결의 동시성·대기열·timeout이 검색에도 적용되며 저장은 이미 완료된 검색을 재실행하지 않는다. Studio → 과거 자료 찾기에서 명시적으로 시작한다.
 
 검색은 DB에 대기/진행/부분 완료 상태를 남긴다. 실패 시 완료 후보를 유지하고 ‘이어서 찾기’가 미완료 후보만 처리한다. 원본·가이드 변경 후 새 검색은 새 snapshot을 사용하며 과거 실행을 바꾸지 않는다. 모델 설정을 바꾼 뒤 새 모델을 적용하려면 새 검색을 실행한다. 기존 실행의 재개는 최초 설정을 유지한다.
 
@@ -171,8 +172,14 @@ LM Studio D3에서 engine_failure가 발생하면 일반 화면의 오류를 ‘
 
 ## Admin 토큰 확인
 
-서버 실행 명령은 그대로 사용한다. HTTP 서버 시작에 성공하면 터미널에 `PuPuTyX Admin token: <64자리 임의 토큰>`을 한 번 표시한다. Admin 입력창에 복사해서 붙여넣는다. 토큰을 잃어버린 경우 서버를 다시 시작해 새 토큰을 확인한다. 다른 프로젝트 데이터와 Provider 설정 암호화 키는 재생성하지 않는다.
+서버 실행 명령은 그대로 사용한다. HTTP 서버 시작에 성공하면 터미널에 `PreM Admin token: <64자리 임의 토큰>`을 한 번 표시한다. Admin 입력창에 복사해서 붙여넣는다. 토큰을 잃어버린 경우 서버를 다시 시작해 새 토큰을 확인한다. 다른 프로젝트 데이터와 Provider 설정 암호화 키는 재생성하지 않는다.
 
 토큰은 구조화 로깅·DB·설정 파일에 기록하지 않는다. 단, 운영자가 CLI 출력을 파일/컨테이너 로그로 리다이렉트하면 시작 출력에도 비밀 정보가 포함되므로 접근을 제한해야 한다. localhost 외 운영 연결은 회사 Ingress의 HTTPS를 사용한다. 비밀 토큰을 URL 인자나 환경변수 기본값으로 제공하는 경로는 없다.
 
 Admin의 일반 설정에서 토큰을 변경할 수 있다. 변경값은 현재 프로세스의 메모리에만 적용된다. 재시작하면 변경값을 복원하지 않고 항상 새로운 CLI 임의 토큰을 발급한다. 토큰 변경이나 재시작이 프로젝트·원본 파일·Provider 설정을 초기화하는 동작은 아니다.
+
+## 날짜 버전 릴리스 패키지
+
+태그는 `vYYYYMMDD`다. Release workflow는 macOS arm64, Ubuntu 24.04 arm64/amd64 네이티브 runner에서 번들 런타임을 설치하고 빌드한다. `package-release.py`가 실행 파일·Node·Python·Kordoc·PPT Master·한국어 OCR 모델·한국어 폰트와 라이선스·파일별 해시를 묶는다. 개발 의존성과 앱 데이터는 배포하지 않는다.
+
+`verify-release.py`는 다른 경로에 풀고 PATH에서 개발 도구를 제거한 환경에서 OCR 모델·Sharp·Python 패키지 로딩, PPTX 생성·PNG 렌더링, HTTP 시작과 재시작을 검증한다. 세 archive와 SHA-256 파일이 draft에 모두 도착한 뒤 릴리스를 게시한다. Linux OS 요구사항은 glibc 2.39 이상, macOS는 14 이상이다. libc/OS 프레임워크와 외부 LLM 추론 서비스는 호스트 책임이다. 파일 이름은 `PreM-vYYYYMMDD-{linux-arm64,linux-amd64,macos-arm64}.tar.gz`다.

@@ -41,7 +41,7 @@ pub async fn request(
 // Existing feature suites authenticate their real HTTP requests with this instance's bootstrap token.
 // Access-control tests deliberately use Application::router directly instead.
 #[allow(dead_code)]
-pub fn router(app: &puputyx_backend::app::Application) -> Router {
+pub fn router(app: &prem_backend::app::Application) -> Router {
     let mut value =
         axum::http::HeaderValue::from_str(&format!("Bearer {}", app.admin_token())).unwrap();
     value.set_sensitive(true);

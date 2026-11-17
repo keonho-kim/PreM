@@ -4,8 +4,13 @@
 // Related: slide-evidence.tsx, api.ts, mock/js/views/presentations.js.
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { MaterialSources } from './material-sources';
+import { MaterialInsertion } from './material-insertion';
 import { SlideEvidence } from './slide-evidence';
 import { SlideChat } from './slide-chat';
+import { ObjectTools } from './object-tools';
+import { useChatDrafts } from './chat-drafts';
+import type { EditThread } from './use-edit-thread';
 import type { Slide, Run } from './api';
 export function DeckInspector({
   project,
@@ -13,6 +18,12 @@ export function DeckInspector({
   slide,
   active,
   canEdit,
+  targetSlides,
+  objectIds,
+  onObjectSelect,
+  history,
+  session,
+  previewing,
   onResult,
 }: {
   project: string;
@@ -20,6 +31,12 @@ export function DeckInspector({
   slide: Slide | undefined;
   active: boolean;
   canEdit: boolean;
+  targetSlides: Slide[];
+  objectIds: string[];
+  onObjectSelect: (id: string, multiple: boolean) => void;
+  history: EditThread;
+  session: string | null;
+  previewing: boolean;
   onResult: (id: string) => void;
 }) {
   const [tab, setTab] = useState('chat');
@@ -27,7 +44,8 @@ export function DeckInspector({
     <Tabs value={tab} onValueChange={setTab} activationMode="manual">
       <TabsList aria-label="슬라이드 도구">
         <TabsTrigger value="chat">AI와 대화</TabsTrigger>
-        <TabsTrigger value="content">내용·메모</TabsTrigger>
+        <TabsTrigger value="objects">객체</TabsTrigger>
+        <TabsTrigger value="content">내용</TabsTrigger>
         <TabsTrigger value="references">참고 자료</TabsTrigger>
       </TabsList>
       <TabsContent className="slide-chat-tab" value="chat" forceMount hidden={tab !== 'chat'}>
@@ -38,14 +56,44 @@ export function DeckInspector({
             run={run}
             slide={slide}
             canEdit={canEdit}
-            active={active && tab === 'chat'}
+            targetSlides={targetSlides}
+            objectIds={objectIds}
+            history={history}
+            session={session}
+            reviewing={previewing}
             onResult={onResult}
           />
         ) : (
           <p>슬라이드를 준비하고 있습니다.</p>
         )}
       </TabsContent>
+      <TabsContent value="objects" forceMount hidden={tab !== 'objects'}>
+        {slide && (
+          <ObjectTools
+            key={`${run.id}:${slide.id}`}
+            project={project}
+            slide={slide}
+            active={active && tab === 'objects'}
+            editable={canEdit && run.is_current && run.status === 'succeeded' && !previewing}
+            selected={objectIds}
+            onSelect={onObjectSelect}
+            onAsk={(prompt, keepSelection) => {
+              if (!keepSelection) onObjectSelect('', false);
+              useChatDrafts.getState().update(`${project}:${run.id}:${slide.id}`, { prompt });
+              setTab('chat');
+            }}
+          />
+        )}
+      </TabsContent>
       <TabsContent value="content" forceMount hidden={tab !== 'content'}>
+        {slide && (
+          <MaterialSources
+            project={project}
+            run={run.id}
+            slide={slide.id}
+            active={active && tab === 'references'}
+          />
+        )}
         {slide?.spec ? (
           <div className="presentation-inspector-copy">
             <p className="field-hint">슬라이드 {slide.position}</p>
@@ -63,6 +111,25 @@ export function DeckInspector({
         )}
       </TabsContent>
       <TabsContent value="references" forceMount hidden={tab !== 'references'}>
+        {slide && (
+          <MaterialInsertion
+            key={`${run.id}:${slide.id}`}
+            project={project}
+            run={run}
+            slide={slide.id}
+            editable={canEdit}
+            session={session}
+            onResult={onResult}
+          />
+        )}
+        {slide && (
+          <MaterialSources
+            project={project}
+            run={run.id}
+            slide={slide.id}
+            active={active && tab === 'references'}
+          />
+        )}
         {slide?.spec ? (
           <SlideEvidence
             key={slide.id}

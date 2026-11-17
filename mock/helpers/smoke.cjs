@@ -13,7 +13,7 @@ const { openBrowser, projectRoot, artifacts, baseURL } = require('./browser.cjs'
   fs.mkdirSync(qa, { recursive: true });
   const downloads = path.join(qa, 'downloads');
   fs.mkdirSync(downloads, { recursive: true });
-  fs.rmSync(path.join(downloads, 'PuPuTyX-mock-presentation.json'), { force: true });
+  fs.rmSync(path.join(downloads, 'PreM-mock-presentation.json'), { force: true });
   fs.copyFileSync(
     path.join(__dirname, 'fixtures/선택한-원본.pdf'),
     path.join(qa, '선택한-원본.pdf'),
@@ -35,7 +35,7 @@ const { openBrowser, projectRoot, artifacts, baseURL } = require('./browser.cjs'
     )
       backendRequests.push(request.url());
   });
-  const state = () => page.evaluate(() => window.PuPuTyXMock.snapshot());
+  const state = () => page.evaluate(() => window.PreMMock.snapshot());
   const fill = async (selector, value) => {
     await page.$eval(selector, (element) => {
       element.value = '';
@@ -47,7 +47,7 @@ const { openBrowser, projectRoot, artifacts, baseURL } = require('./browser.cjs'
     await page.goto(new URL('#view=' + view + '&project=platform' + extra, baseURL).href, {
       waitUntil: 'networkidle0',
     });
-    await page.waitForFunction(() => !!window.PuPuTyXMock);
+    await page.waitForFunction(() => !!window.PreMMock);
     await page.waitForSelector('#main-title');
   };
   const navigate = async (view, extra = '') => {
@@ -155,7 +155,7 @@ const { openBrowser, projectRoot, artifacts, baseURL } = require('./browser.cjs'
     assert.equal((await state()).runs.at(-1).step, pausedStep);
     await page.click('[data-action="toggle-run"]');
     await page.waitForFunction(
-      () => window.PuPuTyXMock.snapshot().runs.at(-1).status === 'completed',
+      () => window.PreMMock.snapshot().runs.at(-1).status === 'completed',
       { timeout: 12000 },
     );
     snapshot = await state();
@@ -206,7 +206,7 @@ const { openBrowser, projectRoot, artifacts, baseURL } = require('./browser.cjs'
     await page.click('.heading-actions [data-action="export"]');
     await page.click('[data-action="download-json"]');
     await completedDownload;
-    const exportedPath = path.join(downloads, 'PuPuTyX-mock-presentation.json');
+    const exportedPath = path.join(downloads, 'PreM-mock-presentation.json');
     const exported = JSON.parse(fs.readFileSync(exportedPath, 'utf8'));
     assert.equal(exported.mock, true);
     assert.equal(exported.version, 3);
@@ -248,7 +248,7 @@ const { openBrowser, projectRoot, artifacts, baseURL } = require('./browser.cjs'
       n.dispatchEvent(new Event('input', { bubbles: true }));
     });
     await page.click('#app-dialog button[type="submit"]');
-    await page.waitForFunction(() => window.PuPuTyXMock.snapshot().projects.length === 4);
+    await page.waitForFunction(() => window.PreMMock.snapshot().projects.length === 4);
     assert.equal((await state()).projects[0].documents.length, 1);
     assert.equal(await page.evaluate(() => window.__mockXss), undefined);
     assert.equal(await page.$$eval('img', (nodes) => nodes.length), 0);
@@ -270,7 +270,7 @@ const { openBrowser, projectRoot, artifacts, baseURL } = require('./browser.cjs'
     await navigate('admin', '&tab=system');
     await page.click('[data-action="reset-confirm"]');
     await page.click('[data-action="reset"]');
-    await page.waitForFunction(() => window.PuPuTyXMock.snapshot().projects.length === 3);
+    await page.waitForFunction(() => window.PreMMock.snapshot().projects.length === 3);
     await navigate('editor', '&deck=deck1');
     await page.click('.editor-stage [data-edit-field="title"]');
     await page.$eval('.editor-stage [data-edit-field="title"]', (node) => {

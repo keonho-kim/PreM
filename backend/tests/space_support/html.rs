@@ -10,10 +10,10 @@ use axum::{
     body::{Body, to_bytes},
     http::{Request, StatusCode},
 };
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use tower::ServiceExt;
 use uuid::Uuid;
-const HTML: &str = "<!DOCTYPE html><html lang='ko'><meta charset='utf-8'><title>팀 문서</title><body><h1>안내</h1><script>window.puputyxHtmlExecuted=true</script><img src='https://html-fixture.invalid/tracker'></body></html>";
+const HTML: &str = "<!DOCTYPE html><html lang='ko'><meta charset='utf-8'><title>팀 문서</title><body><h1>안내</h1><script>window.premHtmlExecuted=true</script><img src='https://html-fixture.invalid/tracker'></body></html>";
 #[tokio::test]
 async fn html_originals_are_download_only_versioned_and_survive_restart() {
     let root = common::storage();

@@ -44,24 +44,10 @@ pub(in crate::adapters::sqlite::presentations) fn context(
                 json!({"id":c.block_id,"text":&c.text[..end]})
             })
             .collect::<Vec<_>>();
-    let history=db.prepare("SELECT prompt,message FROM presentation_edits WHERE project_id=?1 AND presentation_id=?2 AND node_id=(SELECT node_id FROM presentation_edits WHERE id=?3) AND status='applied' ORDER BY created_at DESC,id DESC LIMIT 3").map_err(failure)?.query_map(params![e.project_id.to_string(),e.presentation_id.to_string(),e.id.to_string()],|r|Ok(json!({"user":r.get::<_,String>(0)?,"assistant":r.get::<_,Option<String>>(1)?}))).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
+    let history=db.prepare("SELECT e.prompt,e.message FROM presentation_edits e JOIN presentation_slide_versions s ON s.id=e.source_slide_id WHERE e.project_id=?1 AND e.presentation_id=?2 AND s.slide_key=(SELECT s2.slide_key FROM presentation_edits e2 JOIN presentation_slide_versions s2 ON s2.id=e2.source_slide_id WHERE e2.id=?3) AND e.status='applied' ORDER BY e.created_at DESC,e.id DESC LIMIT 3").map_err(failure)?.query_map(params![e.project_id.to_string(),e.presentation_id.to_string(),e.id.to_string()],|r|Ok(json!({"user":r.get::<_,String>(0)?,"assistant":r.get::<_,Option<String>>(1)?}))).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
     Ok(
-        json!({"source_excerpts":sources,"previous_applied_requests":history.into_iter().rev().collect::<Vec<_>>()}),
+        json!({"source_excerpts":sources,"available_references":e.references.iter().map(|m|json!({"reference_id":m.id,"title":m.title,"kind":m.kind,"text":m.text.as_deref().unwrap_or("").chars().take(500).collect::<String>()})).collect::<Vec<_>>(),"previous_applied_requests":history.into_iter().rev().collect::<Vec<_>>()}),
     )
-}
-pub(in crate::adapters::sqlite::presentations) fn ready(
-    db: &mut rusqlite::Connection,
-    e: Edit,
-    blob: DerivedBlob,
-    message: String,
-    request: Uuid,
-) -> Result<(), Error> {
-    let tx = db.transaction().map_err(failure)?;
-    active(&tx, &e)?;
-    super::super::plans::blob(&tx, &blob, "application/json", "json")?;
-    tx.execute("UPDATE presentation_edits SET status='ready',version=version+1,lease=NULL,lease_until=NULL,message=?,proposed_spec_sha256=?,request_id=? WHERE id=?",params![message,blob.sha256,request.to_string(),e.id.to_string()]).map_err(failure)?;
-    tx.commit().map_err(failure)?;
-    Ok(())
 }
 pub(in crate::adapters::sqlite::presentations) fn fail(
     db: &mut rusqlite::Connection,
@@ -78,6 +64,7 @@ pub(in crate::adapters::sqlite::presentations) fn command(
     key: Uuid,
     version: i64,
     action: String,
+    session: Option<Uuid>,
 ) -> Result<Edit, Error> {
     let tx = db.transaction().map_err(failure)?;
     preparation::project(&tx, p, true)?;
@@ -95,7 +82,7 @@ pub(in crate::adapters::sqlite::presentations) fn command(
         }
         "apply" if e.status == "ready" => {
             current(&tx, &e)?;
-            apply::create(&tx, &e)?;
+            apply::create(&tx, &e, session)?;
             "applying"
         }
         _ => return Err(Error::Conflict),

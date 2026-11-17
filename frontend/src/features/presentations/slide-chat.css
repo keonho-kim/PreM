@@ -16,23 +16,8 @@
   block-size: max(520px, var(--pane-height));
   min-inline-size: 0;
 }
-.slide-chat-options {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
-}
-.slide-chat-options > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-}
-.slide-chat-options label {
-  font-size: 12px;
-}
-.slide-chat-options [role="combobox"] > span {
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.slide-chat-target {
+  margin: 0;
 }
 .slide-chat .slide-chat-thread {
   flex: 1;
@@ -92,36 +77,9 @@
 .slide-edit-proposal {
   min-inline-size: 0;
 }
-.slide-edit-difference {
-  margin: 0;
-  padding: 12px 0;
-}
-.slide-edit-difference > div {
-  padding-block: 12px;
-  border-block-end: 1px solid var(--color-rule);
-}
-.slide-edit-difference dt {
-  font-size: 13px;
-  font-weight: 600;
-}
-.slide-edit-difference dd {
-  margin: 8px 0 0;
-}
-.slide-edit-difference dd > span {
-  font-size: 12px;
-  color: var(--color-muted);
-}
-.slide-edit-difference p {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  margin-block: 4px 12px;
-}
 @media (max-width: 640px) {
   .slide-chat {
     block-size: 600px;
-  }
-  .slide-chat-options {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -130,8 +88,7 @@
   }
 }
 @media (forced-colors: active) {
-  .slide-chat [data-slot="input-group"],
-  .slide-edit-difference > div {
+  .slide-chat [data-slot="input-group"] {
     border-color: CanvasText;
   }
 }

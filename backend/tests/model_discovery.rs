@@ -7,7 +7,7 @@ mod native_support;
 use axum::http::StatusCode;
 use common::request;
 use native_support::Fixture;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use rusqlite::Connection;
 use serde_json::json;
 use uuid::Uuid;

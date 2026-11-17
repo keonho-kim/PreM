@@ -1,0 +1,37 @@
+/* Hallmark · Folio: saved outline and content preparation steps. */
+/* Purpose: Distinguish composition from revision saving with quiet, readable status rows.
+ * Pattern: Shrinkable text tracks; current steps remain visible in forced colors.
+ * Usage: WorkflowStatus inside Studio's outline generation workspace.
+ * Related: workflow-status.tsx, outlines.css, Folio generated tokens. */
+.outline-workflow-status {
+  flex-basis: 100%;
+  min-inline-size: 0;
+  display: grid;
+  gap: 8px;
+}
+.outline-workflow-status ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.outline-workflow-status li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.outline-workflow-status svg {
+  inline-size: 16px;
+  block-size: 16px;
+}
+.outline-workflow-status [aria-current="step"] {
+  font-weight: 600;
+}
+@media (forced-colors: active) {
+  .outline-workflow-status [aria-current="step"] {
+    outline: 1px solid Highlight;
+  }
+}

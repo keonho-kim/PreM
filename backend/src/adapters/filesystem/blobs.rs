@@ -42,7 +42,7 @@ impl Blobs {
             if entry
                 .file_name()
                 .to_string_lossy()
-                .starts_with(".puputyx-upload-")
+                .starts_with(".prem-upload-")
             {
                 anyhow::ensure!(entry.file_type()?.is_file(), "invalid staging entry");
                 root.remove_file(Path::new(".staging").join(entry.file_name()))?;
@@ -138,7 +138,7 @@ impl BlobStorage for Blobs {
                     return Err(Error::NoSpace);
                 }
                 let file = tempfile::Builder::new()
-                    .prefix(".puputyx-upload-")
+                    .prefix(".prem-upload-")
                     .tempfile_in(path.join(".staging"))
                     .map_err(io_error)?;
                 let writer =

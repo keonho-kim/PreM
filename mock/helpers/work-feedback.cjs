@@ -1,6 +1,6 @@
 // Purpose: Verify mock task docking, local-only progress and toast separation without a server.
 // Pattern: Real browser/file URL with metadata-only fixtures and owned helper artifacts.
-// Usage: node mock/helpers/work-feedback.cjs with PUPUTYX_BROWSER_TOOLS configured.
+// Usage: node mock/helpers/work-feedback.cjs with PREM_BROWSER_TOOLS configured.
 // Related: mock/js/feedback.js, app-events.js, mock/styles/feedback.css.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

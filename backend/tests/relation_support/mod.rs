@@ -3,7 +3,7 @@
 // Usage: related_documents.rs and related_recovery.rs.
 // Related: modules/relations/, document_support/, common/.
 use axum::{Json, Router, extract::State, routing::post};
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use std::sync::{
     Arc, Mutex,
@@ -57,6 +57,25 @@ impl Drop for Active {
     }
 }
 async fn evaluate(State(m): State<Arc<Model>>, Json(v): Json<Value>) -> Json<Value> {
+    let native = v.get("state").is_some();
+    let payload = if native {
+        v.clone()
+    } else {
+        serde_json::from_str::<Value>(v["messages"][1]["content"].as_str().unwrap()).unwrap()
+    };
+    if payload["state"].get("regions").is_some() {
+        let answers = payload["questions"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(|id| (id.clone(), if native { json!({"type":"choice","choice":"0","probabilities":{"0":0.9,"1":0.1},"confidence":0.9}) } else { json!({"type":"choice","choice":"0"}) }))
+            .collect::<serde_json::Map<_, _>>();
+        return Json(if native {
+            json!({"model":v["model"],"answers":answers})
+        } else {
+            json!({"choices":[{"finish_reason":"stop","message":{"content":json!({"answers":answers}).to_string()}}]})
+        });
+    }
     m.calls.fetch_add(1, Ordering::SeqCst);
     let active = m.active.fetch_add(1, Ordering::SeqCst) + 1;
     m.peak.fetch_max(active, Ordering::SeqCst);
@@ -184,7 +203,7 @@ pub async fn prepared(app: &Application, p: &str, item: &Value) {
         app,
         &format!("project-{p}"),
         item["id"].as_str().unwrap(),
-        "waiting_configuration",
+        "succeeded",
     )
     .await;
 }

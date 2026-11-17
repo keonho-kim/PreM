@@ -76,7 +76,7 @@ const { openBrowser, baseURL, projectRoot } = require('./browser.cjs');
       n.dispatchEvent(new Event('input', { bubbles: true }));
     });
     await p.click('#app-dialog button[type="submit"]');
-    await p.waitForFunction(() => PuPuTyXMock.snapshot().projects.length === 4);
+    await p.waitForFunction(() => PreMMock.snapshot().projects.length === 4);
     await p.evaluate(() => {
       location.hash = 'view=projects';
     });

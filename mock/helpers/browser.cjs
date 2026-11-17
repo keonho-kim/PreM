@@ -8,17 +8,17 @@ const { createRequire } = require('node:module');
 
 const projectRoot = path.resolve(__dirname, '../..');
 const artifacts = path.join(__dirname, '.artifacts');
-const baseURL = process.env.PUPUTYX_MOCK_URL || 'http://127.0.0.1:5174/';
+const baseURL = process.env.PREM_MOCK_URL || 'http://127.0.0.1:5174/';
 async function openBrowser(name) {
-  const toolRequire = process.env.PUPUTYX_BROWSER_TOOLS
-    ? createRequire(path.join(process.env.PUPUTYX_BROWSER_TOOLS, 'noop.js'))
+  const toolRequire = process.env.PREM_BROWSER_TOOLS
+    ? createRequire(path.join(process.env.PREM_BROWSER_TOOLS, 'noop.js'))
     : require;
   let puppeteer;
   try {
     puppeteer = toolRequire('puppeteer-core');
   } catch {
     throw new Error(
-      'Set PUPUTYX_BROWSER_TOOLS to a development tools directory containing puppeteer-core.',
+      'Set PREM_BROWSER_TOOLS to a development tools directory containing puppeteer-core.',
     );
   }
   const chrome = [
@@ -38,8 +38,15 @@ async function openBrowser(name) {
     env: { ...process.env, TMPDIR: temporary },
   });
   const close = async () => {
-    await browser.close();
-    fs.rmSync(profile, { recursive: true, force: true });
+    try {
+      await browser.close();
+    } finally {
+      // Chrome crash reporting/updater descendants can inherit these pipes after Chrome exits.
+      // Release our readers so a finished QA journey does not retain the Node event loop.
+      browser.process()?.stdout?.destroy();
+      browser.process()?.stderr?.destroy();
+      fs.rmSync(profile, { recursive: true, force: true });
+    }
   };
   return { browser, close };
 }

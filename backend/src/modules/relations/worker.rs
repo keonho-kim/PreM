@@ -6,59 +6,37 @@ use super::*;
 use futures_util::{StreamExt, stream};
 use tokio_util::sync::CancellationToken;
 impl Relations {
-    pub fn start(&self, stop: CancellationToken) -> tokio::task::JoinHandle<()> {
+    pub fn start(
+        &self,
+        stop: CancellationToken,
+        engine: crate::workflows::engine::Engine,
+    ) -> tokio::task::JoinHandle<()> {
         let service = self.clone();
         tokio::spawn(async move {
-            loop {
-                if stop.is_cancelled() {
-                    break;
-                }
-                match service.store.claim().await {
-                    Ok(Some(run)) => service.run(run, stop.child_token()).await,
-                    Ok(None) => {
-                        tokio::select! {()=stop.cancelled()=>break,()=tokio::time::sleep(std::time::Duration::from_millis(600))=>()}
-                    }
-                    Err(e) => {
-                        tracing::warn!(%e,"related search admission failed");
-                        tokio::select! {()=stop.cancelled()=>break,()=tokio::time::sleep(std::time::Duration::from_secs(2))=>()}
-                    }
-                }
+            while !stop.is_cancelled() {
+                engine.tick(service.clone(), stop.clone()).await;
+                tokio::select! {()=stop.cancelled()=>break,()=tokio::time::sleep(std::time::Duration::from_millis(600))=>()}
             }
         })
     }
-    async fn run(&self, run: Run, cancel: CancellationToken) {
-        let monitor = self.clone();
-        let watched = run.clone();
-        let token = cancel.clone();
-        let heartbeat = tokio::spawn(async move {
-            loop {
-                tokio::select! {()=token.cancelled()=>break,()=tokio::time::sleep(std::time::Duration::from_secs(2))=>{
-                if !matches!(monitor.store.heartbeat(watched.clone()).await,Ok(true)){token.cancel();break}
-                }}
-            }
-        });
+    pub(super) async fn review(&self, run: &Run, cancel: CancellationToken) -> Result<(), Error> {
         let result = if let Some(deadline) = run.deadline {
             tokio::time::timeout(
                 std::time::Duration::from_millis(deadline.saturating_sub(now()).max(1) as u64),
-                self.explore(&run, cancel.clone()),
+                self.explore(run, cancel.clone()),
             )
             .await
             .unwrap_or(Err(Error::Model("search_budget_exhausted")))
         } else {
-            self.explore(&run, cancel.clone()).await
+            self.explore(run, cancel).await
         };
-        cancel.cancel();
-        let _ = heartbeat.await;
-        let (status, error) = match result {
-            Ok(()) => ("succeeded", None),
-            Err(Error::Cancelled) => ("queued", Some("interrupted".into())),
+        match result {
+            Ok(()) => self.store.reviewed(run.clone(), false).await,
             Err(Error::Model("search_budget_exhausted")) => {
-                ("succeeded", Some("search_budget_exhausted".into()))
+                self.store.reviewed(run.clone(), true).await
             }
-            Err(Error::Model(code)) => ("failed", Some(code.into())),
-            Err(_) => ("failed", Some("relation_search_failed".into())),
-        };
-        let _ = self.store.finish(run, status.into(), error).await;
+            Err(e) => Err(e),
+        }
     }
     async fn explore(&self, run: &Run, cancel: CancellationToken) -> Result<(), Error> {
         if run.exploration.is_none() {

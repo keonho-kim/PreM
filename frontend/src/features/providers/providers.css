@@ -32,8 +32,8 @@
   gap: 12px;
 }
 .provider-summary {
-  padding-block: 28px;
-  border-block-end: 1px solid var(--color-rule);
+  padding-block: 20px 0;
+  border: 0;
 }
 .provider-form {
   max-inline-size: 680px;
@@ -274,4 +274,25 @@
   .provider-family-tabs [role="tab"][aria-selected="true"] {
     border-bottom-color: Highlight;
   }
+}
+
+.provider-credentials {
+  display: grid;
+  gap: 16px;
+}
+.provider-credentials > div {
+  display: grid;
+  gap: 8px;
+}
+.provider-form > .form-message:empty {
+  min-block-size: 0;
+  margin: 0;
+}
+.provider-summary h2 {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.provider-credentials[hidden] {
+  display: none;
 }

@@ -2,7 +2,7 @@
 // Pattern: Feature factory with an explicit application context.
 // Usage: Registered before mock/app.js by mock/index.html.
 // Related: mock/app.js, mock/index.html.
-window.PuPuTyXModules.data = (context) => {
+window.PreMModules.data = (context) => {
   'use strict';
   const { clone, uid } = context;
   const guideFields = [
@@ -57,7 +57,7 @@ window.PuPuTyXModules.data = (context) => {
   const templateLibrary = [
     {
       id: 'standard',
-      name: 'PuPuTyX 기본',
+      name: 'PreM 기본',
       kind: 'Brand / Deck',
       note: '흰 문서 표면과 선명한 핵심 메시지',
       theme: '',
@@ -256,7 +256,7 @@ window.PuPuTyXModules.data = (context) => {
     const p2 = newProject('knowledge', '신입사원 온보딩 안내');
     const p3 = newProject('workshop', '팀 워크숍 준비');
     p3.status = 'archived';
-    const dates = window.PuPuTyXModules.projectDates;
+    const dates = window.PreMModules.projectDates;
     p.endDate = dates.shift(14);
     p2.endDate = dates.shift(7);
     p3.endDate = dates.shift(-3);

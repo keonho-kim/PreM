@@ -1,0 +1,123 @@
+/* Hallmark · Folio: direct manipulation lives on the document paper. */
+/* Purpose: Provide quiet accessible drag targets and touch-sized resizing handles.
+ * Pattern: Opaque source artwork, neutral chrome and visible focus; no decorative canvas effects.
+ * Usage: DeckCanvas, ObjectSelection and direct command controls.
+ * Related: object-workbench.css, canvas-controls.tsx. */
+.canvas-object-target {
+  pointer-events: auto;
+}
+.slide-object-selection .canvas-object-handle {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.slide-object-selection .canvas-object-handle:active {
+  cursor: grabbing;
+}
+.canvas-object-target.is-selected {
+  z-index: 5;
+}
+.canvas-resize-handle::after {
+  content: "";
+  position: absolute;
+  inline-size: 10px;
+  block-size: 10px;
+  inset-inline-start: calc(50% - 5px);
+  inset-block-start: calc(50% - 5px);
+  background: var(--color-paper);
+  border: 2px solid var(--color-focus);
+}
+.canvas-object-target .canvas-resize-handle {
+  inline-size: 44px !important;
+  block-size: 44px !important;
+}
+.canvas-command-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding-block: 8px;
+}
+.canvas-position-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.canvas-position-form > footer,
+.canvas-position-form > p {
+  grid-column: 1 / -1;
+}
+.blank-template-preview {
+  inline-size: min(100%, 400px);
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+}
+@media (forced-colors: active) {
+  .canvas-resize-handle::after {
+    background: Canvas;
+    border-color: Highlight;
+  }
+}
+.presentation-thumb-actions-owner {
+  position: relative;
+}
+.slide-overflow {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: 4px;
+  background: var(--color-paper);
+}
+
+.slide-object-selection,
+.canvas-command-strip {
+  min-inline-size: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.canvas-artwork-layers {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+.canvas-artwork-layers img {
+  position: absolute;
+  max-inline-size: none;
+  object-fit: fill;
+}
+
+.slide-object-selection .canvas-object-handle[aria-pressed="true"] {
+  border-color: var(--color-focus);
+}
+
+.presentation-thumbnails {
+  position: relative;
+  min-inline-size: 0;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  contain: layout inline-size;
+}
+.presentation-thumb-actions-owner {
+  flex: none;
+  inline-size: 100%;
+}
+@media (max-width: 640px) {
+  .presentation-thumb-actions-owner {
+    inline-size: 144px;
+  }
+}
+@media (forced-colors: active) {
+  .slide-object-selection .canvas-object-handle[aria-pressed="true"] {
+    border-color: Highlight;
+  }
+}
+
+.canvas-file-input[hidden] {
+  display: none;
+}

@@ -1,0 +1,16 @@
+/* Hallmark · Folio: shared decision settings. */
+/* Purpose: Separate the shared model selection from connection editing.
+ * Pattern: Ruled section with explicit spacing and bounded form width.
+ * Usage: Imported by settings.tsx.
+ * Related: providers/providers.css. */
+.processing-settings {
+  display: grid;
+  gap: 20px;
+  max-inline-size: 800px;
+  margin-block-start: 40px;
+  padding-block-start: 28px;
+  border-block-start: 1px solid var(--color-rule);
+}
+.processing-settings > button {
+  justify-self: start;
+}

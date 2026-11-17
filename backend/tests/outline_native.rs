@@ -9,7 +9,7 @@ mod outline_support;
 mod space_support;
 use axum::{Json, Router, routing::post};
 use outline_support::*;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use std::sync::{
     Arc,

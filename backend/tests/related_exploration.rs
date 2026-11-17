@@ -10,7 +10,7 @@ mod relation_support;
 #[allow(dead_code)]
 mod space_support;
 use common::request;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use relation_support::*;
 use serde_json::json;
 use std::sync::atomic::Ordering;
@@ -21,6 +21,7 @@ async fn ambiguous_excerpt_reads_neighbors_and_retains_original_assessment() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
+    register(&app, &f).await;
     let target = setup(&app, 1).await;
     let old = project(&app, "문맥이 필요한 원본").await;
     let text = format!(
@@ -29,7 +30,7 @@ async fn ambiguous_excerpt_reads_neighbors_and_retains_original_assessment() {
     );
     let item = upload(&app, &old, &text).await;
     prepared(&app, &old, &item).await;
-    register(&app, &f).await;
+
     let run = start(&app, &target, "efficiency").await;
     let id = run["id"].as_str().unwrap();
     let done = wait(&app, &target, id, "succeeded").await;
@@ -99,6 +100,7 @@ async fn query_planner_pulls_missing_document_and_invalid_output_preserves_check
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
+    let decision = register(&app, &f).await;
     let target = setup(&app, 0).await;
     let past = project(&app, "후속 자료").await;
     let bridge = upload(&app, &past, "BRIDGE_TOKEN exact baseline report").await;
@@ -107,7 +109,7 @@ async fn query_planner_pulls_missing_document_and_invalid_output_preserves_check
     prepared(&app, &past, &fill).await;
     let uncertain = upload(&app, &past, "efficiency NEEDS_MORE lacking original report").await;
     prepared(&app, &past, &uncertain).await;
-    let decision = register(&app, &f).await;
+
     let planner = planning(&app, &f).await;
     let (s, v) = request(
         &crate::common::router(&app),
@@ -196,10 +198,13 @@ async fn expired_workspace_stops_without_spending_more_model_calls() {
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let f = Fixture::start().await;
+    register(&app, &f).await;
     let target = setup(&app, 1).await;
+    app.shutdown().await.unwrap();
+    let mut app = Application::open(root.path()).unwrap();
     let run = start(&app, &target, "efficiency").await;
     let id = run["id"].as_str().unwrap();
-    assert_eq!(run["status"], "waiting_configuration");
+    assert_eq!(run["status"], "queued");
     let db = rusqlite::Connection::open(root.path().join("db/app.sqlite")).unwrap();
     db.execute(
         "UPDATE relation_workspaces SET deadline_at=1 WHERE run_id=?",
@@ -207,7 +212,8 @@ async fn expired_workspace_stops_without_spending_more_model_calls() {
     )
     .unwrap();
     drop(db);
-    register(&app, &f).await;
+
+    app.start_processing();
     let done = wait(&app, &target, id, "succeeded").await;
     assert_eq!(done["exploration"]["stop_reason"], "budget");
     assert_eq!(done["completed"], 0);

@@ -37,7 +37,7 @@ pub(super) fn heartbeat(db: &mut rusqlite::Connection, r: Run) -> Result<bool, E
         == 1)
 }
 pub(super) fn fail(db: &mut rusqlite::Connection, r: Run, code: String) -> Result<(), Error> {
-    db.execute("UPDATE outline_runs SET status=CASE WHEN ?1='interrupted' THEN 'queued' ELSE 'failed' END,error_code=?1,lease=NULL,lease_until=NULL,version=version+1 WHERE id=?2 AND lease=?3 AND status='running'",params![code,r.id.to_string(),r.lease]).map_err(failure)?;
+    db.execute("UPDATE outline_runs SET status=CASE WHEN ?1='interrupted' AND attempt<3 THEN 'queued' ELSE 'failed' END,error_code=?1,lease=NULL,lease_until=NULL,version=version+1 WHERE id=?2 AND lease=?3 AND status='running'",params![code,r.id.to_string(),r.lease]).map_err(failure)?;
     Ok(())
 }
 pub(super) fn command(

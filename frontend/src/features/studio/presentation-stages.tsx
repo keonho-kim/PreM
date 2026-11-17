@@ -2,11 +2,14 @@
 // Pattern: Step visibility preserves generation drafts while preparation remains Query-owned.
 // Usage: StudioWorkspace supplies server state and explicit step transitions.
 // Related: features/presentations/, features/related-documents/, stepper.tsx.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { presentationKeys } from '@/features/presentations';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { RelatedDocuments } from '@/features/related-documents';
 import {
   EvidenceConfirmation,
+  BlankForm,
   TemplateChoice,
   PresentationGeneration,
   type getPreparation,
@@ -22,6 +25,7 @@ export function PresentationStages({
   ready,
   editable,
   onContinue,
+  blank = false,
 }: {
   project: string;
   name: string;
@@ -30,7 +34,10 @@ export function PresentationStages({
   ready: boolean;
   editable: boolean;
   onContinue: (step: StudioStep) => void;
+  blank?: boolean;
 }) {
+  const client = useQueryClient();
+  const [started, setStarted] = useState(false);
   const active = ['evidence', 'template', 'generation'].includes(step);
   const state = preparation.data;
   const root = useRef<HTMLDivElement>(null);
@@ -76,13 +83,28 @@ export function PresentationStages({
             />
           )}
           <div hidden={step !== 'generation'}>
-            <PresentationGeneration
-              project={project}
-              name={name}
-              state={state}
-              editable={editable}
-              active={step === 'generation'}
-            />
+            {blank && !started ? (
+              <BlankForm
+                project={project}
+                name={name}
+                template={state.template_job_id}
+                editable={editable}
+                active={step === 'generation'}
+                busy={false}
+                onCreated={() => {
+                  setStarted(true);
+                  void client.invalidateQueries({ queryKey: presentationKeys.all });
+                }}
+              />
+            ) : (
+              <PresentationGeneration
+                project={project}
+                name={name}
+                state={state}
+                editable={editable}
+                active={step === 'generation'}
+              />
+            )}
           </div>
         </>
       )}

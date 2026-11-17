@@ -74,8 +74,6 @@ async function poll(check) {
     assert.equal(await a.$eval('button[aria-label="목차·내용"]', (n) => n.disabled), true);
     await click(a, '저장하고 목차로');
     await a.waitForSelector('#outline-model', { visible: true });
-    await click(a, '작성에 사용할 AI', 'combobox');
-    await click(a, '목차 작성 AI', 'option');
     await click(a, '목차 만들기');
     await poll(async () => (await read()).version === 1);
     await a.waitForFunction(

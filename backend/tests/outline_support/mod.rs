@@ -2,8 +2,9 @@
 // Pattern: Synthetic source content, loopback inference, isolated app storage and held/failing calls.
 // Usage: Outline lifecycle tests; no live model credentials or application data.
 // Related: outlines.rs, outline_recovery.rs, common/, space_support/.
+mod edit;
 use axum::{Json, Router, extract::State, http::StatusCode, response::IntoResponse, routing::post};
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use std::sync::{
     Arc,
@@ -13,6 +14,7 @@ use tokio::sync::Notify;
 use uuid::Uuid;
 #[derive(Default)]
 pub struct Model {
+    pub budgets: std::sync::Mutex<Vec<u64>>,
     pub calls: AtomicUsize,
     pub maps: AtomicUsize,
     pub slides: AtomicUsize,
@@ -49,6 +51,10 @@ async fn complete(
     State(m): State<Arc<Model>>,
     Json(body): Json<Value>,
 ) -> axum::response::Response {
+    m.budgets
+        .lock()
+        .unwrap()
+        .push(body["max_tokens"].as_u64().unwrap());
     m.calls.fetch_add(1, Ordering::SeqCst);
     m.entered.notify_one();
     if m.hold.load(Ordering::SeqCst) {
@@ -57,24 +63,13 @@ async fn complete(
     let input: Value =
         serde_json::from_str(body["messages"][1]["content"].as_str().unwrap()).unwrap();
     if input["task"] == "slide_edit" {
-        let mut changes = serde_json::Map::new();
-        for field in input["selected_fields"].as_array().unwrap() {
-            let name = field.as_str().unwrap();
-            changes.insert(
-                name.into(),
-                if name == "title" {
-                    json!("수정된 제목")
-                } else if name == "bullets" {
-                    json!(["간결하게 정리한 본문"])
-                } else {
-                    json!("수정한 발표 메모")
-                },
-            );
+        if input["user_request"] == "batch-failure"
+            && input["current_slide"]["title"] == "실행 계획"
+            && m.fail_second.load(Ordering::SeqCst)
+        {
+            return (StatusCode::BAD_GATEWAY, "synthetic edit interruption").into_response();
         }
-        if m.invalid.load(Ordering::SeqCst) {
-            changes.insert("unexpected".into(), json!("outside scope"));
-        }
-        let result = json!({"tool":"propose_slide_patch","message":"선택한 내용을 간결하게 다듬었습니다.","changes":changes});
+        let result = edit::response(&input, m.invalid.load(Ordering::SeqCst));
         return Json(json!({"choices":[{"finish_reason":"stop","message":{"content":result.to_string()}}],"usage":{"prompt_tokens":100,"completion_tokens":50}})).into_response();
     }
     if input["task"] == "presentation_slide" {
@@ -88,7 +83,14 @@ async fn complete(
         } else {
             input["sources"][0]["id"].clone()
         };
-        let result = json!({"schema_version":1,"title":input["section"]["title"],"bullets":["문서에서 확인한 업무 현황","검토한 원문을 바탕으로 실행 계획을 정리합니다."],"notes":"원문을 확인한 후 발표합니다.","block_ids":[block]});
+        let mut result = json!({"schema_version":1,"title":input["section"]["title"],"bullets":["문서에서 확인한 업무 현황","검토한 원문을 바탕으로 실행 계획을 정리합니다."],"notes":"원문을 확인한 후 발표합니다.","block_ids":[block]});
+        if let Some(layout) = input["template"]["layouts"]
+            .as_array()
+            .and_then(|l| l.first())
+        {
+            result["schema_version"] = json!(4);
+            result["design"] = json!({"layout_key":layout["key"],"authored":false,"objects":[]});
+        }
         return Json(json!({"choices":[{"finish_reason":"stop","message":{"content":result.to_string()}}],"usage":{"prompt_tokens":100,"completion_tokens":50}})).into_response();
     }
     let sources = input["source_excerpts"].as_array().unwrap();

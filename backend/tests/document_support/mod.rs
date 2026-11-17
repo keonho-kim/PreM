@@ -3,7 +3,7 @@
 // Usage: document_processing integration suite.
 // Related: ../document_processing.rs, ../space_support/, tests/fixtures/documents/.
 use axum::{Json, Router, extract::State, routing::post};
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use std::sync::{
     Arc,

@@ -1,6 +1,6 @@
-# Design: PuPuTyX Folio
+# Design: PreM Folio
 
-This is the shared system for PuPuTyX's document-to-presentation workspace.
+This is the shared system for PreM's document-to-presentation workspace.
 The user authorized a full designer-led redesign, replacing Refract and the tile/glass direction.
 
 ## System
@@ -69,4 +69,4 @@ Editor layout: left slide list, central canvas and right task inspector. Keep th
 
 Use official shadcn/ui components first and adapt them through the Folio tokens. Keep one primitive family consistent with the current Radix setup. Production menus, dialogs, calendar pickers and fields use the shared component system; custom native controls require a concrete component gap. Semantic HTML and accessible keyboard/focus behavior still apply. The standalone mock retains its framework-free implementation.
 
-AI UI follows [shadcn/ui AI Elements](https://ui.shadcn.com/docs/ai-elements). Chat, Message, Prompt Input, Sources and Trace-based patterns provide presentation structure; project scope, revisions, safe evidence, API calls and workflow state belong to their feature owners. The adopted source and dependency boundary are documented in [the dependency design](dev-docs/08-dependencies.md). Home consumes the official shadcn/ui source recorded in frontend/components.sources.json. Production chat consumes official Message, Bubble, Message Scroller and InputGroup source for real title/body/notes proposals with explicit acceptance. Generated-deck review and independently collapsible panels are implemented; canvas object editing remains separate work.
+AI UI follows [shadcn/ui AI Elements](https://ui.shadcn.com/docs/ai-elements). Chat, Message, Prompt Input, Sources and Trace-based patterns provide presentation structure; project scope, revisions, safe evidence, API calls and workflow state belong to their feature owners. The adopted source and dependency boundary are documented in [the dependency design](dev-docs/08-dependencies.md). Home consumes the official shadcn/ui source recorded in frontend/components.sources.json. Production chat consumes official Message, Bubble, Message Scroller and InputGroup source for real text/object/layout and multi-slide proposals with explicit acceptance. Generated-deck review and independently collapsible panels are implemented; direct canvas dragging remains separate work.

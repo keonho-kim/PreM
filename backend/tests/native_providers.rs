@@ -7,7 +7,7 @@ mod native_support;
 use axum::http::StatusCode;
 use common::request;
 use native_support::Fixture;
-use puputyx_backend::app::Application;
+use prem_backend::app::Application;
 use serde_json::{Value, json};
 use uuid::Uuid;
 async fn register(
