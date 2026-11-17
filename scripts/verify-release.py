@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import subprocess
 import sys
@@ -106,7 +107,9 @@ await sharp(Buffer.from('<svg width="200" height="60"><text x="5" y="35" font-fa
         try:
             for _ in range(200):
                 if process.poll() is not None:
-                    raise RuntimeError('Packaged server exited before ready')
+                    error = process.stderr.read()
+                    error = re.sub(r'(PreM Admin token:)\s*\S+', r'\1 [redacted]', error)
+                    raise RuntimeError('Packaged server exited before ready: ' + error[-5000:])
                 try:
                     with urlopen(f'http://127.0.0.1:{port}/healthz', timeout=1) as response:
                         health = json.load(response)

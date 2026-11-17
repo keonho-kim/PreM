@@ -157,7 +157,29 @@ pub async fn setup(app: &Application, f: &Fixture) -> (String, String, Value) {
     )
     .await;
     assert_eq!(status, 200, "{settings}");
-    source_upload(app, &p, &source).await;
+    let uploaded = source_upload(app, &p, &source).await;
+    let file = uploaded["id"].as_str().unwrap();
+    // Recovery tests stop the worker after setup; classification must be committed first.
+    tokio::time::timeout(std::time::Duration::from_secs(10), async {
+        loop {
+            let (status, processing) = crate::common::request(
+                &crate::common::router(app),
+                "GET",
+                &format!("/api/v1/projects/{p}/files/{file}/processing"),
+                None,
+                None,
+            )
+            .await;
+            assert_eq!(status, 200, "{processing}");
+            assert_ne!(processing["job"]["status"], "failed", "{processing}");
+            if processing["job"]["status"] == "succeeded" {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+    })
+    .await
+    .expect("source classification did not finish");
     let review = tokio::time::timeout(std::time::Duration::from_secs(10), async {
         loop {
             let (_, r) = crate::common::request(
@@ -191,7 +213,7 @@ pub async fn setup(app: &Application, f: &Fixture) -> (String, String, Value) {
     assert_eq!(crate::common::request(&crate::common::router(app),"PUT",&format!("/api/v1/projects/{p}/guide"),Some(json!({"expected_version":0,"do_text":"실행 계획을 강조","dont_text":"근거 없는 수치 제외"})),None).await.0,200);
     (p, connection, model)
 }
-pub async fn source_upload(app: &Application, p: &str, text: &str) {
+pub async fn source_upload(app: &Application, p: &str, text: &str) -> Value {
     use axum::{
         body::{Body, to_bytes},
         http::Request,
@@ -219,6 +241,7 @@ pub async fn source_upload(app: &Application, p: &str, text: &str) {
     let s = response.status();
     let body = to_bytes(response.into_body(), 100000).await.unwrap();
     assert_eq!(s, 201, "{}", String::from_utf8_lossy(&body));
+    serde_json::from_slice(&body).unwrap()
 }
 pub async fn state(app: &Application, p: &str) -> Value {
     let (s, v) = crate::common::request(

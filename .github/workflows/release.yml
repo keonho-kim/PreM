@@ -37,7 +37,7 @@ jobs:
             gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "PreM $TAG" --notes-file scripts/release-notes.md
           fi
           test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true
-          gh release edit "$TAG" --target "$GITHUB_SHA"
+          gh release edit "$TAG" --target "$GITHUB_SHA" --notes-file scripts/release-notes.md
   build:
     needs: prepare
     strategy:
@@ -88,6 +88,11 @@ jobs:
         run: |
           python3 scripts/package-release.py "$TAG"
           python3 scripts/verify-release.py "release/PreM-$TAG-${{ matrix.platform }}.tar.gz"
+      - name: Verify minimal Linux without network or installed tools
+        if: runner.os == 'Linux'
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: bash scripts/verify-release-linux.sh "release/PreM-$TAG-${{ matrix.platform }}.tar.gz"
       - name: Upload verified archives
         env:
           GH_TOKEN: ${{ github.token }}

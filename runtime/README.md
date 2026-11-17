@@ -10,6 +10,6 @@
 
 템플릿은 PPT Master의 편집 구조와 슬라이드 SVG를 추출하고 Sharp로 수동 실행 요소가 없는 PNG 미리보기를 만든다. 레퍼런스는 Kordoc 또는 HTML 파서로 내용을 추출한다. 도구 작업 파일과 쓰기 가능한 OCR 캐시는 설정된 앱 데이터 경로에 둔다. 원본·결과는 공통 Blob으로 보존한다.
 
-현재 macOS arm64에서 실제 실행을 검증한다. Linux용 패키지는 해당 플랫폼에서 생성·검증해야 한다. LibreOffice·H2Orestart·Java 기반 Office PDF 정규화는 아직 제품에 연결되지 않았다. 이 폴더의 존재만으로 전체 릴리스 검증을 완료한 것으로 간주하지 않는다.
+전체 통합 검사는 macOS arm64에서 실행하고, 릴리스는 macOS arm64와 Linux arm64/amd64의 네이티브 runner에서 각각 생성·검증한다. Linux 번들은 추가 패키지가 없는 Ubuntu 24.04 컨테이너에서 네트워크 없이 재검사한다. LibreOffice·H2Orestart·Java 기반 Office PDF 정규화는 아직 제품에 연결되지 않았다.
 
-릴리스 패키지는 `scripts/package-release.py`가 준비된 호스트용 실행기·도구·모델과 한국어 폰트를 복사한다. 실행은 루트의 `PreM` launcher를 사용하며 앱 데이터 경로에 폰트 캐시를 둔다. 설치 절대 경로가 바뀌어도 동작하도록 패키지의 상대 경로를 사용한다. `scripts/verify-release.py`는 압축 재배치 후 개발 Node/Python 없이 네이티브 라이브러리·OCR 모델·PPTX/PNG와 HTTP 재시작을 검사한다.
+릴리스 패키지는 `scripts/package-release.py`가 준비된 호스트용 실행기·도구·모델과 한국어 폰트를 복사한다. Linux의 libstdc++·libgcc·libatomic, 기본 공개 CA 인증서와 해당 라이선스도 포함한다. 시스템 또는 명시적으로 지정한 인증서 저장소가 있으면 그대로 사용한다. 실행은 루트의 `PreM` launcher를 사용하며 앱 데이터 경로에 폰트 캐시를 둔다. 설치 절대 경로가 바뀌어도 동작하도록 패키지의 상대 경로를 사용한다. `scripts/verify-release.py`는 압축 재배치 후 개발 Node/Python 없이 네이티브 라이브러리·OCR 모델·스캔 PDF/Office/HWP 추출·PPTX/PNG와 HTTP 재시작을 검사한다.

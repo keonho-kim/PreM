@@ -58,11 +58,13 @@ for source in RUNTIME.iterdir():
 if OS == 'linux':
     lib = runtime / 'lib'
     lib.mkdir()
-    for name in ['libstdc++.so.6', 'libgcc_s.so.1']:
+    for name in ['libstdc++.so.6', 'libgcc_s.so.1', 'libatomic.so.1']:
         source = subprocess.check_output(['gcc', '-print-file-name=' + name], text=True).strip()
         if not Path(source).is_file():
             raise SystemExit('Missing native library: ' + name)
         shutil.copy2(Path(source).resolve(), lib / name)
+    (runtime / 'certs').mkdir()
+    shutil.copy2('/etc/ssl/certs/ca-certificates.crt', runtime / 'certs/ca-certificates.crt')
 (runtime / 'fonts.conf').write_text('''<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
 <fontconfig>
@@ -81,6 +83,12 @@ PREM_ROOT=$(CDPATH= cd -- "${0%/*}" && pwd)
 export APP_DOCUMENT_RUNTIME_PATH="$PREM_ROOT/runtime"
 export FONTCONFIG_FILE="$PREM_ROOT/runtime/fonts.conf"
 export LD_LIBRARY_PATH="$PREM_ROOT/runtime/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Retain explicit/host trust stores; provide public roots when the Linux base has none.
+if [ -f "$PREM_ROOT/runtime/certs/ca-certificates.crt" ] && [ -z "${SSL_CERT_FILE:-}" ] && [ -z "${SSL_CERT_DIR:-}" ]; then
+  if [ ! -s /etc/ssl/certs/ca-certificates.crt ] && [ ! -s /etc/pki/tls/certs/ca-bundle.crt ]; then
+    export SSL_CERT_FILE="$PREM_ROOT/runtime/certs/ca-certificates.crt"
+  fi
+fi
 PREM_EXPECT_STORAGE=0
 for PREM_ARG in "$@"; do
   if [ "$PREM_EXPECT_STORAGE" = 1 ]; then export XDG_CACHE_HOME="$PREM_ARG/config/cache"; PREM_EXPECT_STORAGE=0; fi
@@ -95,6 +103,12 @@ exec "$PREM_ROOT/bin/PreM" "$@"
 shutil.copy2(ROOT / 'README.md', DEST / 'README.md')
 notices = DEST / 'licenses'
 shutil.copytree(ROOT / 'licenses', notices)
+if OS == 'linux':
+    for name in ['libstdc++6', 'libgcc-s1', 'libatomic1', 'ca-certificates']:
+        source = Path('/usr/share/doc') / name / 'copyright'
+        target = notices / 'system' / name
+        target.mkdir(parents=True)
+        shutil.copy2(source, target / 'copyright')
 shutil.copy2(ROOT / 'frontend/THIRD_PARTY_NOTICES.md', notices / 'frontend-NOTICES.md')
 metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--format-version', '1', '--locked'], cwd=ROOT))
 packages = []
