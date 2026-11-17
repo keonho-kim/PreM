@@ -3,6 +3,7 @@
 // Usage: After pnpm build; captures stay in tests/.artifacts/captures/folio and no business data is used.
 // Related: canvas_authoring.rs, canvas-api.ts, object-selection.tsx, outline-fixture.cjs.
 const assert = require('node:assert/strict');
+const { setViewport, settleLayout } = require('../helpers/interactions.cjs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
@@ -10,7 +11,7 @@ const { setTimeout: delay } = require('node:timers/promises');
 const { createServer } = require('./server.cjs');
 const { model, json } = require('./outline-fixture.cjs');
 const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
-const { poll, click, fill, capture } = require('./canvas-browser-helpers.cjs');
+const { poll, click, fill, capture, resizeSelected } = require('./canvas-browser-helpers.cjs');
 (async () => {
   const server = await createServer('canvas-authoring-'),
     fixture = await model();
@@ -62,7 +63,7 @@ const { poll, click, fill, capture } = require('./canvas-browser-helpers.cjs');
       if (r.method() === 'POST' && r.url().endsWith('/canvas'))
         requests.push(JSON.parse(r.postData()));
     });
-    await a.setViewport({ width: 1440, height: 1000 });
+    await setViewport(a, { width: 1440, height: 1000 });
     await a.goto(base + `/home/studio/${p}`, { waitUntil: 'networkidle0' });
     await click(a, '빈 장표로 직접 작성');
     await click(a, '템플릿', 'combobox');
@@ -98,8 +99,20 @@ const { poll, click, fill, capture } = require('./canvas-browser-helpers.cjs');
     }
     async function saved(version) {
       const run = await done(version);
+      await a.waitForFunction(
+        (id) => {
+          const preview = document.querySelector('img.presentation-output');
+          return (
+            preview?.src.includes(`/presentations/${id}/`) &&
+            preview.complete &&
+            preview.naturalWidth > 0
+          );
+        },
+        {},
+        run.id,
+      );
       await enabled('도형 추가');
-      await delay(150);
+      await settleLayout(a);
       return run;
     }
     let run = await saved(1);
@@ -165,32 +178,8 @@ const { poll, click, fill, capture } = require('./canvas-browser-helpers.cjs');
     await click(a, '배치 적용');
     run = await saved(5);
     assert.equal((await slides(run))[0].spec.objects[0].frame.x, 25);
-    const handles = await a.$$('.canvas-object-target.is-selected .canvas-resize-handle');
-    const handleBoxes = await Promise.all(
-      handles.map(async (n) => ({ n, b: await n.boundingBox() })),
-    );
-    const chosenCorner = handleBoxes
-      .filter((v) => v.b)
-      .sort((x, y) => y.b.x + y.b.y - (x.b.x + x.b.y))[0];
-    await chosenCorner.n.evaluate((n) => n.scrollIntoView({ block: 'center', inline: 'nearest' }));
-    const corner = await chosenCorner.n.boundingBox();
     const resizeBefore = (await slides(run))[0].spec.objects[0].frame;
-    const beforeResize = requests.length;
-    const resizeHit = await a.evaluate((b) => {
-      const n = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
-      return { tag: n?.tagName, classes: n?.className };
-    }, corner);
-    await a.mouse.move(corner.x + corner.width / 2, corner.y + corner.height / 2);
-    await a.mouse.down();
-    await a.mouse.move(corner.x + corner.width / 2 + 40, corner.y + corner.height / 2 + 20, {
-      steps: 8,
-    });
-    await a.mouse.up();
-    await delay(400);
-    if (requests.length === beforeResize) {
-      await capture(a, 'canvas-resize-diagnostic.png');
-      throw Error('Resize did not submit: ' + JSON.stringify(resizeHit));
-    }
+    await resizeSelected(a, requests);
     run = await saved(6);
     const resized = (await slides(run))[0].spec.objects[0].frame;
     assert(resized.width > resizeBefore.width);
@@ -284,7 +273,7 @@ const { poll, click, fill, capture } = require('./canvas-browser-helpers.cjs');
     );
     await a.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await capture(a, 'canvas-direct-editing.png');
-    await a.setViewport({ width: 390, height: 844 });
+    await setViewport(a, { width: 390, height: 844 });
     await a.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await a
       .waitForFunction(() => document.documentElement.scrollWidth <= innerWidth + 1, {

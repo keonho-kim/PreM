@@ -3,8 +3,9 @@
 // Usage: Called by home-checks.cjs against its isolated application instance.
 // Related: project-filters.tsx, project-menu-behavior.ts, calendar.ts.
 const assert = require('node:assert/strict');
+const { setViewport, settleLayout } = require('../helpers/interactions.cjs');
 async function checkFiltersAndFallbacks(page, base) {
-  await page.setViewport({ width: 1440, height: 1000 });
+  await setViewport(page, { width: 1440, height: 1000 });
   await page.goto(base + '/home', { waitUntil: 'networkidle0' });
   const ratios = await page.evaluate(() => {
     const luminance = (color) => {
@@ -93,9 +94,10 @@ async function checkFiltersAndFallbacks(page, base) {
     await page.keyboard.press('Escape');
     await page.waitForSelector('.project-menu[data-state="open"]', { hidden: true });
     await page.waitForFunction(() => document.activeElement.matches('[data-project-menu-trigger]'));
-    await page.setViewport({ width: 390, height: 844 });
+    await setViewport(page, { width: 390, height: 844 });
     await page.click('.project-card h2', { button: 'right' });
     await page.waitForSelector('.project-menu[data-state="open"]', { visible: true });
+    await settleLayout(page);
     const rect = await page.$eval('.project-menu[data-state="open"]', (n) => {
       const r = n.getBoundingClientRect();
       return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
