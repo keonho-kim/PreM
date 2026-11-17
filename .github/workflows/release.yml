@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
+      build: ${{ steps.tag.outputs.build }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -36,10 +37,16 @@ jobs:
           if ! gh release view "$TAG" >/dev/null 2>&1; then
             gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "PreM $TAG" --notes-file scripts/release-notes.md
           fi
-          test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true
+          if test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = false; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG is already published; keeping its existing assets."
+            exit 0
+          fi
+          echo "build=true" >> "$GITHUB_OUTPUT"
           gh release edit "$TAG" --target "$GITHUB_SHA" --notes-file scripts/release-notes.md
   build:
     needs: prepare
+    if: needs.prepare.outputs.build == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -100,6 +107,7 @@ jobs:
         run: gh release upload "$TAG" release/*.tar.gz release/*.sha256 --clobber
   verify-assets:
     needs: [prepare, build]
+    if: needs.prepare.outputs.build == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Confirm complete draft assets
