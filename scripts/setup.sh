@@ -2,7 +2,7 @@
 # Purpose: Restore project packages and pinned developer tools.
 # Pattern: Explicit development setup, separate from runtime startup.
 # Usage: ./scripts/setup.sh from a prepared Rust/Node development host.
-# Related: scripts/rust-tools.mjs, scripts/dev-tools.json, package.json.
+# Related: scripts/quality/rust-tools.mjs, scripts/quality/dev-tools.json, package.json.
 set -euo pipefail
 PREM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PREM_ROOT"

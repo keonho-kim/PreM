@@ -15,6 +15,7 @@ import {
 import { PrepareModel } from '../prepare-model';
 import { ModelPicker } from '../model-picker';
 import { ProviderConnectionFields } from '../provider-connection-fields';
+import { ThinkingFields } from './thinking-fields';
 import { useProviderForm, type ProviderFormProps } from './use-provider-form';
 export function ProviderForm(props: ProviderFormProps) {
   const { catalog } = props;
@@ -36,6 +37,8 @@ export function ProviderForm(props: ProviderFormProps) {
     setNotice,
     discovery,
     modelReady,
+    diagnostic,
+    decisionMode,
     mutation,
     refresh,
     pending,
@@ -52,7 +55,15 @@ export function ProviderForm(props: ProviderFormProps) {
       className="provider-form"
       aria-label="모델 연결 설정"
       onSubmit={handleSubmit(() => {
-        if (pending || !changed || keyRequired || addressRequired || conflict) return;
+        if (
+          !diagnostic.result?.ticket ||
+          pending ||
+          !changed ||
+          keyRequired ||
+          addressRequired ||
+          conflict
+        )
+          return;
         if (!modelReady) {
           setNotice('모델 목록을 조회한 뒤 사용할 모델을 선택하세요.');
           return;
@@ -84,6 +95,17 @@ export function ProviderForm(props: ProviderFormProps) {
           setSecret('');
           setClearSecret(!clearSecret);
         }}
+        thinkingFields={
+          <ThinkingFields
+            prefix={prefix}
+            decision={decisionMode}
+            draft={draft}
+            update={updateDraft}
+            result={diagnostic.result}
+            error={diagnostic.error}
+            disabled={pending}
+          />
+        }
         modelPicker={
           <ModelPicker
             prefix={prefix}
@@ -129,6 +151,42 @@ export function ProviderForm(props: ProviderFormProps) {
           최신 설정 확인
         </Button>
       )}
+      {draft.context_length || draft.physical_batch_size ? (
+        <p className="field-hint">
+          진단에 필요한 LM Studio 인스턴스가 없으면 입력한 토큰 설정으로 모델을 준비합니다.
+        </p>
+      ) : null}
+      <div className="provider-actions">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={
+            pending ||
+            diagnostic.pending ||
+            !modelReady ||
+            keyRequired ||
+            addressRequired ||
+            conflict
+          }
+          onClick={() => void diagnostic.run()}
+        >
+          저장 전 연결 진단
+        </Button>
+        {diagnostic.pending && (
+          <Button type="button" variant="ghost" onClick={diagnostic.cancel}>
+            진단 취소
+          </Button>
+        )}
+        <p role="status">
+          {diagnostic.pending
+            ? '모델 서버에서 현재 설정을 확인하고 있습니다.'
+            : diagnostic.error ||
+              diagnostic.result?.message ||
+              (diagnostic.result?.ticket
+                ? '연결 진단을 통과했습니다.'
+                : '현재 설정으로 연결 진단을 마친 뒤 저장하세요.')}
+        </p>
+      </div>
       <div className="dialog-actions">
         <Button type="button" variant="secondary" disabled={pending || !changed} onClick={reset}>
           변경 취소
@@ -136,7 +194,14 @@ export function ProviderForm(props: ProviderFormProps) {
         <Button
           ref={submit}
           type="submit"
-          disabled={pending || !changed || keyRequired || addressRequired || conflict}
+          disabled={
+            !diagnostic.result?.ticket ||
+            pending ||
+            !changed ||
+            keyRequired ||
+            addressRequired ||
+            conflict
+          }
         >
           {pending ? '저장 중…' : base ? '변경 사항 저장' : '설정 저장'}
         </Button>
@@ -158,6 +223,7 @@ export function ProviderForm(props: ProviderFormProps) {
           <div className="dialog-actions">
             <AlertDialogCancel>돌아가기</AlertDialogCancel>
             <AlertDialogAction
+              disabled={!diagnostic.result?.ticket || pending}
               onClick={() => {
                 setNotice('');
                 mutation.mutate();

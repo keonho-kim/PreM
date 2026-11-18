@@ -1,5 +1,0 @@
-# Purpose: Pin the Python dependency consumed by PPT Master's native exporter.
-# Pattern: Build-time lock and install; application runtime never installs packages.
-# Usage: uv pip compile --generate-hashes; install the resulting runtime-python.lock.
-# Related: install-document-runtime.mjs, backend/tools/presentation-render.py.
-python-pptx==1.0.2

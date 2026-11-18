@@ -129,9 +129,12 @@ impl Store for SqliteDocuments {
         let q = self.0.clone();
         Box::pin(async move { q.call(move |db| queries::detail(db, k, i, j)).await })
     }
-    fn history(&self, k: String, i: Uuid) -> Work<Vec<Job>> {
+    fn history(&self, k: String, i: Uuid, file_version: Option<i64>) -> Work<Vec<Job>> {
         let q = self.0.clone();
-        Box::pin(async move { q.call(move |db| queries::history(db, &k, i)).await })
+        Box::pin(async move {
+            q.call(move |db| queries::history(db, &k, i, file_version))
+                .await
+        })
     }
     fn command(&self, id: Uuid, e: i64, key: Uuid, a: String) -> Work<Job> {
         let q = self.0.clone();

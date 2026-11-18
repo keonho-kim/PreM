@@ -4,7 +4,7 @@
 // Related: api.ts, provider-form.tsx, backend/adapters/http/providers.rs.
 import { expect, it, vi } from 'vitest';
 import { request } from '@/shared/api/http';
-import { saveProvider, type Provider } from './api';
+import { draftBody, saveProvider, type Provider } from './api';
 vi.mock('@/shared/api/http', () => ({ request: vi.fn() }));
 it('sends only editable settings and the explicit version precondition', () => {
   const provider: Provider = {
@@ -20,7 +20,7 @@ it('sends only editable settings and the explicit version precondition', () => {
     timeout_seconds: 180,
     enabled: true,
   };
-  saveProvider(provider.id, 2, provider);
+  saveProvider(provider.id, draftBody(2, provider), 'receipt');
   const body = JSON.parse(vi.mocked(request).mock.calls[0]?.[2]?.body ?? '{}');
   expect(body).toEqual({
     name: provider.name,
@@ -34,5 +34,8 @@ it('sends only editable settings and the explicit version precondition', () => {
     context_length: null,
     physical_batch_size: null,
     clear_secret: false,
+    decision: false,
+    thinking: null,
+    thinking_effort: null,
   });
 });

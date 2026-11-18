@@ -1,7 +1,7 @@
 // Purpose: Pin bounded neighboring source blocks and expose the exact passages used for review.
 // Pattern: Immutable IDs and UTF-8 prefix lengths; canonical text remains in content_blocks.
 // Usage: Exploration expands ambiguous candidates; model plans and UI read the same window.
-// Related: V18__relation_workspaces.sql, context.rs, exploration.rs.
+// Related: V1__baseline.sql, context.rs, exploration.rs.
 use super::*;
 use rusqlite::{OptionalExtension, params};
 pub(super) fn expand(db: &rusqlite::Connection, run: &Run) -> Result<usize, Error> {

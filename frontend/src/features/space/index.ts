@@ -9,6 +9,7 @@ export const SpaceDirectory = lazy(() =>
 export { UploadWorkPanel } from './upload-work-panel';
 
 export { useUploadEngine } from './use-upload-engine';
+export { LibraryUpload } from './upload-action';
 export { UploadDialog } from './upload-dialog';
 export { VersionDialog } from './version-dialog';
 export {

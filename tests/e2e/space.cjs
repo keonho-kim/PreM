@@ -38,7 +38,7 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
     await a.waitForFunction(() =>
       document.querySelector('.space-upload-row')?.textContent.includes('원본 등록 완료'),
     );
-    assert.equal(await a.$('.space-upload-row [role="progressbar"]'), null);
+    assert.equal(await a.$('.space-upload-row [aria-label$="전송률"]'), null);
     await a.waitForSelector('[data-sonner-toast][data-mounted="true"]');
     await a.waitForFunction(() => {
       const toast = document.querySelector('[data-sonner-toast]')?.getBoundingClientRect();
@@ -78,11 +78,11 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
     await a.waitForSelector('.work-launcher');
     await notifications(a);
     await a.click('.app-navigation a[href="/home/"]');
-    await a.waitForSelector('.projects-empty');
+    await a.waitForSelector('.model-setup-notice');
     await notifications(a);
     assert.match(await a.$eval('.space-uploads', (n) => n.textContent), /팀 운영.docx/);
     await a.screenshot({
-      path: path.join(captures, 'upload-work-panel-home.png'),
+      path: path.join(captures, 'upload-work-panel-setup.png'),
       fullPage: true,
     });
     await notifications(a, false);

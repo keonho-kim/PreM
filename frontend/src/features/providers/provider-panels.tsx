@@ -48,7 +48,7 @@ export function ProviderPanels({
             <h2>{provider.name}</h2>
           </div>
         </section>
-        <ProviderForm provider={provider} catalog={catalog} onSaved={onSaved} />
+        <ProviderForm decision={decision} provider={provider} catalog={catalog} onSaved={onSaved} />
       </TabsContent>
       <TabsContent value="capacity" forceMount hidden={tab !== 'capacity'}>
         <ProviderCapacity providerId={provider.id} active={tab === 'capacity'} />

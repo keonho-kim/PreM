@@ -61,6 +61,7 @@ async function field(page, name, value) {
     let raw = '';
     for await (const chunk of req) raw += chunk;
     const body = JSON.parse(raw);
+    if (require('./draft-probe.cjs').replyToProbe(res, body)) return;
     assert.equal(body.model, 'decision-fixture');
     assert.equal(body.questions.is_table_of_contents.type, 'choice');
     calls++;
@@ -111,6 +112,7 @@ async function field(page, name, value) {
     await click(a, '모델 목록 조회');
     await click(a, '사용할 모델 · 필수', 'combobox');
     await click(a, 'decision-fixture · Decision', 'option');
+    await require('./draft-probe.cjs').verifyDraft(a);
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
     assert.match(await a.$eval('.provider-summary', (e) => e.textContent), /QA · 로컬 판정 서버/);

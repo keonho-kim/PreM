@@ -1,7 +1,7 @@
 // Purpose: Define normalized packages whose payloads live once in the common Blob Store.
 // Pattern: A sorted immutable manifest references independently hashed files, never nested ZIP bytes.
 // Usage: PPT import commits the manifest and members; downloads assemble a transient ZIP.
-// Related: filesystem/packages.rs, modules/ppt_imports/, V12__shared_ppt_packages.sql.
+// Related: filesystem/packages.rs, modules/ppt_imports/, V1__baseline.sql.
 use serde::{Deserialize, Serialize};
 pub(crate) const PACKAGE_MIME: &str = "application/vnd.puputyx.package+json";
 #[derive(Clone, Serialize, Deserialize)]

@@ -15,7 +15,8 @@ pub(super) async fn complete(
     c: &Credentials,
     i: CompletionInput,
 ) -> Result<Completion, Error> {
-    let body = json!({"model":c.model_identifier,"system_prompt":i.system,"input":i.prompt,"max_output_tokens":i.max_tokens,"stream":false,"store":false,"integrations":[]});
+    let mut body = json!({"model":c.model_identifier,"system_prompt":i.system,"input":i.prompt,"max_output_tokens":i.max_tokens,"stream":false,"store":false,"integrations":[]});
+    super::thinking::apply(&mut body, c);
     let r = read(request(t, c, "chat", true)?.json(&body).send().await).await?;
     let mut content = String::new();
     for part in r["output"].as_array().ok_or(Error::InvalidResponse)? {
@@ -28,6 +29,12 @@ pub(super) async fn complete(
         }
     }
     Ok(Completion {
+        reasoned: r["output"].as_array().is_some_and(|xs| {
+            xs.iter().any(|p| {
+                p["type"] == "reasoning"
+                    && p["content"].as_str().is_some_and(|s| !s.trim().is_empty())
+            })
+        }),
         text: text(Some(&content))?,
         prompt_tokens: tokens(&r, "/stats/input_tokens"),
         completion_tokens: tokens(&r, "/stats/total_output_tokens"),

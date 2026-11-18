@@ -187,14 +187,31 @@ impl Runtime {
         }
         Ok((dir, source))
     }
-    async fn run(&self, mut cmd: Command, cancel: CancellationToken) -> Result<(), Error> {
+    async fn run(&self, cmd: Command, cancel: CancellationToken) -> Result<(), Error> {
+        if self.run_status(cmd, cancel).await?.success() {
+            Ok(())
+        } else {
+            Err(Error::Processing("extract_failed"))
+        }
+    }
+    async fn run_status(
+        &self,
+        mut cmd: Command,
+        cancel: CancellationToken,
+    ) -> Result<std::process::ExitStatus, Error> {
         cmd.stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .kill_on_drop(true);
         let mut child = cmd
             .spawn()
             .map_err(|_| Error::Processing("runtime_missing"))?;
-        let outcome = tokio::select! {()=cancel.cancelled()=>Err(Error::Cancelled),r=tokio::time::timeout(Duration::from_secs(180),child.wait())=>match r{Ok(Ok(s)) if s.success()=>Ok(()),Ok(_)=>Err(Error::Processing("extract_failed")),Err(_)=>Err(Error::Processing("extraction_timeout"))}};
+        let outcome = tokio::select! {
+            () = cancel.cancelled() => Err(Error::Cancelled),
+            result = tokio::time::timeout(Duration::from_secs(180), child.wait()) => match result {
+                Ok(status) => status.map_err(|_| Error::Processing("extract_failed")),
+                Err(_) => Err(Error::Processing("extraction_timeout")),
+            }
+        };
         if outcome.is_err() {
             let _ = child.kill().await;
             let _ = child.wait().await;

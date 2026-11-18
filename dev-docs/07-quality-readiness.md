@@ -6,7 +6,7 @@
 
 `pnpm check:core`는 개발 품질을 검증한다. 번들 검증은 [로컬 패키징](06-development-operations.md#로컬-패키징)을 따른다. 버전·디자인 토큰·런타임·오프라인 PDF/PPT·백업 단위 검사, 포맷·구조·lint·Knip, 전체 Rust 단위/통합/doc 테스트·Clippy, 전체 React 테스트·npm advisory 검사를 포함한다.
 
-`pnpm check`는 위 게이트에 설치된 Rust 개발 도구 확인과 cargo-deny/machete 정책 검사를 추가한다. `pnpm test:e2e`는 실제 서버·브라우저에서 모든 등록된 여정을 실행하고 실패 후에도 다음 여정을 검사한다. `tests/.artifacts/e2e/report.json`과 각 로그가 해당 실행의 결과다. 특정 여정만 실행하려면 이름을 인자로 전달한다. `node scripts/install-test-browser.mjs`로 Puppeteer에 맞는 Chrome for Testing을 설치할 수 있다. 반응형 검사는 viewport 변경 후 폰트·ResizeObserver·프레임 갱신을 기다리고, 클릭은 Locator의 표시·활성화·위치 안정화 검사를 사용한다.
+`pnpm check`는 위 게이트에 설치된 Rust 개발 도구 확인과 cargo-deny/machete 정책 검사를 추가한다. `pnpm test:e2e`는 실제 서버·브라우저에서 모든 등록된 여정을 실행하고 실패 후에도 다음 여정을 검사한다. `tests/.artifacts/e2e/report.json`과 각 로그가 해당 실행의 결과다. 특정 여정만 실행하려면 이름을 인자로 전달한다. `node scripts/test/install-browser.mjs`로 Puppeteer에 맞는 Chrome for Testing을 설치할 수 있다. 반응형 검사는 viewport 변경 후 폰트·ResizeObserver·프레임 갱신을 기다리고, 클릭은 Locator의 표시·활성화·위치 안정화 검사를 사용한다.
 
 ## 검사 영역
 

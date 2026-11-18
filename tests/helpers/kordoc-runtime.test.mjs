@@ -1,7 +1,7 @@
 // Purpose: Verify bundled PDF text/OCR extraction without network or development executables.
 // Pattern: Real production adapter under Node permissions with Korean PDF fixtures and owned output.
 // Usage: runtime/node/bin/node --test tests/helpers/kordoc-runtime.test.mjs.
-// Related: backend/tools/document-extract.mjs, scripts/prepare-document-runtime.mjs.
+// Related: backend/tools/document-extract.mjs, scripts/runtime/documents.mjs.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, cp } from 'node:fs/promises';

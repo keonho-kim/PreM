@@ -1,7 +1,7 @@
 // Purpose: Define versioned search inputs, relation results and canonical source identities.
 // Pattern: Compact projections and references; the worker never persists document text copies.
 // Usage: Relations facade, persistence port and HTTP adapter.
-// Related: mod.rs, worker.rs, V14__related_documents.sql.
+// Related: mod.rs, worker.rs, V1__baseline.sql.
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[derive(Clone, Serialize, Deserialize, Default)]

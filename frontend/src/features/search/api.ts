@@ -31,9 +31,11 @@ export function searchParams(params: URLSearchParams) {
   const scope = params.get('scope') ?? 'all',
     mode = params.get('mode') ?? 'all';
   const offset = Number(params.get('offset') ?? 0);
+  const validScope: 'references' | 'templates' | 'all' =
+    scope === 'references' || scope === 'templates' ? scope : 'all';
   return {
     q: (params.get('q') ?? '').slice(0, 120),
-    scope: ['references', 'templates'].includes(scope) ? scope : 'all',
+    scope: validScope,
     mode: ['files', 'content'].includes(mode) ? mode : 'all',
     archived: params.get('archived') === 'true',
     offset: Number.isInteger(offset) && offset >= 0 && offset <= 100000 ? offset : 0,

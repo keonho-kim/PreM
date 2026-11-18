@@ -62,7 +62,18 @@ impl Extractor for Runtime {
                 .env("KORDOC_MODEL_CACHE", &this.cache)
                 .env("KORDOC_MAX_UNZIP_MB", "256")
                 .env("TMPDIR", dir.path());
-            this.run(cmd, cancel.clone()).await?;
+            let status = this.run_status(cmd, cancel.clone()).await?;
+            if !status.success() {
+                tracing::warn!(job_id = %job.id, %status, "document reader exited");
+                let code = match status.code() {
+                    Some(20) => "ocr_failed",
+                    Some(21) => "incomplete_extraction",
+                    Some(22) => "page_limit",
+                    Some(23) => "extraction_limit",
+                    _ => "extract_failed",
+                };
+                return Err(Error::Processing(code));
+            }
             let mut result: Extracted = Self::json(&dir.path().join("result.json")).await?;
             if result.files.len() > 1000 {
                 return Err(Error::Processing("extraction_limit"));

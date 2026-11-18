@@ -15,6 +15,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { listProviders, getProviderCatalog, providerKeys } from '@/features/providers';
+import { modelSetupKey } from '@/shared/api/model-setup';
 import { errorMessage } from '@/shared/api/http';
 import { getSettings, saveSettings, processingKeys } from './api';
 export function ProcessingSettings() {
@@ -44,6 +45,7 @@ export function ProcessingSettings() {
     retry: false,
     onSuccess: () => {
       setDraft(null);
+      void cache.invalidateQueries({ queryKey: modelSetupKey });
       void cache.invalidateQueries({ queryKey: processingKeys.settings });
       void cache.invalidateQueries({ queryKey: processingKeys.all });
     },

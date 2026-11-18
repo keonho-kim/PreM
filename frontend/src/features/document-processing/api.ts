@@ -100,6 +100,19 @@ const processingPath = (kind: string, id: string) =>
   kind.startsWith('project-')
     ? `/api/v1/projects/${kind.slice(8)}/files/${id}/processing`
     : `/api/v1/space/${kind}/${id}/processing`;
+export const getUploadJob = async (
+  kind: string,
+  id: string,
+  version: number,
+  signal: AbortSignal,
+) => {
+  const jobs = await request(
+    `${processingPath(kind, id)}/history?file_version=${version}`,
+    z.array(jobSchema),
+    { signal },
+  );
+  return jobs[0] ?? null;
+};
 export const getDetail = (kind: string, id: string, job: string | undefined, signal: AbortSignal) =>
   request(`${processingPath(kind, id)}${job ? `?job=${job}` : ''}`, detailSchema, {
     signal,

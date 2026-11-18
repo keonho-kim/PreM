@@ -35,3 +35,27 @@
     outline: 1px solid Highlight;
   }
 }
+
+.processing-status [role="progressbar"][data-state="indeterminate"] > div {
+  width: 30%;
+  animation: reading-progress 1.5s ease-in-out infinite alternate;
+}
+@keyframes reading-progress {
+  to {
+    transform: translateX(230%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .processing-status [role="progressbar"][data-state="indeterminate"] > div {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .processing-status [role="progressbar"] {
+    border: 1px solid CanvasText;
+  }
+  .processing-status [role="progressbar"] > div {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}

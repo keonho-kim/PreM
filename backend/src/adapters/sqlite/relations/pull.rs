@@ -1,7 +1,7 @@
 // Purpose: Expand a search workspace through bounded indexed queries with canonical provenance.
 // Pattern: One atomic pull checkpoint; deduplicate before ranking limits and keep requested scope.
 // Usage: Exploration supplies validated queries; no document bytes or text are copied.
-// Related: retrieval.rs, exploration.rs, V18__relation_workspaces.sql.
+// Related: retrieval.rs, exploration.rs, V1__baseline.sql.
 use super::*;
 use rusqlite::params;
 pub(super) fn apply(

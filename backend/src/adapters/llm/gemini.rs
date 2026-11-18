@@ -61,6 +61,7 @@ pub(super) async fn complete(
         body["generationConfig"]["responseMimeType"] = json!("application/json");
         body["generationConfig"]["responseJsonSchema"] = schema;
     }
+    super::thinking::apply(&mut body, c);
     let r = read(
         request(t, c, &format!("models/{model}:generateContent"), true)?
             .json(&body)
@@ -86,6 +87,14 @@ pub(super) async fn complete(
         content.push_str(part["text"].as_str().ok_or(Error::InvalidResponse)?);
     }
     Ok(Completion {
+        reasoned: r
+            .pointer("/usageMetadata/thoughtsTokenCount")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0)
+            > 0
+            || candidate["content"]["parts"]
+                .as_array()
+                .is_some_and(|xs| xs.iter().any(|p| p["thought"] == true)),
         text: text(Some(&content))?,
         prompt_tokens: tokens(&r, "/usageMetadata/promptTokenCount"),
         completion_tokens: tokens(&r, "/usageMetadata/candidatesTokenCount"),

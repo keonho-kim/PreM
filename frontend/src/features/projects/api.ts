@@ -9,6 +9,18 @@ const projectSchema = z.object({
   name: z.string(),
   due_date: z.string().nullable(),
   status: z.enum(['active', 'archived']),
+  saved_stage: z
+    .enum([
+      'created',
+      'sources',
+      'review',
+      'guide',
+      'outline',
+      'evidence',
+      'design',
+      'presentation',
+    ])
+    .optional(),
   deleted_at: z.number().nullable(),
   version: z.number().int().positive(),
   created_at: z.number().int().nonnegative(),

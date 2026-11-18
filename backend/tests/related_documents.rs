@@ -1,7 +1,7 @@
 // Purpose: Verify batched native relation search, provenance, cache identity and pinned selections.
 // Pattern: Real uploads/SQLite and a deterministic local model; no original body duplication.
 // Usage: cargo nextest run --test related_documents.
-// Related: relation_support/, modules/relations/, V14__related_documents.sql.
+// Related: relation_support/, modules/relations/, V1__baseline.sql.
 mod common;
 #[allow(dead_code)]
 mod document_support;

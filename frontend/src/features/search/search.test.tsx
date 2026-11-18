@@ -88,3 +88,14 @@ it('shows safe excerpt text and links to the exact job/page on a document route'
   expect(screen.getByText(/<img src=x/)).toBeInTheDocument();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
+
+it('opens a template upload in place and returns focus to the Space header', async () => {
+  await mount('/space?scope=templates');
+  const upload = screen.getByRole('button', { name: '템플릿 올리기' });
+  await userEvent.click(upload);
+  expect(screen.getByRole('dialog', { name: '템플릿 올리기' })).toBeVisible();
+  expect(screen.getByLabelText('등록할 파일 선택')).toHaveAttribute('accept', '.pptx');
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(upload).toHaveFocus());
+  expect(screen.getByTestId('location')).toHaveTextContent('/space?scope=templates');
+});

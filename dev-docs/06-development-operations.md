@@ -1,8 +1,12 @@
 # 개발·실행·장애 대응
 
+현재 SQLite 마이그레이션은 이전 V36 스키마를 기준으로 한 새 V1에서 시작한다. 기존 설치의 버전별 전환 절차는 [마이그레이션 안내](../backend/migrations/README.md)에 있다.
+
 ## 개발 환경과 명령
 
-버전은 `.node-version`, `rust-toolchain.toml`, `package.json`, `scripts/runtime-versions.json`, `scripts/dev-tools.json`이 소유한다. `./scripts/setup.sh`는 의존성·개발 도구를 준비하고 `pnpm runtime:install`은 로컬 문서 실행기를 설치한다. 앱 실행 중 설치는 하지 않는다.
+`scripts/runtime/`은 문서 실행기 설치와 준비, `scripts/quality/`는 소스·도구·의존성 검사, `scripts/test/`는 브라우저 테스트·커버리지·스모크 검사, `scripts/release/`는 번들 생성과 검증을 담당한다. 개발 명령은 저장소 루트에서 아래와 같이 실행한다.
+
+버전은 `.node-version`, `rust-toolchain.toml`, `package.json`, `scripts/runtime/versions.json`, `scripts/quality/dev-tools.json`이 소유한다. `./scripts/setup.sh`는 의존성·개발 도구를 준비하고 `pnpm runtime:install`은 로컬 문서 실행기를 설치한다. 앱 실행 중 설치는 하지 않는다.
 
 | 명령                            | 동작                                           |
 | ------------------------------- | ---------------------------------------------- |
@@ -64,7 +68,7 @@ Vite는 `127.0.0.1:5173/home/`, API는 `127.0.0.1:8000`이다. Rust 변경 후 �
 
 ## 로컬 패키징
 
-`pnpm build` 후 현재 호스트용 번들이 필요하면 `pnpm release:package vYYYYMMDD`를 실행한다. 태그 인자는 소스 제품 버전과 일치해야 한다. `pnpm release:verify <archive>`는 다른 경로에 압축을 풀고 포함된 런타임으로 실행·백업·복원을 검사한다. Linux 최소 환경 검증에는 `scripts/verify-release-linux.sh`를 사용한다.
+`pnpm build` 후 현재 호스트용 번들이 필요하면 `pnpm release:package vYYYYMMDD`를 실행한다. 태그 인자는 소스 제품 버전과 일치해야 한다. `pnpm release:verify <archive>`는 다른 경로에 압축을 풀고 포함된 런타임으로 실행·백업·복원을 검사한다. Linux 최소 환경 검증에는 `scripts/release/verify-linux.sh`를 사용한다.
 
 ## 장애 대응
 

@@ -1,7 +1,7 @@
 // Purpose: Own persisted operational request capacity for each model connection.
 // Pattern: Short CAS transactions, existing connection check and canonical default limits.
 // Usage: SqliteRequests delegates capacity reads/writes here through its bounded writer.
-// Related: modules/model_execution/capacity.rs, V10__model_capacity.sql.
+// Related: modules/model_execution/capacity.rs, V1__baseline.sql.
 use crate::modules::{
     model_execution::{Capacity, Error, Limits},
     model_registry,

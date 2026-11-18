@@ -19,6 +19,7 @@ async function model(options = {}) {
     let body = '';
     for await (const part of req) body += part;
     const input = JSON.parse(body);
+    if (require('./draft-probe.cjs').replyToProbe(res, input)) return;
     const context = JSON.parse(input.messages[1].content);
     if (context.state && context.questions) {
       const answers = Object.fromEntries(

@@ -1,7 +1,7 @@
 // Purpose: Materialize verified OCR models into application-owned writable cache directories.
 // Pattern: Bundled models are immutable; cache repair uses same-filesystem atomic writes.
 // Usage: Runtime initialization before Kordoc executes offline.
-// Related: mod.rs, scripts/prepare-document-runtime.mjs, storage root config/.
+// Related: mod.rs, scripts/runtime/documents.mjs, storage root config/.
 use sha2::{Digest, Sha256};
 use std::{
     io::Write,

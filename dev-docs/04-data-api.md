@@ -9,6 +9,10 @@
 - 외부 응답과 사용자 입력은 경계에서 검증한다. 클라이언트는 Zod로 성공 응답을 검사하며 오류·취소·재시도는 [공통 HTTP 어댑터](../frontend/src/shared/api/http.ts)가 구분한다.
 - 비밀 키와 토큰은 일반 조회 응답에 포함하지 않는다. 원본 HTML은 다운로드만 허용하고 브라우저에서 실행하지 않는다.
 
+`GET /api/v1/models/setup`은 활성 작성용 LLM의 존재 여부(`llm`)와 공용 판정 연결의 사용 가능 여부(`decision`)만 반환한다. 모델 서버 호출은 Admin에서 명시적으로 연결 진단을 실행할 때 발생한다.
+
+모델 설정 초안은 먼저 `POST /api/v1/admin/llm/providers/{id}/diagnose`로 확인한다. 본문은 저장과 같으며 `thinking`과 `thinking_effort`는 각각 nullable boolean, nullable enum(low, medium, high, xhigh)이다. `decision: true`는 샘플 판정 경로를 선택한다. 성공 응답의 `ticket`을 `X-Connection-Diagnostic` 헤더에 넣어 같은 본문으로 PUT한다. 진단 실패·만료(15분)·입력 변경에는 새 진단이 필요하다. 서버는 주소·키를 포함한 초안의 해시와 버전을 확인하고 진단에서 결정한 유효 effort만 저장한다. 설정 리비전을 커밋하면 그 연결의 기존 진단표를 폐기한다.
+
 ## 주요 리소스
 
 | 리소스         | HTTP 경로                      | 저장 책임                                   |
@@ -23,6 +27,10 @@
 | 모델 연결      | `/admin/llm/providers`         | 암호화된 불변 연결 설정                     |
 
 실제 하위 명령과 DTO는 [HTTP 어댑터](../backend/src/adapters/http/)와 [통합 테스트](../backend/tests/)가 소유한다. 설계 문서에만 있는 경로를 동작하는 API로 간주하지 않는다.
+
+프로젝트 응답의 `saved_stage`는 저장된 작업 중 가장 뒤의 단계를 나타낸다. 작업 순서에 따라 `created`, `sources`, `review`, `guide`, `outline`, `evidence`, `design`, `presentation`을 사용한다. 다음 단계 실행 가능 여부는 Studio가 현재 원본과 설정 버전으로 별도 확인한다.
+
+프로젝트 원본과 Space 자료의 `GET …/processing/history?file_version=N`은 해당 파일 버전의 최신 처리 작업 한 건을 배열로 반환한다. 해당 작업이 없으면 빈 배열이다. 버전을 생략하면 최근 작업을 최대 50건 반환한다.
 
 ## Markdown 원본추출 계약
 

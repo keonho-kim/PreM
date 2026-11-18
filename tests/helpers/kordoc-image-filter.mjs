@@ -1,7 +1,7 @@
 // Purpose: Verify the pinned Kordoc filter removes blank images but preserves useful tiny icons.
 // Pattern: Actual upstream code and synthetic local bytes; no OCR, LLM, network or application data.
 // Usage: runtime/node/bin/node --test tests/helpers/kordoc-image-filter.mjs.
-// Related: scripts/prepare-kordoc-filter.mjs, backend/tools/reference-previews.mjs.
+// Related: scripts/runtime/kordoc-filter.mjs, backend/tools/reference-previews.mjs.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';

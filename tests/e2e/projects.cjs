@@ -14,9 +14,10 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
   const { base } = server;
   const captures = path.join(projectRoot, 'tests/.artifacts/captures/folio');
   fs.mkdirSync(captures, { recursive: true });
-  let session;
+  let session, fixture;
   try {
     await server.start();
+    fixture = await require('./configure-documents.cjs').configureDocuments(server.base);
     session = await openBrowser('projects-production');
     const first = await session.browser.createBrowserContext(),
       second = await session.browser.createBrowserContext();
@@ -192,6 +193,7 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
       if (session) await session.close();
     } finally {
       await server.close();
+      await fixture?.close();
     }
   }
 })().catch((error) => {

@@ -1,7 +1,7 @@
 # Purpose: Enforce dependency provenance, advisory checks and reviewed license families.
 # Pattern: Workspace policy covering product, build and test dependencies.
 # Usage: cargo deny --locked check.
-# Related: scripts/quality-check.sh, dev-docs/08-dependencies.md.
+# Related: scripts/quality/check.sh, dev-docs/08-dependencies.md.
 [graph]
 all-features = true
 

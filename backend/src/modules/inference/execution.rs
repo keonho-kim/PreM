@@ -56,6 +56,32 @@ impl Inference {
             .await?;
         Ok(ExecutionResult { text, record })
     }
+    pub async fn probe(
+        &self,
+        input: crate::modules::model_registry::DiscoveryInput,
+        settings: &crate::modules::model_registry::Settings,
+        check_effort_validation: bool,
+    ) -> Result<bool, Error> {
+        self.execution
+            .draft_query(input, Some(settings), |mut c| {
+                c.probe_effort_validation = check_effort_validation;
+                let request = CompletionInput {
+                    system: crate::prompts::diagnostics::PROBE.into(),
+                    prompt: crate::prompts::diagnostics::TEXT.into(),
+                    schema: None,
+                    max_tokens: c.max_output_tokens.unwrap_or(2048).min(4096),
+                };
+                self.client.complete(c, request)
+            })
+            .await
+            .and_then(|response| {
+                if response.text.trim() == "PreM connection OK" {
+                    Ok(response.reasoned)
+                } else {
+                    Err(Error::InvalidResponse)
+                }
+            })
+    }
     pub async fn discover(
         &self,
         input: crate::modules::model_registry::DiscoveryInput,

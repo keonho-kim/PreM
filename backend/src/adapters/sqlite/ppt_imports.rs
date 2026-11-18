@@ -1,7 +1,7 @@
 // Purpose: Own shared PPT import identities and package-member references.
 // Pattern: One atomic commit registers all files before a source/profile cache becomes visible.
 // Usage: The process adapter publishes bytes first, then calls this narrow persistence port.
-// Related: modules/ppt_imports/, V12__shared_ppt_packages.sql.
+// Related: modules/ppt_imports/, V1__baseline.sql.
 use super::{Queue, Unavailable};
 use crate::modules::{
     assets::{DerivedBlob, DerivedFormat, PACKAGE_MIME, Package},

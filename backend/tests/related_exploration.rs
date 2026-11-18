@@ -1,7 +1,7 @@
 // Purpose: Verify dynamic evidence reads, bounded pulls and pinned optional planning end to end.
 // Pattern: Real document processing and durable SQLite; deterministic local model contracts.
 // Usage: cargo nextest run --test related_exploration; no application storage or model downloads.
-// Related: relation_support/, V18__relation_workspaces.sql, modules/relations/.
+// Related: relation_support/, V1__baseline.sql, modules/relations/.
 mod common;
 #[allow(dead_code)]
 mod document_support;

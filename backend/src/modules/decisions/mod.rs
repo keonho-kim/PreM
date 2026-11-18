@@ -68,6 +68,35 @@ impl Decisions {
             })
             .await
     }
+    pub async fn probe(
+        &self,
+        input: crate::modules::model_registry::DiscoveryInput,
+        settings: &crate::modules::model_registry::Settings,
+    ) -> Result<(), Error> {
+        let batch = Batch {
+            state: serde_json::json!("목차\n1. 개요\n2. 계획"),
+            questions: [(
+                "category".into(),
+                Question::Choice {
+                    instructions: "입력에 맞는 유형을 선택하세요.".into(),
+                    criteria: [
+                        ("0".into(), "일반 문장".into()),
+                        ("1".into(), "문서 목차".into()),
+                    ]
+                    .into(),
+                },
+            )]
+            .into(),
+        };
+        let result = self
+            .execution
+            .draft_query(input, Some(settings), |c| {
+                self.evaluator.evaluate(c, batch.clone())
+            })
+            .await?;
+        batch.validate_result(&result.value)?;
+        Ok(())
+    }
     pub async fn discover(
         &self,
         input: crate::modules::model_registry::DiscoveryInput,

@@ -15,6 +15,21 @@ pub(super) fn text(value: Option<&str>) -> Result<String, Error> {
         .ok_or(Error::InvalidResponse)?;
     Ok(value.into())
 }
+// Some chat templates prefill the opening tag and return only its closing delimiter.
+pub(super) fn visible_completion(
+    value: Option<&str>,
+    prefilled: bool,
+) -> Result<(String, bool), Error> {
+    let raw = value.ok_or(Error::InvalidResponse)?.trim_start();
+    if let Some(rest) = raw.strip_prefix("<think>") {
+        let (thought, answer) = rest.split_once("</think>").ok_or(Error::InvalidResponse)?;
+        return Ok((text(Some(answer.trim_start()))?, !thought.trim().is_empty()));
+    }
+    if prefilled && let Some((thought, answer)) = raw.split_once("</think>") {
+        return Ok((text(Some(answer.trim_start()))?, !thought.trim().is_empty()));
+    }
+    Ok((text(value)?, false))
+}
 pub(super) fn tokens(v: &Value, path: &str) -> Option<i64> {
     v.pointer(path).and_then(Value::as_i64).filter(|n| *n >= 0)
 }

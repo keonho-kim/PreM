@@ -103,12 +103,28 @@ impl Execution {
         input: DiscoveryInput,
         call: impl FnOnce(Credentials) -> CallFuture<T> + Send,
     ) -> Result<T, Error> {
+        self.draft_query(input, None, call).await
+    }
+    pub async fn draft_query<T>(
+        &self,
+        input: DiscoveryInput,
+        settings: Option<&crate::modules::model_registry::Settings>,
+        call: impl FnOnce(Credentials) -> CallFuture<T> + Send,
+    ) -> Result<T, Error> {
         // Unsaved endpoints have no connection capacity row: bound discovery globally.
         let _slot = self
             .discovery_slots
             .try_acquire()
             .map_err(|_| Error::Busy)?;
-        let c = self.registry.discovery_credentials(input).await?;
+        let mut c = self.registry.discovery_credentials(input).await?;
+        if let Some(s) = settings {
+            c.model_identifier.clone_from(&s.model_identifier);
+            c.timeout_seconds = s.timeout_seconds;
+            c.max_output_tokens = s.max_output_tokens;
+            c.thinking = s.thinking;
+            c.context_length = s.context_length;
+            c.physical_batch_size = s.physical_batch_size;
+        }
         authenticate(&c)?;
         let _permit = if c.connection_id.is_nil() {
             None

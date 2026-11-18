@@ -1,7 +1,7 @@
 // Purpose: Define validated connection-level request limits and observable queue counts.
 // Pattern: Independent operational settings preserve immutable model configuration revisions.
 // Usage: Execution and SQLite share this contract; HTTP exposes only safe values.
-// Related: admission.rs, adapters/sqlite/model_capacity.rs, V10__model_capacity.sql.
+// Related: admission.rs, adapters/sqlite/model_capacity.rs, V1__baseline.sql.
 use super::Error;
 use crate::modules::model_registry;
 use serde::{Deserialize, Serialize};

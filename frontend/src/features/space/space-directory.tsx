@@ -14,7 +14,7 @@ import { notify } from '@/shared/notifications';
 import { errorMessage } from '@/shared/api/http';
 import { listAssets, spaceKeys, type Asset, type LibraryKind, type LibraryFilter } from './api';
 import { useUploadEngine } from './use-upload-engine';
-import { UploadAction } from './upload-action';
+import { LibraryUpload } from './upload-action';
 import { UploadDialog } from './upload-dialog';
 import { AssetCard, type AssetAction } from './asset-card';
 import { AssetDialog } from './asset-dialog';
@@ -29,7 +29,7 @@ type Props = {
   onNavigate: (values: { kind: LibraryFilter; q: string; status: string; offset: number }) => void;
 };
 type Session = {
-  action: AssetAction | 'upload';
+  action: AssetAction;
   kind: LibraryKind;
   item?: Asset;
   returnFocus?: HTMLElement;
@@ -78,12 +78,7 @@ export function SpaceDirectory({ kind, q, status, offset, onNavigate }: Props) {
           </h1>
           <p className="muted">레퍼런스와 PPTX 템플릿의 원본을 함께 관리하세요.</p>
         </div>
-        <UploadAction
-          kind={kind}
-          onSelect={(selected, target) =>
-            setSession({ action: 'upload', kind: selected, returnFocus: target })
-          }
-        />
+        <LibraryUpload kind={kind} />
       </div>
       <Tabs
         value={kind}
@@ -229,7 +224,7 @@ export function SpaceDirectory({ kind, q, status, offset, onNavigate }: Props) {
           )}
         </TabsContent>
       </Tabs>
-      {session && (session.action === 'upload' || session.action === 'replace') && (
+      {session?.action === 'replace' && (
         <UploadDialog
           kind={session.kind}
           target={session.item}

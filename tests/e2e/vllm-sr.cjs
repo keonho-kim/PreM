@@ -61,6 +61,7 @@ async function fill(page, name, value) {
     let raw = '';
     for await (const chunk of req) raw += chunk;
     const body = JSON.parse(raw);
+    if (require('./draft-probe.cjs').replyToProbe(res, body)) return;
     assert.equal(body.model, 'vllm-sr/d3-flash');
     assert.equal(typeof body.state, 'string');
     evaluations++;
@@ -110,6 +111,7 @@ async function fill(page, name, value) {
     assert.equal(await a.$('::-p-aria(span-only[role="option"])'), null);
     await click(a, 'vllm-sr/d3-flash · Decision', 'option');
     assert.deepEqual(await (await fetch(server.base + '/api/v1/admin/llm/providers')).json(), []);
+    await require('./draft-probe.cjs').verifyDraft(a);
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
     const settingsUrl = a.url();

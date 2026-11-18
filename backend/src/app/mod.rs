@@ -25,6 +25,7 @@ impl Drop for ProcessingStop {
     }
 }
 pub struct Application {
+    storage_root: std::path::PathBuf,
     document_engine: crate::workflows::engine::Engine,
     relation_engine: crate::workflows::engine::Engine,
     outline_engine: crate::workflows::engine::Engine,
@@ -48,6 +49,9 @@ pub struct Application {
     presentation_worker: Option<tokio::task::JoinHandle<()>>,
 }
 impl Application {
+    pub fn storage_root(&self) -> &Path {
+        &self.storage_root
+    }
     /// Process bootstrap/test access only; never return this value over HTTP.
     pub fn admin_token(&self) -> &str {
         self.admin_access.cli_token()
@@ -131,6 +135,7 @@ impl Application {
         );
         let search = crate::modules::search::Search::new(database.search());
         Ok(Self {
+            storage_root: root.to_owned(),
             relation_engine: crate::workflows::engine::Engine::new(
                 std::num::NonZeroUsize::new(1).unwrap(),
             ),

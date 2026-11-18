@@ -41,7 +41,19 @@ pub(super) async fn complete(
     if let Some(schema) = i.schema {
         body["output_config"] = json!({"format":{"type":"json_schema","schema":schema}});
     }
-    let r = read(request(t, c, "messages", true)?.json(&body).send().await).await?;
+    super::thinking::apply(&mut body, c);
+    let reply = read(request(t, c, "messages", true)?.json(&body).send().await).await;
+    let r = match reply {
+        Err(Error::Upstream(400 | 422))
+            if c.thinking.enabled == Some(true)
+                && c.thinking.effort.is_none()
+                && i.max_tokens > 1024 =>
+        {
+            body["thinking"] = json!({"type":"enabled","budget_tokens":1024});
+            read(request(t, c, "messages", true)?.json(&body).send().await).await?
+        }
+        other => other?,
+    };
     if r["type"] != "message" || r["role"] != "assistant" || r["stop_reason"] != "end_turn" {
         return Err(Error::InvalidResponse);
     }
@@ -54,6 +66,10 @@ pub(super) async fn complete(
         }
     }
     Ok(Completion {
+        reasoned: r["content"].as_array().is_some_and(|xs| {
+            xs.iter()
+                .any(|p| matches!(p["type"].as_str(), Some("thinking" | "redacted_thinking")))
+        }),
         text: text(Some(&content))?,
         prompt_tokens: tokens(&r, "/usage/input_tokens"),
         completion_tokens: tokens(&r, "/usage/output_tokens"),

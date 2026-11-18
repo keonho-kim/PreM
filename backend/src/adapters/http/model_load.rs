@@ -21,6 +21,39 @@ pub(crate) struct ModelLoader {
     slot: Arc<Semaphore>,
 }
 impl ModelLoader {
+    pub(super) async fn prepare_draft(
+        &self,
+        c: crate::modules::model_registry::Credentials,
+    ) -> Result<String, Error> {
+        let _slot = self.slot.try_acquire().map_err(|_| Error::Busy)?;
+        lm_load::prepare(&self.transport, c).await
+    }
+    pub(super) async fn reasoning_options(
+        &self,
+        mut c: crate::modules::model_registry::Credentials,
+    ) -> Result<Option<Vec<String>>, Error> {
+        use crate::adapters::model_http::{bearer, lm_studio_models::native_url, read};
+        c.base_url = native_url(&c)?;
+        let inventory = read(bearer(&self.transport, &c, "models", false)?.send().await).await?;
+        let model = inventory["models"].as_array().and_then(|models| {
+            models.iter().find(|m| {
+                m["key"] == c.model_identifier
+                    || m["loaded_instances"]
+                        .as_array()
+                        .is_some_and(|xs| xs.iter().any(|x| x["id"] == c.model_identifier))
+            })
+        });
+        Ok(model
+            .and_then(|m| m.pointer("/capabilities/reasoning/allowed_options"))
+            .and_then(|v| v.as_array())
+            .map(|xs| {
+                xs.iter()
+                    .filter_map(|v| v.as_str())
+                    .filter(|s| matches!(*s, "on" | "off" | "low" | "medium" | "high" | "xhigh"))
+                    .map(str::to_owned)
+                    .collect()
+            }))
+    }
     pub fn new() -> anyhow::Result<Self> {
         Ok(Self {
             transport: Transport::new()?,

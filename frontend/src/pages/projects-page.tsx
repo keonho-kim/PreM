@@ -5,7 +5,7 @@
 
 import { useUrlSearch } from '@/shared/routing/search';
 import { ProjectDirectory, defaultFilters, type ProjectFilters } from '@/features/projects';
-export function ProjectsPage() {
+export function ProjectsPage({ studio = false }: { studio?: boolean } = {}) {
   const [params, setParams] = useUrlSearch();
   const raw = Number(params.get('offset') ?? 0);
   const offset =
@@ -35,6 +35,7 @@ export function ProjectsPage() {
   }
   return (
     <ProjectDirectory
+      studio={studio}
       filters={filters}
       offset={offset}
       onFilter={(next) => navigate(next, 0)}

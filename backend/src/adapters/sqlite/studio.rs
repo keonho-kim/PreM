@@ -1,7 +1,7 @@
 // Purpose: Persist source review snapshots without copying text or generated results.
 // Pattern: One transaction verifies current versions/readiness and records immutable review links.
 // Usage: The Studio facade requests state or confirms the supplied snapshot hash.
-// Related: V13__project_sources.sql, modules/studio/, documents/queries.rs.
+// Related: V1__baseline.sql, modules/studio/, documents/queries.rs.
 use super::{Queue, Unavailable};
 use crate::modules::studio::*;
 use rusqlite::{OptionalExtension, params};

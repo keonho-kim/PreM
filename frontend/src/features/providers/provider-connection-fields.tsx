@@ -30,6 +30,7 @@ export function ProviderConnectionFields({
   addressRequired,
   update,
   modelPicker,
+  thinkingFields,
   onAddress,
   onSecret,
   onClear,
@@ -45,6 +46,7 @@ export function ProviderConnectionFields({
   addressRequired: boolean;
   update: <K extends keyof ProviderDraft>(key: K, value: ProviderDraft[K]) => void;
   modelPicker: ReactNode;
+  thinkingFields: ReactNode;
   onAddress: (value: string) => void;
   onSecret: (value: string) => void;
   onClear: () => void;
@@ -142,6 +144,7 @@ export function ProviderConnectionFields({
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="provider-fields">
+          {thinkingFields}
           <div>
             <Label htmlFor={`${prefix}-name`}>표시 이름 · 필수</Label>
             <Input

@@ -4,6 +4,10 @@ PreM 통합 제품·기술 설계서 v2.0. 원문 **8장**을 수록한다. [문
 
 현재 구현은 Provider별 네이티브/공식 서버 API의 설정 저장·모델 목록·텍스트/지원되는 구조화 진단과 요청 이력이다. Vision/Tool Calling/스트리밍, 작업별 라우팅·fallback과 문서 처리 Workflow는 아직 구현하지 않았다. 실제 API와 키 계약은 [구현 데이터·API](../dev-docs/04-data-api.md#provider-설정진단-api)를 따른다.
 
+Home 진입 시 저장된 활성 LLM과 실제 적용된 판정 연결을 확인하고 빠진 역할의 Admin 설정으로 안내한다. LLM 연결과 Decision Model 연결의 연결 진단은 관리자가 선택한 연결 리비전에 각각 짧은 텍스트 요청과 선택형 판정 요청을 보낸다.
+
+추가 연결 설정에 선택형 Thinking·effort를 둔다. 연결 리비전은 입력 초안으로 진단을 통과한 뒤 저장한다. 작성 경로는 검증한 옵션을 적용하고 판정 경로는 전용 Decision 또는 Thinking을 끈 LLM을 사용한다. 서버가 내부 추론 여부를 공개하지 않는 경우에는 요청 수락 여부만 표시한다.
+
 ## 8.1 지원 Provider
 
 | Provider | 연결 방식 |

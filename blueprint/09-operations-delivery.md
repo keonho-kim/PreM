@@ -6,20 +6,7 @@ PreM 통합 제품·기술 설계서 v2.0. 원문 **11장, 13장, 14장, 16장**
 
 refinery를 사용하여 Migration을 Rust 실행 파일에 포함한다.
 
-```text
-backend/migrations/
-├── V1__base_schema.sql
-├── V2__blob_registry.sql
-├── V3__document_extraction.sql
-├── V4__project_guides.sql
-├── V5__outline_mapping.sql
-├── V6__libraries.sql
-├── V7__presentations.sql
-├── V8__workflow_engine.sql
-└── V9__llm_registry.sql
-```
-
-한 번 배포한 Migration 파일은 수정하지 않는다. 새 스키마 변경은 새로운 Migration을 추가한다.
+현재 기준은 이전 V36과 같은 스키마의 `V1__baseline.sql`이다. V2부터 기준 스키마 위에 변경을 순서대로 추가한다. 배포한 파일의 내용과 번호는 유지한다. 기존 DB의 백업·전환 경로는 [SQLite 마이그레이션](../backend/migrations/README.md)을 따른다.
 
 ### 업데이트 정책
 

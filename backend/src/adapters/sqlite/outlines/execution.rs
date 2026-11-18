@@ -1,7 +1,7 @@
 // Purpose: Fence common outline checkpoints with canonical job leases and atomic revision commits.
 // Pattern: Feature-owned bridge delegates generic writes; no second job or batch-output owner.
 // Usage: Engine driver, final batch checkpoint and publication transaction.
-// Related: jobs.rs, plans.rs, queries.rs, V25__outline_workflows.sql.
+// Related: jobs.rs, plans.rs, queries.rs, V1__baseline.sql.
 use super::super::workflows as w;
 use super::*;
 use crate::workflows::{

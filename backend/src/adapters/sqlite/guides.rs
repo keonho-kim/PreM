@@ -1,7 +1,7 @@
 // Purpose: Append guide revisions with optimistic concurrency and no workflow side effects.
 // Pattern: One owner and short transaction; previous revisions stay immutable.
 // Usage: The guide facade reads the latest revision or commits an explicit user edit.
-// Related: modules/guides/, V13__project_sources.sql.
+// Related: modules/guides/, V1__baseline.sql.
 use super::{Queue, Unavailable};
 use crate::modules::guides::*;
 use rusqlite::{OptionalExtension, params};

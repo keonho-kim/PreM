@@ -18,6 +18,21 @@ async function authorizedFetch(input, init) {
       init?.headers ?? (input instanceof Request ? input.headers : undefined),
     );
     if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+    if (
+      init?.method === 'PUT' &&
+      /^\/api\/v1\/admin\/llm\/providers\/[^/]+$/.test(url.pathname) &&
+      !headers.has('X-Connection-Diagnostic')
+    ) {
+      const probe = await fetch(new URL(url.pathname + '/diagnose', url), {
+        ...init,
+        method: 'POST',
+        headers,
+      });
+      if (!probe.ok) return probe;
+      const { ticket } = await probe.json();
+      if (!ticket) throw Error('No supported configuration found in the diagnostic');
+      headers.set('X-Connection-Diagnostic', ticket);
+    }
     return fetch(input, { ...init, headers });
   }
   return fetch(input, init);

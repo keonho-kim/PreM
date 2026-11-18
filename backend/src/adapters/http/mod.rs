@@ -18,6 +18,7 @@ mod outlines;
 mod presentations;
 mod projects;
 mod provider_catalog;
+mod provider_drafts;
 mod providers;
 mod relations;
 mod search;

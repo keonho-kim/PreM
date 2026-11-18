@@ -3,15 +3,33 @@
 // Usage: Vitest; real native transport and persistence are covered by HTTP/browser suites.
 // Related: provider-form.tsx, use-model-discovery.ts, tests/e2e/providers.cjs.
 import '@testing-library/jest-dom/vitest';
-import { afterEach, beforeAll, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, beforeAll, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { catalogFixture } from './test-fixtures';
 import { ProviderForm } from './connection-form';
-import { discoverModels, saveProvider, getProvider, type Provider } from './api';
+import { probeProvider, discoverModels, saveProvider, getProvider, type Provider } from './api';
 import { ApiError } from '@/shared/api/http';
-vi.mock('./api', () => ({ saveProvider: vi.fn(), getProvider: vi.fn(), discoverModels: vi.fn() }));
+vi.mock('./api', async (original) => ({
+  ...(await original<typeof import('./api')>()),
+  probeProvider: vi.fn(),
+  saveProvider: vi.fn(),
+  getProvider: vi.fn(),
+  discoverModels: vi.fn(),
+}));
+beforeEach(() =>
+  vi.mocked(probeProvider).mockResolvedValue({
+    ticket: '8cc9a4c7-5c93-4ed6-b8a8-f6982caf0568',
+    advertised: null,
+    accepted_efforts: [],
+    effective_effort: null,
+  }),
+);
+async function probe(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: '저장 전 연결 진단' }));
+  await screen.findByText('연결 진단을 통과했습니다.');
+}
 beforeAll(() => {
   HTMLElement.prototype.hasPointerCapture = () => false;
   HTMLElement.prototype.setPointerCapture = () => {};
@@ -63,20 +81,19 @@ it('keeps the output budget optional and reviews a per-model limit before saving
   expect(budget).toHaveValue(null);
   await user.type(budget, '30000');
   await user.keyboard('{Escape}');
+  if (!(screen.getByRole('button', { name: '저장 전 연결 진단' }) as HTMLButtonElement).disabled)
+    await probe(user);
   await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
   expect(screen.getByRole('alertdialog')).toHaveTextContent('최대 출력 토큰');
   expect(saveProvider).not.toHaveBeenCalled();
   vi.mocked(saveProvider).mockResolvedValue({ ...provider, version: 2, max_output_tokens: 30000 });
   await user.click(screen.getByRole('button', { name: '확인하고 저장' }));
-  await waitFor(() =>
-    expect(saveProvider).toHaveBeenCalledWith(
-      provider.id,
-      1,
-      expect.objectContaining({ max_output_tokens: 30000, timeout_seconds: 600 }),
-      undefined,
-      false,
-    ),
-  );
+  await waitFor(() => expect(saveProvider).toHaveBeenCalledOnce());
+  expect(JSON.parse(vi.mocked(saveProvider).mock.calls[0]?.[1] ?? '{}')).toMatchObject({
+    max_output_tokens: 30000,
+    timeout_seconds: 600,
+    expected_version: 1,
+  });
 });
 afterEach(() => {
   cleanup();
@@ -96,9 +113,12 @@ it('requires actual discovery and selection before registering a model', async (
   expect(saveProvider).not.toHaveBeenCalled();
   await choose(user, 'available-model');
   vi.mocked(saveProvider).mockResolvedValue(provider);
+  await probe(user);
   await user.click(screen.getByRole('button', { name: '설정 저장' }));
   await waitFor(() => expect(saveProvider).toHaveBeenCalledOnce());
-  expect(vi.mocked(saveProvider).mock.calls[0]?.[2].model_identifier).toBe('available-model');
+  expect(JSON.parse(vi.mocked(saveProvider).mock.calls[0]?.[1] ?? '{}').model_identifier).toBe(
+    'available-model',
+  );
 });
 it('keeps retained credentials hidden, confirms changes and reviews conflicts', async () => {
   const user = userEvent.setup();
@@ -121,6 +141,8 @@ it('keeps retained credentials hidden, confirms changes and reviews conflicts', 
     .mockResolvedValueOnce({ ...provider, version: 3 });
   vi.mocked(getProvider).mockResolvedValue({ ...provider, version: 2 });
   await user.keyboard('{Escape}');
+  if (!(screen.getByRole('button', { name: '저장 전 연결 진단' }) as HTMLButtonElement).disabled)
+    await probe(user);
   await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
   expect(saveProvider).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: '돌아가기' })).toHaveFocus();
@@ -129,6 +151,8 @@ it('keeps retained credentials hidden, confirms changes and reviews conflicts', 
     'new-model',
   );
   await user.keyboard('{Escape}');
+  if (!(screen.getByRole('button', { name: '저장 전 연결 진단' }) as HTMLButtonElement).disabled)
+    await probe(user);
   await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
   await user.click(screen.getByRole('button', { name: '확인하고 저장' }));
   await user.click(await screen.findByRole('button', { name: '최신 설정 확인' }));
@@ -136,10 +160,12 @@ it('keeps retained credentials hidden, confirms changes and reviews conflicts', 
   await openModels(user);
   await screen.findByText('1개 모델을 찾았습니다. 사용할 모델을 선택하세요.');
   await user.keyboard('{Escape}');
+  if (!(screen.getByRole('button', { name: '저장 전 연결 진단' }) as HTMLButtonElement).disabled)
+    await probe(user);
   await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
   await user.click(screen.getByRole('button', { name: '확인하고 저장' }));
   await waitFor(() => expect(saved).toHaveBeenCalledOnce());
-  expect(vi.mocked(saveProvider).mock.calls[1]?.[1]).toBe(2);
+  expect(JSON.parse(vi.mocked(saveProvider).mock.calls[1]?.[1] ?? '{}').expected_version).toBe(2);
 });
 it('invalidates discovered choices when endpoint changes and ignores a late response', async () => {
   const user = userEvent.setup();
@@ -186,12 +212,16 @@ it('requires re-discovery after replacing a key and never repeats the key in con
   await user.click(screen.getByRole('button', { name: '연결 주소·인증 변경' }));
   await user.type(screen.getByLabelText('새 API Key'), 'new-key');
   await user.keyboard('{Escape}');
+  if (!(screen.getByRole('button', { name: '저장 전 연결 진단' }) as HTMLButtonElement).disabled)
+    await probe(user);
   await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
   expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   vi.mocked(discoverModels).mockResolvedValue(['saved-model']);
   await openModels(user);
   await screen.findByText('1개 모델을 찾았습니다. 사용할 모델을 선택하세요.');
   await user.keyboard('{Escape}');
+  if (!(screen.getByRole('button', { name: '저장 전 연결 진단' }) as HTMLButtonElement).disabled)
+    await probe(user);
   await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
   expect(screen.getByRole('alertdialog')).not.toHaveTextContent('new-key');
   expect(vi.mocked(discoverModels).mock.calls[0]?.[0].api_key).toBe('new-key');
@@ -211,4 +241,27 @@ it('starts saved connections compact and retains credential edits across disclos
   await user.keyboard('{Enter}');
   expect(screen.getByLabelText('새 API Key')).toHaveValue('synthetic-draft');
   expect(saveProvider).not.toHaveBeenCalled();
+});
+
+it('probes optional thinking and effort, and invalidates a successful diagnostic after edits', async () => {
+  const user = userEvent.setup();
+  mount(provider);
+  expect(screen.queryByRole('combobox', { name: 'Thinking · 선택' })).toBeNull();
+  await user.click(screen.getByRole('button', { name: '추가 연결 설정' }));
+  expect(screen.queryByRole('combobox', { name: 'Thinking Effort · 선택' })).toBeNull();
+  await user.click(screen.getByRole('combobox', { name: 'Thinking · 선택' }));
+  await user.click(screen.getByRole('option', { name: '켜기' }));
+  await screen.findByText('연결 진단을 통과했습니다.');
+  const selector = screen.getByRole('combobox', { name: 'Thinking Effort · 선택' });
+  await user.click(selector);
+  for (const level of ['low', 'medium', 'high', 'xhigh'])
+    expect(screen.getByRole('option', { name: level })).toBeEnabled();
+  await user.click(screen.getByRole('option', { name: 'xhigh' }));
+  await screen.findByText(/선택한 effort는 적용하지 않고 Thinking만 켭니다/);
+  expect(vi.mocked(probeProvider)).toHaveBeenCalledTimes(2);
+  const body = vi.mocked(probeProvider).mock.lastCall?.[1];
+  expect(JSON.parse(body ?? '{}')).toMatchObject({ thinking: true, thinking_effort: 'xhigh' });
+  expect(screen.getByRole('button', { name: '변경 사항 저장' })).toBeEnabled();
+  await user.type(screen.getByLabelText('표시 이름 · 필수'), ' 변경');
+  expect(screen.getByRole('button', { name: '변경 사항 저장' })).toBeDisabled();
 });

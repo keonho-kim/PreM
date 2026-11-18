@@ -58,6 +58,7 @@ impl Registry {
             None
         };
         Ok(Credentials {
+            probe_effort_validation: false,
             connection_id: previous.as_ref().map_or(Uuid::nil(), |p| p.id),
             config_id: previous.as_ref().map_or(Uuid::nil(), |p| p.config_id),
             kind: input.kind,
@@ -68,6 +69,7 @@ impl Registry {
             max_output_tokens: None,
             context_length: None,
             physical_batch_size: None,
+            thinking: Default::default(),
         })
     }
 }

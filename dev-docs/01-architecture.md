@@ -22,6 +22,8 @@ SQLite 쓰기는 소유한 writer를 통해 짧은 트랜잭션으로 수행한�
 
 `app → pages → features → shared` 방향을 따른다. feature 내부는 요청·draft·화면·작업 제어로 분리하며 peer 구현을 직접 가져오지 않는다. shadcn/Radix가 포커스·닫기·키보드 탐색을 소유한다. 디자인 기준은 [디자인과 접근성](05-design-accessibility.md)에만 정의한다.
 
+개발 서버는 Vite로 화면 코드를 변환하고 React Compiler 최적화는 프로덕션 빌드에서 적용한다. 메뉴에 포커스를 두거나 포인터를 올리면 TanStack Router가 목적지 코드를 미리 불러온다. Studio의 프로젝트 목록과 개별 작업 공간은 별도 경로에서 로드한다.
+
 ## Common execution engine: presentation integration
 
 `backend/src/workflows/engine/` owns bounded job admission, dependency traversal, completed-node reuse, heartbeat supervision, cancellation propagation and joining its monitor task. `workflows/definitions/` owns presentation v1 (write → render → publish), document v1 (extract → classify → ready) template v1 (extract → ready), outline v1 (compose → publish) and mapping v1 (map → publish). App injects independent document/template (two slots), outline/mapping (one slot) and PPT (one slot) engines into their workers. Existing model connection limits and queues remain with model_execution.

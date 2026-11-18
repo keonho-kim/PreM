@@ -1,7 +1,7 @@
 // Purpose: Define immutable presentation input, slide and job contracts.
 // Pattern: Typed commands and canonical IDs keep source text out of saved preparation rows.
 // Usage: Presentation service, persistence/process adapters and HTTP boundary.
-// Related: mod.rs, V19__presentation_generation.sql.
+// Related: mod.rs, V1__baseline.sql.
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[derive(Serialize)]

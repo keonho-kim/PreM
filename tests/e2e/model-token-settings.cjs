@@ -36,6 +36,7 @@ const { clickRole } = require('../helpers/interactions.cjs');
     let raw = '';
     for await (const part of req) raw += part;
     const body = JSON.parse(raw);
+    if (require('./draft-probe.cjs').replyToProbe(res, body)) return;
     if (req.url === '/api/v1/models/load') {
       assert.equal(body.model, 'sample');
       assert.equal(body.eval_batch_size, 8192);
@@ -78,12 +79,13 @@ const { clickRole } = require('../helpers/interactions.cjs');
     await app.unlock(page);
     await page.locator('input[name=context_length]').fill('16384');
     await page.locator('input[name=physical_batch_size]').fill('8192');
+    await require('./draft-probe.cjs').verifyDraft(page);
     await clickRole(page, '변경 사항 저장');
     await clickRole(page, '확인하고 저장');
     await page.waitForSelector('button::-p-text(저장한 토큰 설정으로 모델 준비)', {
       visible: true,
     });
-    assert.equal(loads, 0);
+    assert.equal(loads, 1);
     await clickRole(page, '저장한 토큰 설정으로 모델 준비');
     await page.waitForFunction(() => document.body.innerText.includes('준비된 모델: sample:2'));
     assert.equal(loads, 1);

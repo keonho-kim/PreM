@@ -64,6 +64,21 @@ async function capture(page, name) {
       await a.$eval('.processing-dialog', (n) => n.textContent),
       /shape_ids|native_locator|manifest|PPT Master|체크포인트/,
     );
+    assert.deepEqual(
+      await a.$$eval('.material-slide-groups .reference-slide > h2', (nodes) =>
+        nodes.map((node) => node.textContent),
+      ),
+      ['슬라이드 1', '슬라이드 2'],
+    );
+    await click(a, '내용', 'tab');
+    await a.waitForSelector('.processing-blocks .reference-slide .processing-block');
+    assert.deepEqual(
+      await a.$$eval('.processing-blocks .reference-slide > h2', (nodes) =>
+        nodes.map((node) => node.textContent),
+      ),
+      ['슬라이드 1', '슬라이드 2'],
+    );
+    await click(a, 'PPT에 쓸 자료', 'tab');
     await kind(a, '장표·페이지');
     await a.waitForFunction(() => document.querySelectorAll('.material-card').length === 2);
     const picks = await a.$$('.material-card button[aria-pressed]');
@@ -84,9 +99,9 @@ async function capture(page, name) {
     await click(a, '전체 자료로 돌아가기');
     await kind(a, '그림');
     await a.waitForFunction(() => document.querySelectorAll('.material-card').length >= 4);
-    assert.match(await a.$eval('.material-gallery', (n) => n.textContent), /이미지/);
-    assert.match(await a.$eval('.material-gallery', (n) => n.textContent), /도형·도식/);
-    assert.match(await a.$eval('.material-gallery', (n) => n.textContent), /차트/);
+    assert.match(await a.$eval('.material-slide-groups', (n) => n.textContent), /이미지/);
+    assert.match(await a.$eval('.material-slide-groups', (n) => n.textContent), /도형·도식/);
+    assert.match(await a.$eval('.material-slide-groups', (n) => n.textContent), /차트/);
     assert.equal(
       await a.$$eval('.material-image', (nodes) =>
         nodes.every((node) => {

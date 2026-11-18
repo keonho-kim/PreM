@@ -29,3 +29,7 @@ pub(super) async fn list(State(api): State<ProviderApi>) -> Result<Response, Api
         .collect::<Vec<_>>();
     Ok(json(StatusCode::OK, items))
 }
+
+pub(super) async fn setup(State(api): State<ProviderApi>) -> Result<Response, ApiError> {
+    Ok(json(StatusCode::OK, api.registry.setup().await?))
+}

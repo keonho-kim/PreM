@@ -1,7 +1,7 @@
 // Purpose: Persist shared project queries, request receipts and conditional lifecycle changes.
 // Pattern: Parameterized SQL on the owned writer; one transaction per command.
 // Usage: Implements the project feature's persistence port.
-// Related: modules/projects/ports.rs, migrations/V2__project_home.sql.
+// Related: modules/projects/ports.rs, migrations/V1__baseline.sql.
 use super::Queue;
 use crate::modules::projects::{
     Change, CreateResult, Error, ListQuery, Project, ProjectList, ProjectStore, StoreFuture,
@@ -10,7 +10,16 @@ use rusqlite::{Connection, OptionalExtension, Row, TransactionBehavior, params};
 use std::sync::Arc;
 use uuid::Uuid;
 pub(super) struct SqliteProjects(pub Arc<Queue>);
-const COLUMNS: &str = "id, name, version, created_at, updated_at, due_date, status, deleted_at";
+const COLUMNS: &str = "id, name, version, created_at, updated_at, due_date, status, deleted_at,
+    CASE
+      WHEN EXISTS (SELECT 1 FROM presentations WHERE project_id=projects.id AND current_revision_id IS NOT NULL) THEN 'presentation'
+      WHEN EXISTS (SELECT 1 FROM presentation_preparations WHERE project_id=projects.id AND design_id IS NOT NULL) THEN 'design'
+      WHEN EXISTS (SELECT 1 FROM presentation_evidence_reviews WHERE project_id=projects.id) THEN 'evidence'
+      WHEN EXISTS (SELECT 1 FROM outline_heads WHERE project_id=projects.id AND current_revision_id IS NOT NULL) THEN 'outline'
+      WHEN EXISTS (SELECT 1 FROM project_guide_revisions WHERE project_id=projects.id) THEN 'guide'
+      WHEN EXISTS (SELECT 1 FROM project_source_reviews WHERE project_id=projects.id) THEN 'review'
+      WHEN EXISTS (SELECT 1 FROM source_items WHERE project_id=projects.id AND deleted_at IS NULL) THEN 'sources'
+      ELSE 'created' END";
 const FILTER: &str = "deleted_at IS NULL AND instr(lower(name),lower(?1))>0 AND (?2='all' OR status=?2) AND (?3 IS NULL OR due_date>=?3) AND (?4 IS NULL OR due_date<=?4) AND (?5 IS NULL OR due_date=?5)";
 fn storage(error: rusqlite::Error) -> Error {
     tracing::error!(%error, "project database operation failed");
@@ -30,6 +39,7 @@ fn row(row: &Row<'_>) -> rusqlite::Result<Project> {
         due_date: row.get(5)?,
         status: row.get(6)?,
         deleted_at: row.get(7)?,
+        saved_stage: row.get(8)?,
     })
 }
 fn get(db: &Connection, id: Uuid, include_deleted: bool) -> Result<Project, Error> {

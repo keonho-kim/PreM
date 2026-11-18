@@ -28,12 +28,13 @@ import './projects.css';
 import './project-gallery.css';
 type Session = { command: ProjectCommand; project?: Project; returnFocus?: HTMLElement };
 type Props = {
+  studio?: boolean;
   filters: ProjectFilters;
   offset: number;
   onFilter: (filters: ProjectFilters) => void;
   onPage: (offset: number) => void;
 };
-export function ProjectDirectory({ filters, offset, onFilter, onPage }: Props) {
+export function ProjectDirectory({ studio, filters, offset, onFilter, onPage }: Props) {
   const navigate = useNavigate();
   const client = useQueryClient(),
     today = useToday();
@@ -70,24 +71,31 @@ export function ProjectDirectory({ filters, offset, onFilter, onPage }: Props) {
     heading.current?.focus();
   }
   const hasFilters = filters.q || filters.due_date || filters.status !== 'active';
+  const firstInStudio = studio && list.data?.total === 0 && !hasFilters;
   const page = Math.floor(offset / pageSize) + 1,
     pages = Math.max(1, Math.ceil((total ?? 0) / pageSize));
   return (
     <>
       <ProjectContextMenu onCommand={command}>
         <main className="container workspace project-workspace">
-          <title>프로젝트 | PreM</title>
+          <title>{studio ? 'Studio' : '프로젝트'} | PreM</title>
           <div className="projects-heading">
             <div>
               <h1 ref={heading} tabIndex={-1}>
-                프로젝트
+                {studio ? 'Studio' : '프로젝트'}
               </h1>
-              <p className="muted">함께 사용할 프로젝트를 만들고 관리하세요.</p>
+              <p className="muted">
+                {studio
+                  ? '프로젝트를 만들거나 저장된 작업을 이어가세요.'
+                  : '함께 사용할 프로젝트를 만들고 관리하세요.'}
+              </p>
             </div>
-            <Button id="project-create-button" onClick={() => command('create')}>
-              <Plus aria-hidden="true" />
-              프로젝트 만들기
-            </Button>
+            {!firstInStudio && (
+              <Button id="project-create-button" onClick={() => command('create')}>
+                <Plus aria-hidden="true" />
+                프로젝트 만들기
+              </Button>
+            )}
           </div>
           <ProjectFilterForm
             filters={filters}
@@ -154,8 +162,15 @@ export function ProjectDirectory({ filters, offset, onFilter, onPage }: Props) {
                 <p className="muted">
                   {hasFilters
                     ? '검색 조건을 변경하거나 초기화하세요.'
-                    : '상단의 프로젝트 만들기로 시작하세요. 모든 접속자와 공유됩니다.'}
+                    : studio
+                      ? '프로젝트를 만든 뒤 발표에 사용할 원본을 등록하세요.'
+                      : '상단의 프로젝트 만들기로 시작하세요. 모든 접속자와 공유됩니다.'}
                 </p>
+                {firstInStudio && (
+                  <Button id="project-create-button" onClick={() => command('create')}>
+                    <Plus aria-hidden="true" />첫 프로젝트 만들기
+                  </Button>
+                )}
                 {hasFilters && (
                   <Button variant="secondary" onClick={() => onFilter(defaultFilters)}>
                     전체 프로젝트 보기

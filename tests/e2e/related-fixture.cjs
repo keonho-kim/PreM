@@ -31,6 +31,7 @@ async function model() {
       for await (const chunk of req) text += chunk;
       assert.ok(Buffer.byteLength(text) < 32768);
       const body = JSON.parse(text);
+      if (require('./draft-probe.cjs').replyToProbe(res, body)) return;
       if (body.state && body.questions && !body.state.candidates) {
         res.setHeader('Content-Type', 'application/json');
         res.end(

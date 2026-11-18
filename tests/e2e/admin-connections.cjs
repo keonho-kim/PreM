@@ -10,14 +10,27 @@ const { createServer } = require('./server.cjs');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
 const path = require('node:path');
 (async () => {
-  const model = http.createServer((req, res) => {
+  const model = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
+    if (req.method === 'POST') {
+      let raw = '';
+      for await (const chunk of req) raw += chunk;
+      if (require('./draft-probe.cjs').replyToProbe(res, JSON.parse(raw))) return;
+    }
     assert.equal(req.url, '/api/v1/models');
     res.end(
       JSON.stringify({
         models: [
-          { type: 'llm', key: 'writing-model' },
-          { type: 'decision', key: 'decision-model' },
+          {
+            type: 'llm',
+            key: 'writing-model',
+            loaded_instances: [{ id: 'writing-model', config: { physical_batch_size: 2048 } }],
+          },
+          {
+            type: 'decision',
+            key: 'decision-model',
+            loaded_instances: [{ id: 'decision-model', config: { physical_batch_size: 2048 } }],
+          },
           { type: 'embedding', key: 'excluded' },
         ],
       }),
@@ -62,6 +75,7 @@ const path = require('node:path');
     await page.waitForSelector('::-p-aria(writing-model · LLM[role="option"])');
     assert.equal(await page.$('::-p-aria(decision-model · Decision[role="option"])'), null);
     await click(page, 'writing-model · LLM', 'option');
+    await require('./draft-probe.cjs').verifyDraft(page);
     await click(page, '설정 저장');
     await page.waitForSelector('.provider-summary');
     assert.equal(await page.$('input[name=base_url]'), null);
@@ -96,6 +110,7 @@ const path = require('node:path');
     await page.waitForSelector('::-p-aria(decision-model · Decision[role="option"])');
     assert.equal(await page.$('::-p-aria(writing-model · LLM[role="option"])'), null);
     await click(page, 'decision-model · Decision', 'option');
+    await require('./draft-probe.cjs').verifyDraft(page);
     await click(page, '설정 저장');
     await page.waitForSelector('.provider-summary');
     await page.evaluate(() => window.scrollTo(0, 0));

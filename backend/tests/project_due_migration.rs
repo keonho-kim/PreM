@@ -1,7 +1,7 @@
-// Purpose: Verify one deadline survives V2 migration with its original request receipt.
-// Pattern: On-disk old-schema fixture, HTTP compatibility and physical schema assertions.
+// Purpose: Verify a deadline survives V33 baseline adoption with its original request receipt.
+// Pattern: On-disk old-schema fixture, HTTP compatibility and baseline schema assertions.
 // Usage: cargo nextest run --test project_due_migration.
-// Related: migrations/V3__project_due_date.sql, adapters/http/projects.rs.
+// Related: migrations/V1__baseline.sql, adapters/http/projects.rs.
 mod common;
 use axum::http::StatusCode;
 use prem_backend::app::Application;
@@ -9,28 +9,23 @@ use rusqlite::{Connection, params};
 use serde_json::json;
 use uuid::Uuid;
 #[tokio::test]
-async fn deadline_rename_preserves_values_revisions_and_retries() {
+async fn baseline_preserves_deadlines_revisions_and_retries() {
     let root = common::storage();
     std::fs::create_dir_all(root.path().join("db")).unwrap();
     let path = root.path().join("db/app.sqlite");
     let mut db = Connection::open(&path).unwrap();
-    let migrations = [
-        refinery::Migration::unapplied(
-            "V1__projects",
-            include_str!("../migrations/V1__projects.sql"),
-        )
-        .unwrap(),
-        refinery::Migration::unapplied(
-            "V2__project_home",
-            include_str!("../migrations/V2__project_home.sql"),
-        )
-        .unwrap(),
-    ];
-    refinery::Runner::new(&migrations).run(&mut db).unwrap();
+    refinery::Runner::new(&[refinery::Migration::unapplied(
+        "V1__baseline",
+        include_str!("../migrations/V1__baseline.sql"),
+    )
+    .unwrap()])
+    .run(&mut db)
+    .unwrap();
+    common::legacy::mark(&db, 33);
     let id = Uuid::new_v4().to_string();
     let key = Uuid::new_v4().to_string();
-    db.execute("INSERT INTO projects(id,name,status,version,created_at,updated_at,end_date) VALUES (?1,'마감일 보존','archived',7,1,2,'2030-01-15')",[&id]).unwrap();
-    db.execute("INSERT INTO project_creation_requests(request_key,original_name,project_id,original_end_date) VALUES (?1,'마감일 보존',?2,'2030-01-15')",params![key,id]).unwrap();
+    db.execute("INSERT INTO projects(id,name,status,version,created_at,updated_at,due_date) VALUES (?1,'마감일 보존','archived',7,1,2,'2030-01-15')",[&id]).unwrap();
+    db.execute("INSERT INTO project_creation_requests(request_key,original_name,project_id,original_due_date) VALUES (?1,'마감일 보존',?2,'2030-01-15')",params![key,id]).unwrap();
     drop(db);
     let app = Application::open(root.path()).unwrap();
     let router = app.router();
@@ -85,7 +80,7 @@ async fn deadline_rename_preserves_values_revisions_and_retries() {
     assert_eq!(
         db.pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        36
+        2
     );
     let mut columns = db
         .prepare("SELECT name FROM pragma_table_info('projects')")
@@ -106,7 +101,7 @@ async fn deadline_rename_preserves_values_revisions_and_retries() {
     let backup = Connection::open(backup).unwrap();
     assert_eq!(
         backup
-            .query_row("SELECT end_date FROM projects", [], |r| r
+            .query_row("SELECT due_date FROM projects", [], |r| r
                 .get::<_, String>(0))
             .unwrap(),
         "2030-01-15"

@@ -1,7 +1,7 @@
 // Purpose: Verify real uploads, byte downloads, deduplication, revisions and shared persistence.
 // Pattern: Public HTTP requests against isolated on-disk SQLite and Blob storage.
 // Usage: cargo nextest run --test space.
-// Related: space_support/mod.rs, migrations/V4__space_libraries.sql.
+// Related: space_support/mod.rs, migrations/V1__baseline.sql.
 #[path = "space_support/cancellation.rs"]
 mod cancellation;
 mod common;

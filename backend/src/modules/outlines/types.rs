@@ -1,7 +1,7 @@
 // Purpose: Define outline revisions, source links and explicit generation commands.
 // Pattern: Canonical block IDs, immutable input identities and small typed projections.
 // Usage: Outline facade, SQLite owner and HTTP/React boundary.
-// Related: mod.rs, validation.rs, V17__outline_authoring.sql.
+// Related: mod.rs, validation.rs, V1__baseline.sql.
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[derive(Clone, Serialize, Deserialize)]

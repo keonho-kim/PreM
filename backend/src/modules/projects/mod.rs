@@ -21,6 +21,7 @@ pub(crate) struct Project {
     pub version: i64,
     pub created_at: i64,
     pub updated_at: i64,
+    pub saved_stage: String,
 }
 #[derive(Clone)]
 pub(crate) struct ListQuery {
@@ -115,6 +116,7 @@ impl ProjectService {
                     version: 1,
                     created_at: now,
                     updated_at: now,
+                    saved_stage: "created".into(),
                 },
                 key,
             )

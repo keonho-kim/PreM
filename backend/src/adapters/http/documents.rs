@@ -102,11 +102,19 @@ async fn detail(
         s.documents.detail(kind, id, q.job).await?,
     ))
 }
+#[derive(Deserialize)]
+struct HistoryQuery {
+    file_version: Option<i64>,
+}
 async fn history(
     State(s): State<Api>,
     Path((kind, id)): Path<(String, Uuid)>,
+    q: Query<HistoryQuery>,
 ) -> Result<Response, ApiError> {
-    Ok(json(StatusCode::OK, s.documents.history(kind, id).await?))
+    Ok(json(
+        StatusCode::OK,
+        s.documents.history(kind, id, q.file_version).await?,
+    ))
 }
 async fn enqueue(
     State(s): State<Api>,
@@ -286,8 +294,9 @@ async fn source_detail(
 async fn source_history(
     s: State<Api>,
     Path((project, file)): Path<(Uuid, Uuid)>,
+    q: Query<HistoryQuery>,
 ) -> Result<Response, ApiError> {
-    history(s, Path((format!("project-{project}"), file))).await
+    history(s, Path((format!("project-{project}"), file)), q).await
 }
 async fn source_enqueue(
     s: State<Api>,

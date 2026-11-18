@@ -1,7 +1,7 @@
 // Purpose: Apply saved LM Studio token settings to an explicitly prepared local instance.
 // Pattern: Check live inventory, reuse matching instances and load only on an Admin command.
 // Usage: Generation and decision adapters resolve the pinned configuration before inference.
-// Related: lm_studio_models.rs, http/model_load.rs, V35__model_load_limits.sql.
+// Related: lm_studio_models.rs, http/model_load.rs, V1__baseline.sql.
 use super::{Transport, bearer, lm_studio_models::native_url, read};
 use crate::modules::{model_execution::Error, model_registry::Credentials};
 use serde_json::{Value, json};

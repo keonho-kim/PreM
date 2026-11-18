@@ -17,7 +17,7 @@ vi.mock('./materials-api', async (original) => ({
 const job = 'f3920570-0367-46a1-9296-9a1329b9bce6';
 const item = (number: number) => ({
   id: `00000000-0000-4000-8000-${String(number).padStart(12, '0')}`,
-  page_id: job,
+  page_id: `page-${number}`,
   page_label: `슬라이드 ${number}`,
   source_page: number,
   kind: 'slide' as const,
@@ -46,12 +46,12 @@ const data = {
   items: [item(1), item(2)],
 };
 const clients: QueryClient[] = [];
-function mount() {
+function mount(groupSlides = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   clients.push(client);
   return render(
     <QueryClientProvider client={client}>
-      <ReferenceMaterials job={job} />
+      <ReferenceMaterials job={job} groupSlides={groupSlides} />
     </QueryClientProvider>,
   );
 }
@@ -112,4 +112,21 @@ it('explains legacy preparation instead of fabricating reusable parts', async ()
   await screen.findByText(/아직 재사용 자료가 준비되지 않았습니다/);
   expect(screen.queryAllByRole('img')).toHaveLength(0);
   expect(screen.getByRole('button', { name: '선택한 자료 보기' })).toBeDisabled();
+});
+
+it('joins later results to the same source slide without mixing different slides', async () => {
+  const first = item(1);
+  const diagram = { ...first, id: 'diagram', kind: 'diagram' as const, title: '도식' };
+  vi.mocked(getMaterials)
+    .mockResolvedValueOnce({ ...data, total: 3, items: [first] })
+    .mockResolvedValueOnce({ ...data, total: 3, items: [diagram, item(2)] });
+  mount(true);
+  await userEvent.click(await screen.findByRole('button', { name: '자료 더 보기' }));
+  const heading = await screen.findByRole('heading', { name: '슬라이드 2' });
+  expect(screen.getAllByRole('heading', { name: '슬라이드 1' })).toHaveLength(1);
+  expect(screen.getByRole('heading', { name: '슬라이드 1' }).closest('section')).toHaveTextContent(
+    '도식',
+  );
+  expect(heading.closest('section')).not.toHaveTextContent('도식');
+  expect(screen.queryByRole('button', { name: '자료 더 보기' })).toBeNull();
 });

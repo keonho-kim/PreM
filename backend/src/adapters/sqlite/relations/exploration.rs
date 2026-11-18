@@ -1,7 +1,7 @@
 // Purpose: Advance a durable, bounded search workspace only after each comparison phase commits.
 // Pattern: Atomic stage transitions, immutable read windows and explicit partial-result termination.
 // Usage: Relations worker requests the next action; legacy runs finish after their original pass.
-// Related: reads.rs, pull.rs, V18__relation_workspaces.sql.
+// Related: reads.rs, pull.rs, V1__baseline.sql.
 use super::*;
 use rusqlite::{OptionalExtension, params};
 pub(super) fn projection(

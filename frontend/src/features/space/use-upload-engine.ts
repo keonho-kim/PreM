@@ -12,6 +12,7 @@ export function useUploadEngine() {
     getUploadEngine(() => {
       void client.invalidateQueries({ queryKey: spaceKeys.all });
       void client.invalidateQueries({ queryKey: ['studio'] });
+      void client.invalidateQueries({ queryKey: ['library-search'] });
     }),
   );
   return engine;

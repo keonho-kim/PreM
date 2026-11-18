@@ -1,7 +1,7 @@
 // Purpose: Implement relation-search persistence on the existing bounded SQLite writer.
 // Pattern: One table owner delegates cohesive retrieval, lifecycle, projection and selection responsibilities.
 // Usage: Database exposes only the consumer-owned Relations Store.
-// Related: modules/relations/, V14__related_documents.sql.
+// Related: modules/relations/, V1__baseline.sql.
 mod context;
 mod execution;
 mod exploration;

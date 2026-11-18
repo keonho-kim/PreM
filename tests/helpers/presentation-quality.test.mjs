@@ -1,6 +1,6 @@
 // Purpose: Verify real native typography bounds, retained content and per-page extraction checks.
 // Pattern: Independently authored synthetic text and owned QA workspaces; no model or business data.
-// Usage: Bundled Node test runner after prepare-document-runtime; runtime dependencies stay local.
+// Usage: Bundled Node test runner after document runtime preparation; runtime dependencies stay local.
 // Related: presentation-quality.py, presentation-render.py, presentation-validate.mjs.
 import test from 'node:test';
 import assert from 'node:assert/strict';

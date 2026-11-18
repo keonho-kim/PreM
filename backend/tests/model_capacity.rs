@@ -1,7 +1,7 @@
 // Purpose: Verify persisted live request limits through the actual HTTP and provider execution stack.
 // Pattern: Isolated SQLite, held local model calls and both LLM/System One connection types.
 // Usage: cargo test --test model_capacity; no production data or model settings are used.
-// Related: capacity_support/, modules/model_execution/, V10__model_capacity.sql.
+// Related: capacity_support/, modules/model_execution/, V1__baseline.sql.
 mod capacity_support;
 mod common;
 use axum::{Router, http::StatusCode};

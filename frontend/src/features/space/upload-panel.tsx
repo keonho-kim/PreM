@@ -3,7 +3,7 @@
 // Usage: The global notification panel displays this tab-local queue on demand.
 // Related: upload-engine.ts, api.ts, components/ui/progress.tsx.
 import { UploadProcessing } from '@/features/document-processing';
-import { useUppyState } from '@uppy/react';
+import type { UploadTask } from './use-upload-tasks';
 import { Check, RotateCcw, X, Trash2, Upload, CircleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,39 +16,45 @@ import {
 } from '@/components/ui/item';
 import { Progress } from '@/components/ui/progress';
 import { sizeLabel } from './api';
-import type { UploadEngine, UploadFile } from './upload-engine';
-export function UploadPanel({ engine }: { engine: UploadEngine }) {
-  const files = useUppyState(engine.uppy, (state) => Object.values(state.files));
-  if (!files.length) return null;
-  const completed = files.filter((file) => file.progress.uploadComplete);
+import type { UploadEngine } from './upload-engine';
+export function UploadPanel({
+  engine,
+  tasks,
+  onClear,
+}: {
+  engine: UploadEngine;
+  tasks: UploadTask[];
+  onClear: () => void;
+}) {
+  if (!tasks.length)
+    return (
+      <p className="work-panel-empty" role="status">
+        남은 작업이 없습니다.
+      </p>
+    );
   return (
     <section className="space-uploads" aria-label="이 탭의 업로드 목록">
       <header>
-        <span className="upload-list-count">{files.length}개</span>
+        <span className="upload-list-count">{tasks.length}개</span>
         <Button
           variant="ghost"
-          disabled={!completed.length}
-          onClick={() => {
-            completed.forEach((file) => {
-              engine.uppy.removeFile(file.id);
-            });
-            if (!engine.uppy.getFiles().length)
-              document.querySelector<HTMLElement>('main h1')?.focus();
-          }}
+          disabled={!tasks.some((task) => task.state === 'complete')}
+          onClick={onClear}
         >
           <Trash2 aria-hidden="true" />
           완료 항목 정리
         </Button>
       </header>
       <ul>
-        {files.map((file) => (
-          <UploadRow key={file.id} file={file} engine={engine} />
+        {tasks.map((task) => (
+          <UploadRow key={task.file.id} task={task} engine={engine} />
         ))}
       </ul>
     </section>
   );
 }
-function UploadRow({ file, engine }: { file: UploadFile; engine: UploadEngine }) {
+function UploadRow({ task, engine }: { task: UploadTask; engine: UploadEngine }) {
+  const { file, processing } = task;
   const percent = file.progress.percentage ?? 0,
     done = !!file.progress.uploadComplete;
   const state = file.meta.cancelPending
@@ -89,8 +95,13 @@ function UploadRow({ file, engine }: { file: UploadFile; engine: UploadEngine })
             {!done && !file.error && percent < 100 ? ` · ${percent}%` : ''}
           </ItemDescription>
           {!done && !file.error && <Progress aria-label={`${file.name} 전송률`} value={percent} />}
-          {done && typeof file.response?.body?.id === 'string' && (
-            <UploadProcessing kind={file.meta.kind} id={file.response.body.id} />
+          {processing && typeof file.response?.body?.version === 'number' && (
+            <UploadProcessing result={processing} assetVersion={file.response.body.version} />
+          )}
+          {done && task.state === 'attention' && (
+            <Button variant="ghost" onClick={() => engine.uppy.removeFile(file.id)}>
+              목록에서 숨기기
+            </Button>
           )}
           {(file.error || file.meta.cancelError) && (
             <p role="alert" className="upload-error">

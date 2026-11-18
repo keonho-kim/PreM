@@ -60,12 +60,10 @@ async function main() {
     tableFormat: 'gfm',
   });
   if (!parsed.success) throw new Error('extract_failed');
-  if (
-    (parsed.warnings ?? []).some((w) =>
-      ['OCR_FAILED', 'NEEDS_OCR', 'PARTIAL_PARSE', 'TRUNCATED_TABLE'].includes(w.code),
-    )
-  )
-    throw new Error('incomplete_extraction');
+  const incomplete = parsed.warnings?.find((w) =>
+    ['OCR_FAILED', 'NEEDS_OCR', 'PARTIAL_PARSE', 'TRUNCATED_TABLE'].includes(w.code),
+  );
+  if (incomplete) throw new Error(incomplete.code);
   const type = parsed.fileType;
   const mode =
     type === 'pptx'
@@ -176,7 +174,17 @@ async function main() {
   if (Buffer.byteLength(encoded) > 16 * 1024 * 1024) throw new Error('output_limit');
   await fs.writeFile(path.join(output, 'result.json'), encoded, { flag: 'wx' });
 }
-main().catch(() => {
-  process.stderr.write('document_extract_failed\n');
-  process.exitCode = 1;
+// Only these exit codes cross the process boundary. Parser messages can contain source text.
+const failures = new Map([
+  ['OCR_FAILED', 20],
+  ['NEEDS_OCR', 20],
+  ['PARTIAL_PARSE', 21],
+  ['TRUNCATED_TABLE', 21],
+  ['page_limit', 22],
+  ['block_limit', 23],
+  ['asset_limit', 23],
+  ['output_limit', 23],
+]);
+main().catch((error) => {
+  process.exitCode = failures.get(error?.message) ?? 1;
 });

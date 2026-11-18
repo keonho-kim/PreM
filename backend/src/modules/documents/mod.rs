@@ -58,8 +58,13 @@ impl Documents {
         }
         Ok(detail)
     }
-    pub async fn history(&self, kind: String, item: Uuid) -> Result<Vec<Job>, Error> {
-        self.store.history(kind, item).await
+    pub async fn history(
+        &self,
+        kind: String,
+        item: Uuid,
+        file_version: Option<i64>,
+    ) -> Result<Vec<Job>, Error> {
+        self.store.history(kind, item, file_version).await
     }
     pub async fn blocks(
         &self,

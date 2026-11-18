@@ -13,6 +13,6 @@
 
 문서 준비에 필요한 공통 판정 연결은 테스트가 명시적으로 설정한다. `configure-documents.cjs`는 실제 문서 파서를 그대로 사용하면서 분류만 로컬 합성 응답으로 고정한다. 모델 미설정 gate는 document-processing 여정과 Rust 해당 테스트가 별도로 검증한다. 합성 테스트는 실모델의 작성 품질이나 업무 문서 전체 정확도를 보장하지 않는다.
 
-브라우저 도구는 `tests/.artifacts/browser-tools/`에 설치하며 버전은 `scripts/runtime-versions.json`에서 읽는다. Chrome 경로는 `CHROME_PATH`로 지정할 수 있다. 실제 `data/`에 QA 자료를 만들지 않는다.
+브라우저 도구는 `tests/.artifacts/browser-tools/`에 설치하며 버전은 `scripts/runtime/versions.json`에서 읽는다. Chrome 경로는 `CHROME_PATH`로 지정할 수 있다. 실제 `data/`에 QA 자료를 만들지 않는다.
 
-브라우저 도구 설치 후 `node scripts/install-test-browser.mjs`는 고정 Puppeteer가 요구하는 Chrome for Testing을 `tests/.artifacts/browser-tools/`에 준비한다. 브라우저 어댑터는 명시한 `CHROME_PATH`, 이 고정 브라우저, 시스템 Chrome 순으로 선택한다. `helpers/interactions.cjs`는 화면 갱신과 실제 클릭의 완료 조건을 공유한다.
+브라우저 도구 설치 후 `node scripts/test/install-browser.mjs`는 고정 Puppeteer가 요구하는 Chrome for Testing을 `tests/.artifacts/browser-tools/`에 준비한다. 브라우저 어댑터는 명시한 `CHROME_PATH`, 이 고정 브라우저, 시스템 Chrome 순으로 선택한다. `helpers/interactions.cjs`는 화면 갱신과 실제 클릭의 완료 조건을 공유한다.

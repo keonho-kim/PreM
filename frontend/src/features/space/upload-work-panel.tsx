@@ -2,12 +2,13 @@
 // Pattern: Uppy owns tasks; Redux shares panel presentation with the notification host.
 // Usage: App Feedback mounts once across routes; closing never cancels an upload.
 // Related: upload-panel.tsx, use-upload-engine.ts, shared/notifications.ts, app/feedback.css.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useUppyState } from '@uppy/react';
+import { useUploadTasks } from './use-upload-tasks';
 import { ChevronDown, ChevronUp, ListTodo, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { stepSummary } from '@/features/document-processing';
 import { notify } from '@/shared/notifications';
 import { useWorkPanel } from '@/shared/work-panel-state';
 import { useUploadEngine } from './use-upload-engine';
@@ -16,15 +17,18 @@ import type { UploadFile } from './upload-engine';
 import './upload-work-panel.css';
 export function UploadWorkPanel() {
   const engine = useUploadEngine();
-  const files = useUppyState(engine.uppy, (state) => Object.values(state.files));
+  const tasks = useUploadTasks(engine);
+  const [showEmpty, setShowEmpty] = useState(false);
   const { view, setView, setHeight: onHeightChange } = useWorkPanel();
   const region = useRef<HTMLElement>(null),
     toggle = useRef<HTMLButtonElement>(null),
     focusRequested = useRef(false);
-  const complete = files.filter((file) => file.progress.uploadComplete).length;
-  const failed = files.filter((file) => !file.progress.uploadComplete && file.error).length;
-  const active = files.length - complete - failed;
-  const present = files.length > 0;
+  const complete = tasks.filter((t) => t.state === 'complete').length;
+  const attention = tasks.filter((t) => t.state === 'attention').length;
+  const active = tasks.length - complete - attention;
+  const present = tasks.length > 0 || showEmpty;
+  const current = tasks.find((task) => task.state === 'active');
+
   useEffect(() => {
     const added = () => setView('expanded');
     const saved = (file: UploadFile | undefined) => {
@@ -69,10 +73,17 @@ export function UploadWorkPanel() {
       focusRequested.current = false;
     }
   }, [view]);
+  function clearCompleted() {
+    setShowEmpty(true);
+    for (const task of tasks) {
+      if (task.state === 'complete') engine.uppy.removeFile(task.file.id);
+    }
+    toggle.current?.focus();
+  }
   return createPortal(
     <>
       <span className="sr-only" role="status">
-        {present ? `업로드 진행 ${active}개 · 완료 ${complete}개 · 실패 ${failed}개` : ''}
+        {present ? `작업 진행 ${active}개 · 완료 ${complete}개 · 확인 필요 ${attention}개` : ''}
       </span>
       {present && (
         <section ref={region} className="work-dock" aria-label="작업 진행 상황">
@@ -83,7 +94,7 @@ export function UploadWorkPanel() {
               onClick={() => change('expanded')}
             >
               <ListTodo aria-hidden="true" />
-              작업 {files.length}개 보기
+              작업 {tasks.length}개 보기
             </Button>
           ) : (
             <Collapsible
@@ -93,12 +104,20 @@ export function UploadWorkPanel() {
             >
               <header className="work-panel-heading">
                 <div>
-                  <h2>
-                    업로드 {active ? `${active}개 진행 중` : failed ? `${failed}개 실패` : '완료'}
-                  </h2>
+                  <h2>작업 현황</h2>
                   <p>
-                    완료 {complete} · 전체 {files.length}
+                    진행 {active} · 확인 필요 {attention} · 완료 {complete}
                   </p>
+                  {view === 'collapsed' && current && (
+                    <p>
+                      {current.file.name} ·{' '}
+                      {current.processing?.data
+                        ? stepSummary(current.processing.data)
+                        : current.file.progress.uploadComplete
+                          ? '처리 상태 확인 중'
+                          : `전송 ${current.file.progress.percentage ?? 0}%`}
+                    </p>
+                  )}
                 </div>
                 <CollapsibleTrigger asChild>
                   <Button
@@ -120,13 +139,16 @@ export function UploadWorkPanel() {
                   size="icon"
                   aria-label="작업 패널 닫기"
                   title="작업 패널 닫기"
-                  onClick={() => change('hidden')}
+                  onClick={() => {
+                    setShowEmpty(false);
+                    change('hidden');
+                  }}
                 >
                   <X aria-hidden="true" />
                 </Button>
               </header>
               <CollapsibleContent className="work-panel-body">
-                <UploadPanel engine={engine} />
+                <UploadPanel engine={engine} tasks={tasks} onClear={clearCompleted} />
               </CollapsibleContent>
             </Collapsible>
           )}

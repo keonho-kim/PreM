@@ -2,6 +2,9 @@
 // Pattern: Temporary application data under the repository's test artifact root.
 // Usage: Imported only by backend integration test binaries.
 // Related: projects.rs, http.rs, database_startup.rs.
+#[allow(dead_code)]
+pub mod legacy;
+mod provider_fixture;
 use axum::{
     Router,
     body::{Body, to_bytes},
@@ -42,17 +45,20 @@ pub async fn request(
 // Access-control tests deliberately use Application::router directly instead.
 #[allow(dead_code)]
 pub fn router(app: &prem_backend::app::Application) -> Router {
+    let db = app.storage_root().join("db/app.sqlite");
     let mut value =
         axum::http::HeaderValue::from_str(&format!("Bearer {}", app.admin_token())).unwrap();
     value.set_sensitive(true);
     app.router().layer(axum::middleware::from_fn(
         move |mut request: axum::extract::Request, next: axum::middleware::Next| {
             let value = value.clone();
+            let db = db.clone();
             async move {
                 if !request.headers().contains_key("Authorization") {
                     request.headers_mut().insert("Authorization", value);
                 }
-                next.run(request).await
+                next.run(provider_fixture::with_fixture_receipt(request, &db).await)
+                    .await
             }
         },
     ))

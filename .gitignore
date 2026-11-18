@@ -1,7 +1,7 @@
 # Purpose: Keep local state and generated output out of the PreM source repository.
 # Pattern: Ignore owned output locations; retain reproducible inputs and reviewed fixtures.
 # Usage: Verify new paths with git check-ignore; tracked files are not untracked by this file.
-# Related: README.md, AGENTS.md, scripts/setup.sh, scripts/install-document-runtime.mjs.
+# Related: README.md, AGENTS.md, scripts/setup.sh, scripts/runtime/documents.mjs.
 
 # Application-owned storage: databases, originals, blobs, secrets, workspaces and backups
 /data/

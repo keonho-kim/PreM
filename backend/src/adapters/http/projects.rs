@@ -38,6 +38,7 @@ struct ProjectDto {
     version: i64,
     created_at: i64,
     updated_at: i64,
+    saved_stage: String,
 }
 impl From<Project> for ProjectDto {
     fn from(p: Project) -> Self {
@@ -51,6 +52,7 @@ impl From<Project> for ProjectDto {
             version: p.version,
             created_at: p.created_at,
             updated_at: p.updated_at,
+            saved_stage: p.saved_stage,
         }
     }
 }

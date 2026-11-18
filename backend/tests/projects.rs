@@ -24,6 +24,7 @@ async fn projects_are_shared_retry_safe_and_persistent() {
     .await;
     assert_eq!(status, StatusCode::CREATED);
     assert_eq!(created["name"], "사내 프로젝트");
+    assert_eq!(created["saved_stage"], "created");
     let (_, shared) = common::request(&second, "GET", "/api/v1/projects", None, None).await;
     assert_eq!(shared["total"], 1);
     assert_eq!(shared["items"][0], created);

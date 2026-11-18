@@ -38,7 +38,7 @@ const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
     await b.goto(url, { waitUntil: 'networkidle0' });
     await b.waitForSelector('#admin-token');
     assert.equal(await b.$('.admin-layout'), null);
-    await a.click('a[href="/home/"]');
+    await a.click('a[href="/home/studio"]');
     await a.waitForSelector('.admin-layout', { hidden: true });
     await a.click('a[href="/home/admin"]');
     await a.waitForSelector('#admin-token');

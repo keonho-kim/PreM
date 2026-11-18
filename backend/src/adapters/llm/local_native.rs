@@ -2,7 +2,7 @@
 // Pattern: Server-side llama chat templating; server-side tokenization for SGLang.
 // Usage: Root server URLs for llama_cpp and sglang kinds.
 // Related: transport.rs, model discovery contracts and native provider tests.
-use super::response::{model_id, text, tokens};
+use super::response::{model_id, tokens, visible_completion};
 use crate::adapters::model_http::bearer as request;
 use crate::adapters::model_http::{Transport, read};
 use crate::modules::{
@@ -28,7 +28,8 @@ pub(super) async fn sglang(
             "SGLang에 로드된 model_path와 설정된 모델 ID가 다릅니다.",
         ));
     }
-    let template = json!({"model":c.model_identifier,"messages":[{"role":"system","content":i.system},{"role":"user","content":i.prompt}]});
+    let mut template = json!({"model":c.model_identifier,"messages":[{"role":"system","content":i.system},{"role":"user","content":i.prompt}]});
+    super::thinking::apply(&mut template, c);
     let rendered = read(
         request(t, c, "tokenize", true)?
             .json(&template)
@@ -51,8 +52,10 @@ pub(super) async fn sglang(
     {
         return Err(Error::InvalidResponse);
     }
+    let (text, reasoned) = visible_completion(r["text"].as_str(), true)?;
     Ok(Completion {
-        text: text(r["text"].as_str())?,
+        reasoned,
+        text,
         prompt_tokens: tokens(&r, "/meta_info/prompt_tokens"),
         completion_tokens: tokens(&r, "/meta_info/completion_tokens"),
     })
@@ -62,7 +65,8 @@ pub(super) async fn llama(
     c: &Credentials,
     i: CompletionInput,
 ) -> Result<Completion, Error> {
-    let template = json!({"model":c.model_identifier,"messages":[{"role":"system","content":i.system},{"role":"user","content":i.prompt}]});
+    let mut template = json!({"model":c.model_identifier,"messages":[{"role":"system","content":i.system},{"role":"user","content":i.prompt}]});
+    super::thinking::apply(&mut template, c);
     let rendered = read(
         request(t, c, "apply-template", true)?
             .json(&template)
@@ -82,8 +86,10 @@ pub(super) async fn llama(
     if !matches!(r["stop_type"].as_str(), Some("eos" | "word")) || r["truncated"] == true {
         return Err(Error::InvalidResponse);
     }
+    let (text, reasoned) = visible_completion(r["content"].as_str(), true)?;
     Ok(Completion {
-        text: text(r["content"].as_str())?,
+        reasoned,
+        text,
         prompt_tokens: tokens(&r, "/tokens_evaluated"),
         completion_tokens: tokens(&r, "/tokens_predicted"),
     })

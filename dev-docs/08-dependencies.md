@@ -1,6 +1,6 @@
 # 의존성 구성과 도입 기준
 
-의존성 버전은 manifest·lockfile 및 [런타임 버전 파일](../scripts/runtime-versions.json)이 소유한다. 이 문서는 실제 소비자와 라이선스·런타임 경계를 설명한다. 설치 여부를 기능 완료의 근거로 사용하지 않는다.
+의존성 버전은 manifest·lockfile 및 [런타임 버전 파일](../scripts/runtime/versions.json)이 소유한다. 이 문서는 실제 소비자와 라이선스·런타임 경계를 설명한다. 설치 여부를 기능 완료의 근거로 사용하지 않는다.
 
 ## Rust 실행 의존성
 
@@ -23,13 +23,13 @@ Rust/Axum/Tokio가 HTTP·비동기 실행·취소를, rusqlite/refinery가 단�
 
 ## 개발 도구와 실행 번들
 
-Node는 [.node-version](../.node-version), pnpm은 [package.json](../package.json), Rust는 [rust-toolchain.toml](../rust-toolchain.toml), Python·uv·PPT Master·Puppeteer는 [runtime-versions.json](../scripts/runtime-versions.json), Rust 개발 CLI는 [dev-tools.json](../scripts/dev-tools.json)이 소유한다. `pnpm check:versions`는 제품 버전·lock·검토된 Kordoc 어댑터와 릴리스 태그의 일치를 검사한다. CI는 이 파일에서 버전을 읽는다.
+Node는 [.node-version](../.node-version), pnpm은 [package.json](../package.json), Rust는 [rust-toolchain.toml](../rust-toolchain.toml), Python·uv·PPT Master·Puppeteer는 [런타임 버전](../scripts/runtime/versions.json), Rust 개발 CLI는 [dev-tools.json](../scripts/quality/dev-tools.json)이 소유한다. `pnpm check:versions`는 제품 버전·lock·검토된 Kordoc 어댑터와 릴리스 태그의 일치를 검사한다. CI는 이 파일에서 버전을 읽는다.
 
 제품 번들에는 Node·Python·Kordoc/OCR·PPT Master·Python 패키지·폰트·라이선스가 포함된다. npm/uv/cargo/브라우저 자동화 도구는 설치·개발 단계의 도구다. 실행 중 패키지나 모델을 설치하지 않는다. LLM/Decision 추론 서버·가중치는 별도로 연결한다.
 
 ## 라이선스와 전문 엔진
 
-사내 팀 사용에 필요한 유지보수·로컬 실행·실제 전이 고지를 검토한다. GPL/MPL/AGPL이라는 이유로 일괄 제외하지 않으며, 실제 사용 범위와 배포물의 고지를 확인한다. Python 패키지는 해시 잠금 파일, Node 런타임 패키지는 npm lockfile을 사용한다. `package-release.py`가 upstream 고지와 의존성 inventory를 묶는다.
+사내 팀 사용에 필요한 유지보수·로컬 실행·실제 전이 고지를 검토한다. GPL/MPL/AGPL이라는 이유로 일괄 제외하지 않으며, 실제 사용 범위와 배포물의 고지를 확인한다. Python 패키지는 해시 잠금 파일, Node 런타임 패키지는 npm lockfile을 사용한다. `scripts/release/package.py`가 upstream 고지와 의존성 inventory를 묶는다.
 
 LibreOffice·H2Orestart·Java Office PDF 정규화는 아직 제품에 연결하지 않았다. 코어 문서 추출과 PPT 생성은 아래 실제 도구 경로를 사용한다.
 
@@ -81,3 +81,18 @@ Kordoc은 `runtime/kordoc/package.json`에서 **4.24.83**으로 고정하고 npm
 ## System One / Decisions API 지원 조사
 
 실제 공급자 종류·지원 능력은 [model_registry](../backend/src/modules/model_registry/)의 카탈로그가 소유한다. native 판정 어댑터는 제공된 state와 choice 질문을 각 프로토콜에 맞춰 전송하고, LLM bridge는 일반 생성 연결의 구조화 출력을 사용한다. 전체 클라우드 계정 수용을 의미하지 않으며 synthetic HTTP 계약과 실모델 acceptance를 구분한다. 공급자가 지원하지 않는 프로토콜로 자동 전환하지 않는다.
+
+## Provider별 Thinking 요청
+
+| Provider                       | 설정 전달 위치                                                                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenAI Responses               | `reasoning.effort`                                                                                                                          |
+| OpenAI 호환·LiteLLM            | `reasoning_effort`                                                                                                                          |
+| LM Studio Native / OpenAI 호환 | 각각 `reasoning` / `reasoning_effort`. 선택한 모델의 네이티브 인벤토리에 `allowed_options`가 있으면 진단 응답과 대조한다.                   |
+| Claude Messages                | `thinking.type`, `output_config.effort`. adaptive가 거절되고 effort 없는 켜기가 요청되면 출력 한도가 허용할 때 기존 budget 방식도 확인한다. |
+| Gemini generateContent         | `generationConfig.thinkingConfig`의 `thinkingLevel` 또는 `thinkingBudget`. 끄기는 0 예산으로 요청한다.                                      |
+| llama.cpp·SGLang               | 각각 `apply-template` / `tokenize`에서 `chat_template_kwargs.enable_thinking`과 선택한 `reasoning_effort`를 전달한다.                       |
+| vLLM                           | Chat Completions에 `chat_template_kwargs.enable_thinking`과 선택한 `reasoning_effort`를 전달한다.                                           |
+| 전용 Decision 프로토콜         | 생성용 Thinking·effort 필드를 보내지 않는다.                                                                                                |
+
+지원하는 값과 끄기 가능 여부는 서버·모델·템플릿에 따라 다르다. OpenAI 계열처럼 별도의 켜기 스위치 없이 강도로 제어하는 프로토콜에서는 켜기 단독 진단이 양의 기본 강도를 사용한다. 원본 문서나 추론 본문을 진단 결과에 저장하지 않는다. [OpenAI](https://developers.openai.com/api/docs/guides/reasoning) · [Claude](https://platform.claude.com/docs/en/build-with-claude/effort) · [Gemini](https://ai.google.dev/gemini-api/docs/thinking) · [LM Studio](https://lmstudio.ai/docs/developer/rest/list) · [vLLM](https://docs.vllm.ai/en/stable/features/reasoning_outputs/) · [LiteLLM](https://docs.litellm.ai/docs/reasoning_content)

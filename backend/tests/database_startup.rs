@@ -2,6 +2,8 @@
 // Pattern: Real on-disk migration and restart tests with isolated data roots.
 // Usage: cargo nextest run --test database_startup.
 // Related: adapters/sqlite/migrations.rs, app/mod.rs.
+#[path = "common/legacy.rs"]
+mod legacy;
 use prem_backend::app::Application;
 use rusqlite::Connection;
 use std::{fs, path::Path};
@@ -118,4 +120,63 @@ async fn repeated_shutdown_releases_storage_with_surviving_router_handles() {
     let reopened = Application::open(root.path()).unwrap();
     reopened.shutdown().await.unwrap();
     drop(retained_routers);
+}
+
+#[tokio::test]
+async fn incompatible_legacy_databases_are_preserved() {
+    for cause in ["checksum", "schema", "older"] {
+        let dir = directory();
+        Application::open(dir.path())
+            .unwrap()
+            .shutdown()
+            .await
+            .unwrap();
+        let path = dir.path().join("db/app.sqlite");
+        let db = Connection::open(&path).unwrap();
+        legacy::mark(&db, 33);
+        let (sql, reason, version) = match cause {
+            "checksum" => (
+                "UPDATE refinery_schema_history SET checksum='0' WHERE version=25",
+                "modified legacy migration history",
+                33,
+            ),
+            "schema" => (
+                "DROP INDEX projects_updated",
+                "differs from the V1 baseline",
+                33,
+            ),
+            _ => (
+                "DELETE FROM refinery_schema_history WHERE version=33; PRAGMA user_version=32",
+                "upgrade to V36",
+                32,
+            ),
+        };
+        db.execute_batch(sql).unwrap();
+        drop(db);
+        let err = Application::open(dir.path())
+            .err()
+            .expect("should reject input");
+        assert!(format!("{err:#}").contains(reason), "{err:#}");
+        let db = Connection::open(path).unwrap();
+        assert_eq!(
+            db.query_row("PRAGMA user_version", [], |r| r.get::<_, i32>(0))
+                .unwrap(),
+            version
+        );
+        assert_eq!(
+            db.query_row("SELECT count(*) FROM refinery_schema_history", [], |r| r
+                .get::<_, i32>(0))
+                .unwrap(),
+            version
+        );
+        assert_eq!(
+            db.query_row(
+                "SELECT count(*) FROM sqlite_schema WHERE name='document_alignment'",
+                [],
+                |r| r.get::<_, i32>(0)
+            )
+            .unwrap(),
+            0
+        );
+    }
 }

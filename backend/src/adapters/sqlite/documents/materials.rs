@@ -1,7 +1,7 @@
 // Purpose: Own reusable-material indexing and version-bound resolution from canonical document data.
 // Pattern: One transactional writer; reads join content blocks instead of copying their text.
 // Usage: Extraction commits the index; Space and later generation resolve explicit material IDs.
-// Related: results.rs, queries.rs, V11__reference_materials.sql, modules/documents/materials.rs.
+// Related: results.rs, queries.rs, V1__baseline.sql, modules/documents/materials.rs.
 use super::*;
 use rusqlite::{OptionalExtension, params};
 fn uuid(value: String) -> rusqlite::Result<Uuid> {

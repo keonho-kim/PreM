@@ -102,6 +102,21 @@ async fn html_upload_extracts_and_classifies_once_then_survives_restart() {
     .await;
     assert_eq!(done["job"]["extraction_id"], d["job"]["extraction_id"]);
     assert_ne!(done["job"]["id"], d["job"]["id"]);
+    for (suffix, count) in [("", 2), ("?file_version=1", 1), ("?file_version=2", 0)] {
+        let (status, history) = request(
+            &app.router(),
+            "GET",
+            &format!("{path}/history{suffix}"),
+            None,
+            None,
+        )
+        .await;
+        assert_eq!(status, 200);
+        assert_eq!(history.as_array().unwrap().len(), count);
+        if count > 0 {
+            assert_eq!(history[0]["id"], done["job"]["id"]);
+        }
+    }
     app.shutdown().await.unwrap();
 }
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

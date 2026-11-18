@@ -5,16 +5,7 @@
 use super::*;
 use rusqlite::{OptionalExtension, params};
 pub(super) fn config(db: &rusqlite::Connection, id: Option<Uuid>) -> Result<Option<String>, Error> {
-    let Some(id) = id else { return Ok(None) };
-    let row:Option<(String,String,bool)>=db.query_row("SELECT c.id,c.provider_type,c.enabled FROM llm_provider_connections p JOIN llm_provider_config_versions c ON c.id=p.current_config_version_id WHERE p.id=?",[id.to_string()],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?))).optional().map_err(failure)?;
-    match row {
-        Some((id, kind, true)) => {
-            let kind: crate::modules::model_registry::ProviderKind =
-                kind.parse().map_err(|_| Error::Storage)?;
-            Ok((kind.is_system() || kind.descriptor().structured).then_some(id))
-        }
-        _ => Ok(None),
-    }
+    super::super::decision_settings::resolve(db, id.map(|id| id.to_string())).map_err(failure)
 }
 pub(super) fn read(db: &rusqlite::Connection) -> Result<Settings, Error> {
     let (version, id, planner): (i64, Option<String>, Option<String>) = db

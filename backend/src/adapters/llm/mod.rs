@@ -9,6 +9,7 @@ mod local_native;
 mod openai;
 mod openai_compatible;
 mod response;
+mod thinking;
 use crate::adapters::model_http::Transport;
 use crate::modules::{
     inference::{CallFuture, Completion, CompletionInput, ModelClient},
@@ -50,7 +51,8 @@ impl ModelClient for ProviderClient {
         let t = self.0.clone();
         Box::pin(async move {
             let c = crate::adapters::model_http::lm_load::resolve(&t, c).await?;
-            match c.kind {
+            let off = c.thinking.enabled == Some(false);
+            let reply = match c.kind {
                 ProviderKind::Openai => openai::complete(&t, &c, i).await,
                 ProviderKind::Claude => claude::complete(&t, &c, i).await,
                 ProviderKind::Gemini => gemini::complete(&t, &c, i).await,
@@ -64,7 +66,13 @@ impl ModelClient for ProviderClient {
                 _ => Err(crate::modules::inference::Error::Unsupported(
                     "System One 연결은 Decision 서비스를 사용하세요.",
                 )),
+            }?;
+            if off && reply.reasoned {
+                return Err(crate::modules::inference::Error::Unsupported(
+                    "서버가 Thinking 끄기 요청에도 추론을 수행했습니다. 다른 모델이나 설정을 선택하세요.",
+                ));
             }
+            Ok(reply)
         })
     }
 }

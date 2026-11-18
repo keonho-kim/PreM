@@ -6,6 +6,8 @@ import { capacityBounds } from './capacity-api';
 import { z } from 'zod';
 import { providerCatalogSchema } from './provider-types';
 import { request } from '@/shared/api/http';
+export const efforts = ['low', 'medium', 'high', 'xhigh'] as const;
+const effortSchema = z.enum(efforts);
 const providerSchema = z.object({
   id: z.uuid(),
   config_id: z.uuid(),
@@ -17,6 +19,8 @@ const providerSchema = z.object({
   timeout_seconds: z.number().int(),
   context_length: z.number().int().positive().nullish(),
   physical_batch_size: z.number().int().positive().nullish(),
+  thinking: z.boolean().nullish(),
+  thinking_effort: effortSchema.nullish(),
   max_output_tokens: z.number().int().min(256).max(65536).nullish(),
   enabled: z.boolean(),
   has_secret: z.boolean(),
@@ -32,6 +36,8 @@ export type ProviderDraft = Pick<
   | 'timeout_seconds'
   | 'max_output_tokens'
   | 'context_length'
+  | 'thinking'
+  | 'thinking_effort'
   | 'physical_batch_size'
   | 'enabled'
 >;
@@ -57,29 +63,47 @@ export const getProviderCatalog = (signal: AbortSignal) =>
 export const listProviders = (signal: AbortSignal) =>
   request(root, z.array(providerSchema), { signal });
 export const getProvider = (id: string) => request(`${root}/${id}`, providerSchema);
-export const saveProvider = (
-  id: string,
+export const draftBody = (
   expected_version: number,
   draft: ProviderDraft,
   api_key?: string,
   clear_secret = false,
+  decision = false,
 ) =>
+  JSON.stringify({
+    name: draft.name,
+    provider_type: draft.provider_type,
+    base_url: draft.base_url,
+    model_identifier: draft.model_identifier,
+    timeout_seconds: draft.timeout_seconds,
+    context_length: draft.context_length ?? null,
+    physical_batch_size: draft.physical_batch_size ?? null,
+    max_output_tokens: draft.max_output_tokens ?? null,
+    thinking: decision ? null : (draft.thinking ?? null),
+    thinking_effort: decision || !draft.thinking ? null : (draft.thinking_effort ?? null),
+    decision,
+    enabled: draft.enabled,
+    expected_version,
+    api_key,
+    clear_secret,
+  });
+const diagnosticSchema = z.object({
+  ticket: z.uuid().nullable(),
+  message: z.string().optional(),
+  accepted_efforts: z.array(effortSchema),
+  effort_unverified: z.boolean().optional(),
+  thinking_observed: z.boolean().optional(),
+  effective_effort: effortSchema.nullable(),
+  advertised: z.array(z.string()).nullable(),
+});
+export type DraftDiagnostic = z.infer<typeof diagnosticSchema>;
+export const probeProvider = (id: string, body: string, signal: AbortSignal, timeout: number) =>
+  request(`${root}/${id}/diagnose`, diagnosticSchema, { method: 'POST', body, signal, timeout });
+export const saveProvider = (id: string, body: string, ticket: string) =>
   request(`${root}/${id}`, providerSchema, {
     method: 'PUT',
-    body: JSON.stringify({
-      name: draft.name,
-      provider_type: draft.provider_type,
-      base_url: draft.base_url,
-      model_identifier: draft.model_identifier,
-      timeout_seconds: draft.timeout_seconds,
-      context_length: draft.context_length ?? null,
-      physical_batch_size: draft.physical_batch_size ?? null,
-      max_output_tokens: draft.max_output_tokens ?? null,
-      enabled: draft.enabled,
-      expected_version,
-      api_key,
-      clear_secret,
-    }),
+    body,
+    headers: { 'X-Connection-Diagnostic': ticket },
   });
 export const listModels = (provider: Provider, signal: AbortSignal) =>
   request(

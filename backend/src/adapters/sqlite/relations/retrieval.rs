@@ -1,7 +1,7 @@
 // Purpose: Combine indexed block matches with diverse project-document candidates.
 // Pattern: Bounded candidate quotas, one extraction identity, and normalized provenance links.
 // Usage: Creation transaction snapshots candidates before any model work.
-// Related: context.rs, queries.rs, V14__related_documents.sql.
+// Related: context.rs, queries.rs, V1__baseline.sql.
 use super::*;
 use rusqlite::params;
 use std::collections::BTreeSet;

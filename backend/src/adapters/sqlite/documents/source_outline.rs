@@ -1,7 +1,7 @@
 // Purpose: Publish and project exact source outline rows alongside their page assignments.
 // Pattern: Ordered parent-child rows are scoped to a single job and immutable extraction.
 // Usage: Called inside the alignment commit transaction and document detail query.
-// Related: V36__original_contents.sql, alignment.rs.
+// Related: V1__baseline.sql, alignment.rs.
 use super::*;
 use rusqlite::Connection;
 pub(super) fn save(db: &Connection, job: &Job, roots: &[SourceEntry]) -> Result<(), Error> {

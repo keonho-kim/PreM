@@ -1,7 +1,7 @@
 // Purpose: Verify project-scoped originals, shared extraction, immutable versions and stale review fencing.
 // Pattern: Real router, local document tools and isolated persistent storage across restart.
 // Usage: cargo nextest run --test studio_sources.
-// Related: V13__project_sources.sql, document_support/, modules/studio/.
+// Related: V1__baseline.sql, document_support/, modules/studio/.
 mod common;
 #[allow(dead_code)]
 mod document_support;

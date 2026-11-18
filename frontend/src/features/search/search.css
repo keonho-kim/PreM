@@ -202,11 +202,19 @@
   }
 }
 
+.space-search-actions {
+  margin-inline-start: auto;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .space-search-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px;
   margin-block-end: 40px;
 }
 .space-search-heading h1 {

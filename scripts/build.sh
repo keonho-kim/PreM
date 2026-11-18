@@ -7,6 +7,6 @@ set -euo pipefail
 PREM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PREM_ROOT"
 pnpm tokens:check
-node scripts/prepare-document-runtime.mjs
+node scripts/runtime/documents.mjs prepare
 pnpm --filter @prem/frontend build
 cargo build --workspace --release --locked --features embedded-ui

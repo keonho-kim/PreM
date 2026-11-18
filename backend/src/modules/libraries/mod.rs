@@ -1,7 +1,7 @@
 // Purpose: Own shared reference/template registration, metadata and immutable file versions.
 // Pattern: One cohesive library use case with a narrow atomic persistence port.
 // Usage: Space HTTP maps transport to these commands; file bytes belong to assets.
-// Related: ports.rs, adapters/sqlite/libraries/, migrations/V4__space_libraries.sql.
+// Related: ports.rs, adapters/sqlite/libraries/, migrations/V1__baseline.sql.
 mod ports;
 use crate::modules::assets::{self, Blob, Format};
 pub(crate) use ports::{LibraryStore, StoreFuture};

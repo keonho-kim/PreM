@@ -47,7 +47,7 @@ pub(crate) async fn list(
     Ok(ids)
 }
 
-pub(super) fn native_url(c: &Credentials) -> Result<String, Error> {
+pub(crate) fn native_url(c: &Credentials) -> Result<String, Error> {
     if c.kind != crate::modules::model_registry::ProviderKind::LmStudioNative
         && !c.base_url.ends_with("/api/v1/")
     {

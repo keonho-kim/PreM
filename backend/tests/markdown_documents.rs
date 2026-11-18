@@ -1,7 +1,7 @@
 // Purpose: Verify Markdown upload, immutable extraction, original downloads and format-specific reuse.
 // Pattern: Real product HTTP/SQLite with a synthetic local model connection; all storage is isolated.
 // Usage: cargo nextest run --test markdown_documents.
-// Related: adapters/markdown/, V16__registered_text_formats.sql, tests/fixtures/documents/reference.md.
+// Related: adapters/markdown/, V1__baseline.sql, tests/fixtures/documents/reference.md.
 mod common;
 #[allow(dead_code)]
 mod document_support;

@@ -43,6 +43,7 @@ async function save(page) {
     let raw = '';
     for await (const chunk of req) raw += chunk;
     const body = JSON.parse(raw);
+    if (require('./draft-probe.cjs').replyToProbe(res, body)) return;
     calls++;
     const send = () => {
       res.setHeader('Content-Type', 'application/json');

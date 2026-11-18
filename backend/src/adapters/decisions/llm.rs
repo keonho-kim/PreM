@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use std::{collections::BTreeMap, sync::Arc};
 pub(super) async fn evaluate(
     client: Arc<dyn ModelClient>,
-    c: Credentials,
+    mut c: Credentials,
     batch: Batch,
 ) -> Result<Outcome<Evaluation>, Error> {
     if !c.kind.descriptor().structured {
@@ -22,6 +22,7 @@ pub(super) async fn evaluate(
     }
     let properties: serde_json::Map<String, Value> = batch.questions.iter().map(|(id,q)| (id.clone(), json!({"type":"object","properties":{"type":{"type":"string","enum":["choice"]},"choice":{"type":"string","enum":q.criteria().keys().collect::<Vec<_>>()}},"required":["type","choice"],"additionalProperties":false}))).collect();
     let schema = json!({"type":"object","properties":{"answers":{"type":"object","properties":properties,"required":batch.questions.keys().collect::<Vec<_>>(),"additionalProperties":false}},"required":["answers"],"additionalProperties":false});
+    c.thinking = crate::modules::model_registry::Thinking::OFF;
     let model = c.model_identifier.clone();
     let input = CompletionInput {
         system: crate::prompts::decisions::EVALUATE.into(),

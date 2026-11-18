@@ -3,8 +3,8 @@
 // Usage: Space reference preview; selection review never claims to insert into a presentation.
 // Related: materials-api.ts, content.tsx, reference-materials.css.
 import { useEffect, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Check, Plus, Layers, ArrowLeft } from 'lucide-react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { Layers, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,19 +16,17 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { errorMessage } from '@/shared/api/http';
-import { fileUrl } from './api';
+import { MaterialCard } from './material-card';
+import { SlideGroups } from './slide-groups';
 import { getMaterials, resolveMaterials, materialKeys, type Material } from './materials-api';
 import './reference-materials.css';
-const labels = {
-  slide: '장표',
-  page: '페이지',
-  image: '이미지',
-  diagram: '도형·도식',
-  chart: '차트',
-  text: '글',
-  table: '표',
-};
-export function ReferenceMaterials({ job }: { job: string }) {
+export function ReferenceMaterials({
+  job,
+  groupSlides = false,
+}: {
+  job: string;
+  groupSlides?: boolean;
+}) {
   const [kind, setKind] = useState('all'),
     [draft, setDraft] = useState(''),
     [query, setQuery] = useState(''),
@@ -39,9 +37,14 @@ export function ReferenceMaterials({ job }: { job: string }) {
     [pending, setPending] = useState(false);
   const controller = useRef<AbortController | null>(null);
   useEffect(() => () => controller.current?.abort(), []);
-  const result = useQuery({
+  const result = useInfiniteQuery({
     queryKey: materialKeys.list(job, kind, query, offset),
-    queryFn: ({ signal }) => getMaterials(job, kind, query, offset, signal),
+    initialPageParam: offset,
+    queryFn: ({ signal, pageParam }) => getMaterials(job, kind, query, pageParam, signal),
+    getNextPageParam: (last, _pages, start) =>
+      start + last.items.length < last.total && last.items.length
+        ? start + last.items.length
+        : undefined,
   });
   const inspect = async () => {
     controller.current?.abort();
@@ -62,7 +65,22 @@ export function ReferenceMaterials({ job }: { job: string }) {
     setSelected((ids) =>
       ids.includes(id) ? ids.filter((value) => value !== id) : ids.length < 50 ? [...ids, id] : ids,
     );
-  const items = review ?? result.data?.items ?? [];
+  const catalog = result.data?.pages[0];
+  const items = review ?? result.data?.pages.flatMap((p) => p.items) ?? [];
+  function cards(parts: Material[], grouped: boolean) {
+    return parts.map((item, index) => (
+      <MaterialCard
+        key={item.id}
+        job={job}
+        item={item}
+        grouped={grouped}
+        reviewNumber={review ? index + 1 : undefined}
+        selected={selected.includes(item.id)}
+        disabled={pending || (!selected.includes(item.id) && selected.length >= 50)}
+        onSelect={() => toggle(item.id)}
+      />
+    ));
+  }
   return (
     <section aria-label="PPT에 쓸 자료" className="reference-materials">
       <p className="field-hint">
@@ -139,73 +157,45 @@ export function ReferenceMaterials({ job }: { job: string }) {
       {error && <p role="alert">{error}</p>}
       {!review && result.isPending ? (
         <p role="status">자료를 불러옵니다.</p>
-      ) : !review && result.isError ? (
+      ) : !review && result.isError && !catalog ? (
         <div role="status">
           <p>{errorMessage(result.error)}</p>
           <Button variant="secondary" onClick={() => void result.refetch()}>
             다시 시도
           </Button>
         </div>
-      ) : !review && !result.data?.ready ? (
+      ) : !review && !catalog?.ready ? (
         <p>
           이 자료는 아직 재사용 자료가 준비되지 않았습니다. 위의 ‘재사용 자료 준비’를 눌러 주세요.
         </p>
       ) : !items.length ? (
         <p>이 조건에 맞는 자료가 없습니다.</p>
+      ) : groupSlides && !review ? (
+        <div className="material-slide-groups">
+          <SlideGroups items={items} label={(item) => item.page_label}>
+            {(group) => <div className="material-gallery">{cards(group, true)}</div>}
+          </SlideGroups>
+        </div>
       ) : (
         <div className={`material-gallery${review ? ' material-review' : ''}`}>
-          {items.map((item, index) => (
-            <article key={item.id} className="material-card">
-              {item.preview ? (
-                <div className="material-image">
-                  <img
-                    src={fileUrl(job, item.preview)}
-                    loading="lazy"
-                    decoding="async"
-                    alt={`${item.page_label} · ${labels[item.kind]}${item.preview_scope === 'page' ? '가 포함된 원본 페이지' : ''}`}
-                  />
-                </div>
-              ) : (
-                <section
-                  className="material-text"
-                  // biome-ignore lint/a11y/noNoninteractiveTabindex: Named source-text viewport needs keyboard scrolling.
-                  tabIndex={0}
-                  aria-label={`${item.page_label} 본문`}
-                >
-                  <p>{item.text || item.title}</p>
-                </section>
-              )}
-              <div className="material-caption">
-                <div>
-                  <span>
-                    {review ? `${index + 1}. ` : ''}
-                    {item.page_label} · {labels[item.kind]}
-                  </span>
-                  <h3>{item.title}</h3>
-                  {item.preview_scope === 'page' && <small>이 자료가 포함된 원본 페이지</small>}
-                </div>
-                {!review && (
-                  <Button
-                    size="icon"
-                    variant={selected.includes(item.id) ? 'default' : 'secondary'}
-                    aria-label={`${item.page_label} ${item.title} 선택`}
-                    aria-pressed={selected.includes(item.id)}
-                    disabled={pending || (!selected.includes(item.id) && selected.length >= 50)}
-                    onClick={() => toggle(item.id)}
-                  >
-                    {selected.includes(item.id) ? (
-                      <Check aria-hidden="true" />
-                    ) : (
-                      <Plus aria-hidden="true" />
-                    )}
-                  </Button>
-                )}
-              </div>
-            </article>
-          ))}
+          {cards(items, false)}
         </div>
       )}
-      {!review && (
+      {!review && groupSlides && result.hasNextPage && (
+        <div className="processing-pagination">
+          {result.isFetchNextPageError && (
+            <span role="alert">다음 자료를 불러오지 못했습니다.</span>
+          )}
+          <Button
+            variant="secondary"
+            disabled={result.isFetching}
+            onClick={() => void result.fetchNextPage()}
+          >
+            {result.isFetchNextPageError ? '다시 시도' : '자료 더 보기'}
+          </Button>
+        </div>
+      )}
+      {!review && !groupSlides && (
         <div className="processing-pagination">
           <Button
             variant="secondary"
@@ -215,11 +205,11 @@ export function ReferenceMaterials({ job }: { job: string }) {
             이전 자료
           </Button>
           <span>
-            {Math.floor(offset / 50) + 1} / {Math.max(1, Math.ceil((result.data?.total ?? 0) / 50))}
+            {Math.floor(offset / 50) + 1} / {Math.max(1, Math.ceil((catalog?.total ?? 0) / 50))}
           </span>
           <Button
             variant="secondary"
-            disabled={offset + 50 >= (result.data?.total ?? 0)}
+            disabled={offset + 50 >= (catalog?.total ?? 0)}
             onClick={() => setOffset(offset + 50)}
           >
             다음 자료

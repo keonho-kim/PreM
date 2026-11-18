@@ -14,6 +14,8 @@ export const draftFields = [
   'context_length',
   'physical_batch_size',
   'enabled',
+  'thinking',
+  'thinking_effort',
 ] as const;
 export type ConnectionValues = {
   draft: ProviderDraft;
@@ -34,6 +36,8 @@ export function formValues(provider: Provider | null, option: ProviderOption): C
         ? (provider.physical_batch_size ?? null)
         : (option.default_physical_batch_size ?? null),
       max_output_tokens: provider?.max_output_tokens ?? null,
+      thinking: provider?.thinking ?? null,
+      thinking_effort: provider?.thinking_effort ?? null,
       enabled: provider?.enabled ?? true,
     },
     address: provider ? '' : option.base,

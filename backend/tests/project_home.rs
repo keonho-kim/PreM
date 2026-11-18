@@ -1,7 +1,7 @@
 // Purpose: Verify Home deadlines, lifecycle concurrency and preserved migration data.
 // Pattern: Real HTTP/SQLite boundaries with isolated fixtures and restart checks.
 // Usage: cargo nextest run --test project_home.
-// Related: migrations/V2__project_home.sql, adapters/http/projects.rs.
+// Related: migrations/V1__baseline.sql, adapters/http/projects.rs.
 mod common;
 use axum::http::StatusCode;
 use prem_backend::app::Application;
@@ -201,16 +201,18 @@ async fn deadlines_filters_and_lifecycle_are_durable_and_conditional() {
     );
 }
 #[tokio::test]
-async fn version_one_projects_and_receipts_survive_backed_up_migration() {
+async fn projects_and_receipts_survive_backed_up_baseline_adoption() {
     let root = common::storage();
     std::fs::create_dir_all(root.path().join("db")).unwrap();
     let mut db = Connection::open(root.path().join("db/app.sqlite")).unwrap();
-    let migration = refinery::Migration::unapplied(
-        "V1__projects",
-        include_str!("../migrations/V1__projects.sql"),
+    refinery::Runner::new(&[refinery::Migration::unapplied(
+        "V1__baseline",
+        include_str!("../migrations/V1__baseline.sql"),
     )
+    .unwrap()])
+    .run(&mut db)
     .unwrap();
-    refinery::Runner::new(&[migration]).run(&mut db).unwrap();
+    common::legacy::mark(&db, 36);
     let id = Uuid::new_v4().to_string();
     db.execute(
         "INSERT INTO projects(id,name,created_at,updated_at) VALUES (?1,'이전 프로젝트',1,1)",
@@ -218,7 +220,7 @@ async fn version_one_projects_and_receipts_survive_backed_up_migration() {
     )
     .unwrap();
     db.execute(
-        "INSERT INTO project_creation_requests VALUES (?1,'이전 프로젝트',?2)",
+        "INSERT INTO project_creation_requests(request_key,original_name,project_id) VALUES (?1,'이전 프로젝트',?2)",
         [Uuid::new_v4().to_string(), id.clone()],
     )
     .unwrap();
@@ -237,7 +239,7 @@ async fn version_one_projects_and_receipts_survive_backed_up_migration() {
         backup
             .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        1
+        36
     );
     assert_eq!(
         backup

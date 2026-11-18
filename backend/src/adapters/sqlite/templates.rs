@@ -1,7 +1,7 @@
 // Purpose: Commit template job links to shared native imports through one conditional write owner.
 // Pattern: Validate source lineage and lease without copying canonical structure JSON.
 // Usage: Template service commits PPT Master results; no content/TOC rows are created.
-// Related: modules/templates/, V12__shared_ppt_packages.sql, documents/jobs.rs.
+// Related: modules/templates/, V1__baseline.sql, documents/jobs.rs.
 use super::{Queue, Unavailable};
 use crate::modules::{
     assets::{DerivedBlob, DerivedFormat},

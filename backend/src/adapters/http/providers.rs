@@ -4,7 +4,7 @@
 // Related: model_registry, inference, frontend/features/providers/.
 use crate::modules::{
     inference::{self, Diagnostics, Inference, RequestRecord, TestKind},
-    model_registry::{self, Provider, Registry, Settings},
+    model_registry::{self, Provider, Registry},
 };
 use axum::{
     Json, Router,
@@ -26,6 +26,7 @@ pub(crate) struct ProviderApi {
 }
 pub(super) fn router(api: ProviderApi) -> Router {
     Router::new()
+        .route("/api/v1/models/setup", get(super::authoring_models::setup))
         .route(
             "/api/v1/models/authoring",
             get(super::authoring_models::list),
@@ -39,7 +40,14 @@ pub(super) fn router(api: ProviderApi) -> Router {
             axum::routing::post(super::model_discovery::discover),
         )
         .route("/api/v1/admin/llm/providers", get(list))
-        .route("/api/v1/admin/llm/providers/{id}", get(detail).put(save))
+        .route(
+            "/api/v1/admin/llm/providers/{id}",
+            get(detail).put(super::provider_drafts::save),
+        )
+        .route(
+            "/api/v1/admin/llm/providers/{id}/diagnose",
+            axum::routing::post(super::provider_drafts::diagnose),
+        )
         .route("/api/v1/admin/llm/providers/{id}/models", get(models))
         .route(
             "/api/v1/admin/llm/providers/{id}/prepare",
@@ -62,7 +70,7 @@ pub(super) fn router(api: ProviderApi) -> Router {
         .with_state(api)
 }
 #[derive(Serialize)]
-struct ProviderDto {
+pub(super) struct ProviderDto {
     id: Uuid,
     config_id: Uuid,
     version: i64,
@@ -74,6 +82,8 @@ struct ProviderDto {
     max_output_tokens: Option<u32>,
     context_length: Option<u32>,
     physical_batch_size: Option<u32>,
+    thinking: Option<bool>,
+    thinking_effort: Option<model_registry::Effort>,
     enabled: bool,
     has_secret: bool,
     created_at: i64,
@@ -93,28 +103,13 @@ impl From<Provider> for ProviderDto {
             max_output_tokens: s.max_output_tokens,
             context_length: s.context_length,
             physical_batch_size: s.physical_batch_size,
+            thinking: s.thinking.enabled,
+            thinking_effort: s.thinking.effort,
             enabled: s.enabled,
             has_secret: p.encrypted_secret.is_some(),
             created_at: p.created_at,
         }
     }
-}
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct SaveBody {
-    expected_version: i64,
-    name: String,
-    provider_type: String,
-    base_url: String,
-    model_identifier: String,
-    timeout_seconds: u32,
-    max_output_tokens: Option<u32>,
-    context_length: Option<u32>,
-    physical_batch_size: Option<u32>,
-    enabled: bool,
-    api_key: Option<String>,
-    #[serde(default)]
-    clear_secret: bool,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -215,34 +210,6 @@ async fn detail(
         StatusCode::OK,
         ProviderDto::from(api.registry.get(id).await?),
     ))
-}
-async fn save(
-    State(api): State<ProviderApi>,
-    Path(id): Path<Uuid>,
-    input: Result<Json<SaveBody>, JsonRejection>,
-) -> Result<Response, ApiError> {
-    let b = body(input)?;
-    let p = api
-        .registry
-        .save(
-            id,
-            b.expected_version,
-            Settings {
-                name: b.name,
-                provider_type: b.provider_type.parse()?,
-                base_url: b.base_url,
-                model_identifier: b.model_identifier,
-                timeout_seconds: b.timeout_seconds,
-                max_output_tokens: b.max_output_tokens,
-                context_length: b.context_length,
-                physical_batch_size: b.physical_batch_size,
-                enabled: b.enabled,
-            },
-            b.api_key,
-            b.clear_secret,
-        )
-        .await?;
-    Ok(json(StatusCode::OK, ProviderDto::from(p)))
 }
 async fn models(
     State(api): State<ProviderApi>,

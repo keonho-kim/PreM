@@ -4,8 +4,9 @@
 // Related: processing-dialog.tsx, settings.tsx, upload-processing.tsx.
 export { ProcessingDialog } from './processing-dialog';
 export { ProcessingSettings } from './settings';
-export { UploadProcessing } from './upload-processing';
-export { processingLabel } from './status';
+export type { Job as ProcessingJob } from './api';
+export { UploadProcessing, uploadJobOptions } from './upload-processing';
+export { processingLabel, stepSummary } from './status';
 
 export { ProcessingView } from './processing-view';
 

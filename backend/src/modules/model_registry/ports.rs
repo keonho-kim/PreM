@@ -8,6 +8,14 @@ use std::{future::Future, pin::Pin};
 use uuid::Uuid;
 pub(crate) type StoreFuture<T> = Pin<Box<dyn Future<Output = Result<T, Error>> + Send>>;
 pub(crate) trait ProviderStore: Send + Sync {
+    fn certify(&self, id: Uuid, hash: String, effort: Option<super::Effort>) -> StoreFuture<Uuid>;
+    fn certified_effort(
+        &self,
+        id: Uuid,
+        token: Uuid,
+        hash: String,
+    ) -> StoreFuture<Option<super::Effort>>;
+    fn setup(&self) -> StoreFuture<super::ModelSetup>;
     fn list(&self) -> StoreFuture<Vec<Provider>>;
     fn config(&self, id: Uuid) -> StoreFuture<Provider>;
     fn get(&self, id: Uuid) -> StoreFuture<Provider>;

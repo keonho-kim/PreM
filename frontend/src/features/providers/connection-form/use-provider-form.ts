@@ -7,15 +7,22 @@ import { useForm, useWatch, useFormState } from 'react-hook-form';
 import { formValues, draftFields, type ConnectionValues } from './form-values';
 import { useMutation } from '@tanstack/react-query';
 import { ApiError, errorMessage } from '@/shared/api/http';
-import { getProvider, saveProvider, type Provider, type ProviderDraft } from '../api';
+import { useDraftDiagnostic } from './use-draft-diagnostic';
+import { draftBody, getProvider, saveProvider, type Provider, type ProviderDraft } from '../api';
 import type { ProviderOption } from '../provider-types';
 import { useModelDiscovery } from '../use-model-discovery';
 export type ProviderFormProps = {
   provider: Provider | null;
   catalog: ProviderOption[];
   onSaved: (provider: Provider) => void;
+  decision?: boolean;
 };
-export function useProviderForm({ provider, catalog, onSaved }: ProviderFormProps) {
+export function useProviderForm({
+  provider,
+  catalog,
+  onSaved,
+  decision = false,
+}: ProviderFormProps) {
   const initial = catalog[0];
   if (!initial) throw new Error('Provider catalog must be loaded before opening settings');
   const id = useRef(provider?.id ?? crypto.randomUUID());
@@ -35,8 +42,10 @@ export function useProviderForm({ provider, catalog, onSaved }: ProviderFormProp
     register('secret');
     register('clearSecret');
   }, [register]);
-  const updateDraft = <K extends keyof ProviderDraft>(key: K, value: ProviderDraft[K]) =>
+  const updateDraft = <K extends keyof ProviderDraft>(key: K, value: ProviderDraft[K]) => {
+    if (key === 'thinking' || key === 'thinking_effort') diagnostic.onThinkingEdit();
     setValue<`draft.${keyof ProviderDraft}`>(`draft.${key}`, value, { shouldDirty: true });
+  };
   const setAddress = (value: string) => setValue('address', value, { shouldDirty: true });
   const setSecret = (value: string) => setValue('secret', value, { shouldDirty: true });
   const setClearSecret = (value: boolean) => setValue('clearSecret', value, { shouldDirty: true });
@@ -58,16 +67,21 @@ export function useProviderForm({ provider, catalog, onSaved }: ProviderFormProp
     Boolean(draft.model_identifier) &&
     (discovery.models?.includes(draft.model_identifier) ||
       (!connectionEdited && draft.model_identifier === base?.model_identifier));
+  const decisionMode = decision || initial.category === 'system';
+  const body = draftBody(
+    base?.version ?? 0,
+    { ...draft, base_url: address.trim() || base?.base_url || '' },
+    secret || undefined,
+    clearSecret,
+    decisionMode,
+  );
+  const diagnostic = useDraftDiagnostic(id.current, body, draft.timeout_seconds, modelReady);
   const mutation = useMutation({
     meta: { admin: true },
-    mutationFn: () =>
-      saveProvider(
-        id.current,
-        base?.version ?? 0,
-        { ...draft, base_url: address.trim() || base?.base_url || '' },
-        secret || undefined,
-        clearSecret,
-      ),
+    mutationFn: () => {
+      if (!diagnostic.result?.ticket) throw Error('연결 진단이 필요합니다.');
+      return saveProvider(id.current, body, diagnostic.result.ticket);
+    },
     retry: false,
     onSuccess: (p) => {
       setBase(p);
@@ -110,6 +124,7 @@ export function useProviderForm({ provider, catalog, onSaved }: ProviderFormProp
   const keyRequired = Boolean(base?.has_secret && destinationChanged && !secret && !clearSecret);
   const addressRequired = reviewAddress && Boolean(secret) && !address.trim();
   const conflict =
+    diagnostic.conflict ||
     (mutation.error instanceof ApiError && mutation.error.code === 'revision_conflict') ||
     (discovery.error instanceof ApiError && discovery.error.code === 'revision_conflict');
   const error = mutation.isError
@@ -140,6 +155,10 @@ export function useProviderForm({ provider, catalog, onSaved }: ProviderFormProp
         draft.context_length !== (base.context_length ?? null) && '컨텍스트 길이',
         draft.physical_batch_size !== (base.physical_batch_size ?? null) && '물리 배치 크기',
         draft.enabled !== base.enabled && '연결 상태',
+        !decisionMode &&
+          (draft.thinking !== (base.thinking ?? null) ||
+            draft.thinking_effort !== (base.thinking_effort ?? null)) &&
+          'Thinking 설정',
       ]
         .filter(Boolean)
         .join(', ')
@@ -158,6 +177,8 @@ export function useProviderForm({ provider, catalog, onSaved }: ProviderFormProp
     notice,
     setNotice,
     discovery,
+    decisionMode,
+    diagnostic,
     modelReady,
     mutation,
     refresh,

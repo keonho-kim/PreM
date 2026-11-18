@@ -39,7 +39,9 @@ impl presentations::Renderer for Runtime {
         h.update(include_bytes!("../../../tools/presentation-assemble.py"));
         h.update(include_bytes!("../../../tools/presentation-references.py"));
         h.update(include_bytes!("../../../tools/presentation-validate.mjs"));
-        h.update(include_bytes!("../../../../scripts/runtime-python.lock"));
+        h.update(include_bytes!(
+            "../../../../scripts/runtime/requirements.lock"
+        ));
         hex::encode(h.finalize())
     }
     fn render(&self, input: RenderInput, cancel: CancellationToken) -> Work<SlideOutput> {

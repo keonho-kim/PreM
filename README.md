@@ -15,7 +15,7 @@ PreM은 팀의 업무 문서를 **근거를 확인할 수 있는 PowerPoint 발�
 
 ## 설치와 실행
 
-지원 환경은 **Apple Silicon macOS**와 **Linux AMD64·ARM64**입니다. Git, Bash, tar, C/C++ 빌드 도구, rustup, Node.js와 npm, uv를 준비하세요. WSL에서는 Linux 터미널에서 `uv --version`을 확인하세요. 이 프로젝트는 CPython 3.13.18 설치에 uv 0.13.6을 사용합니다. 프로젝트에서 사용하는 버전은 [Rust 설정](rust-toolchain.toml), [Node 설정](.node-version), [pnpm 설정](package.json), [런타임 설정](scripts/runtime-versions.json)에 있습니다.
+지원 환경은 **Apple Silicon macOS**와 **Linux AMD64·ARM64**입니다. Git, Bash, tar, C/C++ 빌드 도구, rustup, Node.js와 npm, uv를 준비하세요. WSL에서는 Linux 터미널에서 `uv --version`을 확인하세요. 이 프로젝트는 CPython 3.13.18 설치에 uv 0.13.6을 사용합니다. 프로젝트에서 사용하는 버전은 [Rust 설정](rust-toolchain.toml), [Node 설정](.node-version), [pnpm 설정](package.json), [런타임 설정](scripts/runtime/versions.json)에 있습니다.
 
 ```sh
 git clone https://github.com/keonho-kim/PreM.git
@@ -49,10 +49,12 @@ pnpm build
 
 ## 첫 발표자료 만들기
 
-1. **모델 연결** — 시작 터미널에 출력된 `PreM Admin token`으로 **Admin**에 들어갑니다. **LLM 연결**에서 작성용 모델을 저장하고, **Decision Model 연결**에서 문서 처리·자료 찾기에 쓸 공통 판정 연결을 선택합니다. 전용 Decision 모델 또는 구조화 출력을 지원하는 LLM을 사용할 수 있습니다.
+1. **모델 연결** — 시작 터미널에 출력된 `PreM Admin token`으로 **Admin**에 들어갑니다. **LLM 연결**에서 작성용 모델을 저장하고, **Decision Model 연결**에서 문서 처리·자료 찾기에 쓸 공통 판정 연결을 선택합니다. 전용 Decision 모델 또는 구조화 출력을 지원하는 LLM을 사용할 수 있습니다. Home은 미설정 모델이 있으면 해당 Admin 화면으로 안내합니다. 두 연결 화면의 **연결 진단** 버튼으로 저장한 모델의 실제 응답을 확인하세요.
 2. **원본 등록** — **Home**에서 프로젝트를 만든 뒤 **Studio**에 원본을 올립니다. 처리가 끝나면 페이지와 추출 내용을 확인합니다. 여러 프로젝트가 같이 쓸 참고자료와 템플릿은 **Space**에 등록합니다.
 3. **목차와 근거 검토** — 작성 방향을 입력하고 발표 목차를 구성합니다. 각 항목에 연결된 원문을 읽고 필요한 근거를 확정합니다. 여기서 발표 목차를 바꿔도 원본 문서의 목차는 그대로 보존됩니다.
 4. **생성·편집** — 템플릿과 생성할 항목을 선택해 장표를 만듭니다. 미리보기에서 직접 편집하거나 AI 수정안을 검토한 뒤 **PPTX 다운로드**를 누릅니다.
+
+모델 연결을 저장하려면 사용할 모델을 선택하고 **저장 전 연결 진단**을 실행하세요. **추가 연결 설정**에서 작성용 모델의 Thinking과 effort를 선택할 수 있습니다. 비워 두면 모델 기본값을 사용합니다. Thinking을 켜면 서버에 시험 요청을 보내 수락한 값을 표시합니다. 판정에 사용하는 LLM에는 Thinking 끄기를 요청합니다.
 
 문서가 설정 대기 상태라면 **Admin → Decision Model 연결**에서 공통 판정 연결이 선택돼 있는지 확인하세요. LM Studio에서는 모델별 컨텍스트 길이와 물리 배치 크기를 조절할 수 있습니다. 로딩 값을 변경했다면 저장한 뒤 **저장한 토큰 설정으로 모델 준비**를 누릅니다.
 

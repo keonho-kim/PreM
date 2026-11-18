@@ -1,7 +1,7 @@
 // Purpose: Verify reusable reference parts, original media, ordered selections and historical lineage.
 // Pattern: Real bundled extraction tools and isolated storage; no model calls or production mutations.
 // Usage: cargo nextest run --test reference_materials after preparing the offline runtime.
-// Related: document_support/, V11__reference_materials.sql, modules/documents/materials.rs.
+// Related: document_support/, V1__baseline.sql, modules/documents/materials.rs.
 mod common;
 #[allow(dead_code)]
 mod document_support;
@@ -255,7 +255,13 @@ async fn migration_preserves_old_extractions_until_explicit_material_preparation
     let extraction = detail["job"]["extraction_id"].as_str().unwrap();
     app.shutdown().await.unwrap();
     let db = Connection::open(root.path().join("db/app.sqlite")).unwrap();
-    db.execute_batch("DROP TABLE presentation_render_layers; DROP TABLE presentation_canvas_commands; DROP TABLE presentation_manual_designs; DROP TABLE presentation_quality_checks; DROP TABLE presentation_render_cache; DROP TRIGGER slide_edit_workflow_register; DROP TRIGGER slide_edit_workflow_interrupt; DROP TABLE slide_edit_workflows; DROP TRIGGER presentation_slide_key; DROP TABLE presentation_edit_target_imports; DROP TABLE presentation_edit_imports; DROP TABLE presentation_slide_imports; DROP TABLE presentation_generation_imports; DROP TABLE presentation_reference_drafts; DROP TABLE presentation_material_imports; ALTER TABLE presentation_slide_versions DROP COLUMN slide_key; DROP TRIGGER relation_workflow_register; DROP TRIGGER relation_workflow_interrupt; DROP TABLE relation_workflows; DROP TRIGGER outline_workflow_register; DROP TRIGGER outline_workflow_interrupt; DROP TABLE outline_workflows; DROP TRIGGER document_workflow_register; DROP TRIGGER document_workflow_interrupt; DROP TABLE document_workflows; DROP TABLE workflow_artifacts; DROP TABLE workflow_events; DROP TABLE workflow_nodes; DROP TABLE presentation_workflows; DROP TABLE workflow_executions; DROP TABLE presentation_edit_previews; DROP TABLE presentation_edit_renders; DROP TABLE presentation_restorations; DROP TABLE presentation_undo_stack; DROP TABLE presentation_run_sessions; DROP TABLE presentation_editor_sessions; DROP TABLE presentation_edit_target_media; DROP TABLE presentation_slide_media; DROP TABLE presentation_edit_media; DROP TABLE presentation_edit_targets; DROP TABLE presentation_media; DROP TRIGGER project_edit_cancel; DROP TABLE presentation_edit_commands; DROP TABLE presentation_edits; DROP TABLE presentation_run_slides; DROP TRIGGER project_presentation_cancel; DROP TABLE presentation_commands; DROP TABLE presentation_revision_slides; DROP TABLE presentation_revisions; DROP TABLE presentation_slide_evidence; DROP TABLE presentation_slide_versions; DROP TABLE presentation_runs; DROP TABLE presentations; DROP TABLE presentation_preparations; DROP TABLE presentation_designs; DROP TABLE presentation_evidence_links; DROP TABLE presentation_evidence_reviews; DROP TABLE relation_workspace_peers; DROP TABLE relation_pulls; DROP TABLE relation_review_history; DROP TABLE relation_reads; DROP TABLE relation_workspaces; DROP TRIGGER project_outline_cancel; DROP TABLE outline_run_commands; DROP TABLE outline_run_batches; DROP TABLE outline_run_blocks; DROP TABLE outline_runs; DROP TABLE outline_confirmations; DROP TABLE outline_assignments; DROP TABLE outline_revision_nodes; DROP TABLE outline_node_versions; DROP TABLE outline_nodes; DROP TABLE outline_heads; DROP TABLE outline_revisions; DROP VIEW registered_file_facts; DROP TRIGGER relation_project_cancel; DROP TABLE relation_link_changes; DROP TABLE relation_links; DROP TABLE relation_commands; DROP TABLE relation_origins; DROP TABLE relation_candidates; DROP TABLE relation_assessments; DROP TABLE relation_sources; DROP TABLE relation_runs; DROP TABLE relation_settings; DROP INDEX job_extraction_lookup; DROP TRIGGER source_document_job; DROP TRIGGER source_document_cancel; DROP TRIGGER project_source_cancel; DROP TABLE project_source_review_files; DROP TABLE project_source_reviews; DROP TABLE project_guide_revisions; DROP TABLE source_versions; DROP TABLE source_items; DROP TABLE template_import_links; DROP TABLE ppt_imports; DROP TABLE asset_package_members; DROP TABLE blob_collection_candidates; DROP TABLE document_materials; DROP TABLE document_native_packages; DROP INDEX document_page_identity; DROP INDEX document_block_identity; ALTER TABLE llm_provider_config_versions DROP COLUMN physical_batch_size; ALTER TABLE llm_provider_config_versions DROP COLUMN context_length; ALTER TABLE llm_provider_config_versions DROP COLUMN max_output_tokens; DROP TABLE IF EXISTS document_source_entries; DROP TABLE IF EXISTS document_page_alignments; DROP TABLE IF EXISTS document_alignment; DROP TABLE IF EXISTS decision_settings; DELETE FROM refinery_schema_history WHERE version>=11; PRAGMA user_version=10; UPDATE document_extractions SET schema_version=1,profile='legacy-v1'; UPDATE document_jobs SET status='succeeded',profile='legacy-v1';").unwrap();
+    db.execute_batch(
+        "DELETE FROM document_materials; DELETE FROM document_native_packages;
+        UPDATE document_extractions SET schema_version=1,profile='legacy-v1';
+        UPDATE document_jobs SET profile='legacy-v1';",
+    )
+    .unwrap();
+    common::legacy::mark(&db, 36);
     let text: String = db
         .query_row(
             "SELECT group_concat(text) FROM (SELECT text FROM content_blocks ORDER BY id)",
@@ -265,7 +271,6 @@ async fn migration_preserves_old_extractions_until_explicit_material_preparation
         .unwrap();
     drop(db);
     let mut app = Application::open(root.path()).unwrap();
-    document_support::configure(&app, &fixture_model).await;
     app.start_processing();
     let old = catalog(&app, job, "").await;
     assert_eq!(old["ready"], false);

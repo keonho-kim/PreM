@@ -1,7 +1,7 @@
 // Purpose: Read canonical library items and immutable file-version metadata.
 // Pattern: Parameterized queries with trusted table prefixes and one snapshot per list.
 // Usage: The library adapter uses these queries within its atomic write transactions too.
-// Related: mod.rs, uploads.rs, migrations/V4__space_libraries.sql.
+// Related: mod.rs, uploads.rs, migrations/V1__baseline.sql.
 use super::*;
 use rusqlite::{OptionalExtension, Row, params};
 const FIELDS: &str = "i.id,i.title,i.status,i.version,v.number,f.original_filename,b.sha256,b.size_bytes,b.detected_mime,b.format,i.created_at,i.updated_at,coalesce((SELECT j.status FROM document_jobs j WHERE j.reference_version_id=v.id OR j.template_version_id=v.id OR j.source_version_id=v.id ORDER BY j.generation DESC LIMIT 1),'not_started')";

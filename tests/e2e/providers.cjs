@@ -5,9 +5,8 @@
 const { setViewport, clickRole } = require('../helpers/interactions.cjs');
 const assert = require('node:assert/strict');
 const { authorizedFetch: fetch } = require('./admin-client.cjs');
-const http = require('node:http');
+const { startModelServer } = require('./provider-server.cjs');
 const path = require('node:path');
-const { once } = require('node:events');
 const { openBrowser, projectRoot } = require('../helpers/browser.cjs');
 const { createServer } = require('./server.cjs');
 const { adminNavigation } = require('./admin-navigation.cjs');
@@ -67,62 +66,8 @@ async function openOptions(page) {
   if (!input || !(await input.boundingBox())) await click(page, '추가 연결 설정');
 }
 (async () => {
-  let inventoryCalls = 0;
-  const model = http.createServer(async (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    if (req.url === '/api/v1/models') {
-      inventoryCalls++;
-      res.end(
-        JSON.stringify({
-          models: [
-            {
-              type: 'llm',
-              key: 'download-model',
-              loaded_instances: [
-                { id: 'ornith-1.5-35b-a3b', config: { physical_batch_size: 2048 } },
-              ],
-            },
-            {
-              type: 'decision',
-              key: 'download-decision',
-              loaded_instances: [{ id: 'd3-flash-artemis', config: { physical_batch_size: 2048 } }],
-            },
-            { type: 'embedding', key: 'not-for-this-task' },
-          ],
-        }),
-      );
-      return;
-    }
-    if (req.url.startsWith('/v1/')) assert.equal(req.headers.authorization, 'Bearer qa-key');
-    let raw = '';
-    for await (const chunk of req) raw += chunk;
-    const body = JSON.parse(raw);
-    if (req.url === '/api/v1/chat') {
-      res.end(
-        JSON.stringify({
-          output: [{ type: 'message', content: 'PreM connection OK' }],
-          stats: { input_tokens: 12, total_output_tokens: 5 },
-        }),
-      );
-      return;
-    }
-    res.end(
-      JSON.stringify({
-        choices: [
-          {
-            finish_reason: 'stop',
-            message: {
-              content: body.response_format ? '{"status":"ok"}' : 'PreM connection OK',
-            },
-          },
-        ],
-        usage: { prompt_tokens: 12, completion_tokens: 5 },
-      }),
-    );
-  });
-  model.listen(0, '127.0.0.1');
-  await once(model, 'listening');
-  const endpoint = `http://127.0.0.1:${model.address().port}`;
+  const model = await startModelServer();
+  const { endpoint } = model;
   const server = await createServer('providers-browser-');
   let session;
   const list = async () => (await fetch(server.base + '/api/v1/admin/llm/providers')).json();
@@ -137,7 +82,13 @@ async function openOptions(page) {
       p.on('pageerror', (e) => errors.push(e.message));
       await setViewport(p, { width: 1440, height: 1000 });
     }
-    await a.goto(server.base + '/home/admin', { waitUntil: 'networkidle0' });
+    await a.goto(server.base + '/home/', { waitUntil: 'networkidle0' });
+    await a.waitForSelector('#admin-token');
+    assert.equal(new URL(a.url()).searchParams.get('section'), 'llm');
+    assert.match(
+      await a.$eval('.model-setup-notice', (n) => n.textContent),
+      /LLM과 Decision 모델이 아직 설정되지/,
+    );
     await server.unlock(a);
     assert.ok(await a.$('::-p-aria(LLM 연결[role="link"])'));
     assert.ok(await a.$('::-p-aria(Decision Model 연결[role="link"])'));
@@ -156,6 +107,18 @@ async function openOptions(page) {
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/output-budget-admin.png'),
     });
+    assert(await a.$eval('.provider-form button[type=submit]', (b) => b.disabled));
+    await choose(a, 'Thinking · 선택', '켜기');
+    await a.waitForFunction(
+      () =>
+        document.querySelector('.thinking-feedback') &&
+        !document.querySelector('.provider-form button[type=submit]')?.disabled,
+    );
+    await choose(a, 'Thinking Effort · 선택', 'xhigh');
+    await a.waitForFunction(() =>
+      document.querySelector('.provider-form')?.textContent.includes('Thinking만 켭니다.'),
+    );
+    await require('./draft-probe.cjs').verifyDraft(a);
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
     const first = (await list())[0];
@@ -164,6 +127,27 @@ async function openOptions(page) {
     assert.equal(first.max_output_tokens, 30000);
     assert.equal(first.physical_batch_size, 2048);
     assert.equal(first.timeout_seconds, 600);
+    assert.equal(first.thinking, true);
+    assert.equal(first.thinking_effort, null);
+    await a.waitForFunction(() =>
+      document.querySelector('.model-setup-notice')?.textContent.startsWith('Decision 모델'),
+    );
+    model.failNextDiagnostic();
+    await click(a, '연결 진단');
+    await a.waitForFunction(() =>
+      document.querySelector('.connection-diagnostic')?.textContent.includes('연결 진단 실패'),
+    );
+    await click(a, '연결 진단');
+    await a.waitForFunction(() =>
+      document.querySelector('.connection-diagnostic')?.textContent.includes('텍스트 응답 확인'),
+    );
+    await click(a, 'Decision Model 연결', 'link');
+    await click(a, '연결 진단');
+    await a.waitForFunction(() =>
+      document.querySelector('.connection-diagnostic')?.textContent.includes('판정 응답 확인'),
+    );
+    await a.goBack();
+    await a.waitForFunction(() => new URL(location.href).searchParams.get('provider') !== null);
     await click(a, '연결 주소·인증 변경');
     assert.equal(await a.$eval('input[name="base_url"]', (n) => n.value), '');
     assert.equal(await a.$eval('input[name="api_key"]', (n) => n.value), '');
@@ -183,6 +167,7 @@ async function openOptions(page) {
     await click(a, '연결 설정', 'tab');
     await openOptions(a);
     await field(a, 'name', '내 연결 설정');
+    await require('./draft-probe.cjs').verifyDraft(a);
     const change = await fetch(`${server.base}/api/v1/admin/llm/providers/${first.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -207,6 +192,7 @@ async function openOptions(page) {
       document.querySelector('.provider-form > [role="status"]')?.textContent.includes('최신 v2'),
     );
     assert.equal(await a.$eval('input[name="name"]', (n) => n.value), '내 연결 설정');
+    await require('./draft-probe.cjs').verifyDraft(a);
     await click(a, '변경 사항 저장');
     await click(a, '확인하고 저장');
     await a.waitForFunction(() =>
@@ -246,10 +232,13 @@ async function openOptions(page) {
         );
         throw error;
       });
-    await click(a, '변경 사항 저장');
-    await a.waitForSelector('[role="alertdialog"]');
-    await a.keyboard.press('Escape');
-    await a.waitForSelector('[role="alertdialog"]', { hidden: true });
+    await click(a, '저장 전 연결 진단');
+    await a.waitForFunction(() =>
+      document
+        .querySelector('.provider-form .provider-actions [role=status]')
+        ?.textContent.includes('인증'),
+    );
+    assert.equal(await a.$eval('.provider-form button[type=submit]', (b) => b.disabled), true);
     assert.equal(await a.$eval('input[name="api_key"]', (n) => n.value), 'uncommitted-key');
     await click(a, '변경 취소');
     await server.stop();
@@ -264,6 +253,7 @@ async function openOptions(page) {
     await field(a, 'base_url', endpoint + '/api/v1');
     await click(a, '모델 목록 조회');
     await choose(a, '사용할 모델 · 필수', 'ornith-1.5-35b-a3b');
+    await require('./draft-probe.cjs').verifyDraft(a);
     await click(a, '설정 저장');
     await a.waitForFunction(
       () => document.querySelector('#provider-llm')?.textContent === 'LM Studio Native',
@@ -279,6 +269,7 @@ async function openOptions(page) {
     await click(a, '모델 목록 조회');
     await choose(a, '사용할 모델 · 필수', 'd3-flash-artemis');
     assert.equal((await list()).length, 2);
+    await require('./draft-probe.cjs').verifyDraft(a);
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
     const decision = (await list()).find((p) => p.provider_type === 'lm_studio_decision');
@@ -289,7 +280,22 @@ async function openOptions(page) {
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-decision-settings.png'),
       fullPage: true,
     });
-    assert.ok(inventoryCalls >= 4);
+    await click(a, '연결 진단');
+    await a.waitForFunction(() =>
+      document.querySelector('.connection-diagnostic')?.textContent.includes('판정 응답 확인'),
+    );
+    await a.goto(server.base + '/home/', { waitUntil: 'networkidle0' });
+    assert.equal(new URL(a.url()).searchParams.get('section'), 'decision');
+    await server.unlock(a);
+    await click(a, '사용할 판정 연결', 'combobox');
+    await click(a, decision.name + ' · System One', 'option');
+    await click(a, '판정 연결 적용');
+    await a.waitForFunction(() =>
+      document.querySelector('.model-setup-notice')?.textContent.includes('설정이 완료'),
+    );
+    await click(a, 'Home으로 이동', 'link');
+    await a.waitForSelector('.projects-empty');
+    assert.ok(model.inventoryCalls() >= 4);
     assert.deepEqual(errors, []);
     console.log(
       'PASS: LLM/Decision tabs, native pre-save discovery, loaded model IDs, shared edits, key retention, confirmation/cancel, independent settings, mobile and restart.',
@@ -297,8 +303,7 @@ async function openOptions(page) {
   } finally {
     if (session) await session.close();
     await server.close();
-    model.closeAllConnections();
-    await new Promise((r) => model.close(r));
+    await model.close();
   }
 })().catch((e) => {
   console.error(e);

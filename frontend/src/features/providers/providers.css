@@ -296,3 +296,20 @@
 .provider-credentials[hidden] {
   display: none;
 }
+
+.connection-diagnostic {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-block: 16px;
+}
+.connection-diagnostic p {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.thinking-feedback {
+  color: var(--color-error);
+  font-size: 0.8125rem;
+}

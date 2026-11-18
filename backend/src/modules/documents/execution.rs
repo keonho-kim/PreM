@@ -49,7 +49,8 @@ impl Driver for Documents {
             if fresh.lease != j.lease {
                 return Err(Error::Cancelled);
             }
-            match n.key {
+            tracing::info!(job_id = %j.id, stage = n.key, attempt = j.attempt, format = %j.format, "document stage started");
+            let result = match n.key {
                 "extract" => this.extract_job(fresh, cancel).await,
                 "classify" => this.classify_job(fresh, cancel).await,
                 "ready" => {
@@ -58,7 +59,17 @@ impl Driver for Documents {
                         .await
                 }
                 _ => Err(Error::Processing("workflow_incompatible")),
+            };
+            match &result {
+                Ok(()) => tracing::info!(job_id = %j.id, stage = n.key, "document stage finished"),
+                Err(Error::WaitingConfiguration) => {
+                    tracing::info!(job_id = %j.id, stage = n.key, "waiting for model configuration")
+                }
+                Err(error) => {
+                    tracing::warn!(job_id = %j.id, stage = n.key, attempt = j.attempt, %error, "document stage stopped")
+                }
             }
+            result
         })
     }
     fn fail(&self, j: Job, e: Option<Error>) -> Work<()> {
@@ -79,6 +90,7 @@ impl Driver for Documents {
                     ]
                     .contains(&code),
                 ),
+                Some(Error::Storage) => ("failed", "storage_unavailable", false),
                 _ => ("failed", "processing_failed", false),
             };
             let current = store.current_job(j.id).await?;

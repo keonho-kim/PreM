@@ -10,13 +10,17 @@ use std::{
     time::Duration,
 };
 use uuid::Uuid;
+mod legacy;
 mod embedded {
     refinery::embed_migrations!("migrations");
 }
 
 pub(super) fn open(root: &Path) -> anyhow::Result<Connection> {
+    open_with(root, embedded::migrations::runner())
+}
+
+fn open_with(root: &Path, runner: refinery::Runner) -> anyhow::Result<Connection> {
     let path = root.join("db/app.sqlite");
-    let runner = embedded::migrations::runner();
     let latest = runner
         .get_migrations()
         .iter()
@@ -28,6 +32,7 @@ pub(super) fn open(root: &Path) -> anyhow::Result<Connection> {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => return Err(error.into()),
     };
+    let mut legacy_version = None;
     if let Some(metadata) = existing {
         ensure!(
             metadata.is_file() && !metadata.file_type().is_symlink(),
@@ -40,7 +45,6 @@ pub(super) fn open(root: &Path) -> anyhow::Result<Connection> {
         let mut source = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
         verify_integrity(&source)?;
         let version: i32 = source.pragma_query_value(None, "user_version", |row| row.get(0))?;
-        ensure!(version <= latest, "database is newer than this application");
         let has_history: bool = source.query_row(
             "SELECT EXISTS(SELECT 1 FROM sqlite_schema WHERE name='refinery_schema_history')",
             [],
@@ -50,21 +54,31 @@ pub(super) fn open(root: &Path) -> anyhow::Result<Connection> {
             let app_id: i32 = source.pragma_query_value(None, "application_id", |r| r.get(0))?;
             ensure!(app_id == 1347768408, "database identity mismatch");
             let applied = runner.get_applied_migrations(&mut source)?;
-            for migration in &applied {
+            if applied
+                .first()
+                .is_some_and(|m| m.version() == 1 && m.name() == "projects")
+            {
+                legacy::verify(version, &applied)?;
+                legacy_version = Some(version);
+            } else {
+                ensure!(version <= latest, "database is newer than this application");
                 ensure!(
-                    runner
-                        .get_migrations()
-                        .iter()
-                        .any(|m| m.version() == migration.version()
-                            && m.name() == migration.name()
-                            && m.checksum() == migration.checksum()),
-                    "unsupported or modified migration history"
+                    version > 0 && applied.len() == usize::try_from(version)?,
+                    "inconsistent database schema version"
                 );
+                for (index, migration) in applied.iter().enumerate() {
+                    ensure!(
+                        usize::try_from(migration.version())? == index + 1
+                            && runner
+                                .get_migrations()
+                                .iter()
+                                .any(|expected| migration.version() == expected.version()
+                                    && migration.name() == expected.name()
+                                    && migration.checksum() == expected.checksum()),
+                        "unsupported or modified migration history"
+                    );
+                }
             }
-            ensure!(
-                applied.len() == usize::try_from(version)?,
-                "inconsistent database schema version"
-            );
         } else {
             let tables: i64 = source.query_row("SELECT count(*) FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'", [], |r| r.get(0))?;
             ensure!(
@@ -72,7 +86,7 @@ pub(super) fn open(root: &Path) -> anyhow::Result<Connection> {
                 "unrecognized database; refusing initialization"
             );
         }
-        if version < latest {
+        if legacy_version.is_some() || version < latest {
             let backup = root
                 .join("backups")
                 .join(format!("before-migration-{}.sqlite", Uuid::new_v4()));
@@ -85,6 +99,9 @@ pub(super) fn open(root: &Path) -> anyhow::Result<Connection> {
     connection.execute_batch(
         "PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL;",
     )?;
+    if let Some(version) = legacy_version {
+        legacy::adopt(&mut connection, version)?;
+    }
     // SQLite's supported table-rebuild procedure requires disabling FK actions before BEGIN.
     // Rebuild migrations check constraints inside the transaction; clients reopen with FK enforcement.
     connection.pragma_update(None, "foreign_keys", false)?;
@@ -99,15 +116,20 @@ pub(super) fn open(root: &Path) -> anyhow::Result<Connection> {
     connection.prepare(
         "SELECT request_key,original_name,original_due_date,project_id FROM project_creation_requests LIMIT 0",
     )?;
+    verify_foreign_keys(&connection)?;
+    Ok(connection)
+}
+
+fn verify_foreign_keys(connection: &Connection) -> anyhow::Result<()> {
     ensure!(
-        !connection
+        connection
             .prepare("PRAGMA foreign_key_check")?
             .query([])?
             .next()?
-            .is_some(),
+            .is_none(),
         "database foreign key integrity failed"
     );
-    Ok(connection)
+    Ok(())
 }
 fn verify_integrity(connection: &Connection) -> anyhow::Result<()> {
     let result: String = connection.query_row("PRAGMA integrity_check", [], |row| row.get(0))?;
@@ -116,4 +138,47 @@ fn verify_integrity(connection: &Connection) -> anyhow::Result<()> {
         "database integrity failed; explicit recovery required"
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn next_migration_runs_once_on_top_of_the_baseline() {
+        let artifacts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/.artifacts");
+        fs::create_dir_all(&artifacts).unwrap();
+        let dir = tempfile::tempdir_in(artifacts).unwrap();
+        let root = dir.path();
+        fs::create_dir(root.join("db")).unwrap();
+        fs::create_dir(root.join("backups")).unwrap();
+        let baseline = embedded::migrations::runner()
+            .get_migrations()
+            .iter()
+            .find(|m| m.version() == 1)
+            .unwrap()
+            .clone();
+        let second = refinery::Migration::unapplied(
+            "V2__probe",
+            "CREATE TABLE upgrade_probe(id INTEGER PRIMARY KEY); PRAGMA user_version=2;",
+        )
+        .unwrap();
+        let migrations = [baseline, second];
+        drop(open_with(root, refinery::Runner::new(&migrations[..1])).unwrap());
+        for _ in 0..2 {
+            let db = open_with(root, refinery::Runner::new(&migrations)).unwrap();
+            assert_eq!(
+                db.query_row("PRAGMA user_version", [], |row| row.get::<_, i32>(0))
+                    .unwrap(),
+                2
+            );
+            assert_eq!(
+                db.query_row("SELECT count(*) FROM refinery_schema_history", [], |row| {
+                    row.get::<_, i32>(0)
+                })
+                .unwrap(),
+                2
+            );
+        }
+        assert_eq!(fs::read_dir(root.join("backups")).unwrap().count(), 1);
+    }
 }

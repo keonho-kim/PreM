@@ -109,7 +109,7 @@ it('previews template slides and never displays structure or queries document bl
 });
 it('uses observed block counts only and does not fabricate extraction percentages', async () => {
   const view = await render(<ProcessingStatus job={{ ...job, status: 'extracting' }} />);
-  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  expect(screen.getByRole('progressbar')).not.toHaveAttribute('aria-valuenow');
   view.rerender(<ProcessingStatus job={{ ...job, status: 'classifying', completed_blocks: 1 }} />);
   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
 });

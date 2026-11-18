@@ -52,6 +52,7 @@ async function capture(page, name) {
     let raw = '';
     for await (const chunk of req) raw += chunk;
     const body = JSON.parse(raw);
+    if (require('./draft-probe.cjs').replyToProbe(res, body)) return;
     const input = JSON.parse(body.messages[1].content);
     calls++;
     const answers = Object.fromEntries(

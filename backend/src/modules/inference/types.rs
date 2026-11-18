@@ -10,6 +10,7 @@ pub(crate) struct CompletionInput {
     pub max_tokens: u32,
 }
 pub(crate) struct Completion {
+    pub reasoned: bool,
     pub text: String,
     pub prompt_tokens: Option<i64>,
     pub completion_tokens: Option<i64>,

@@ -1,7 +1,7 @@
 // Purpose: Collect abandoned Blobs only before HTTP/workers start under the storage instance lock.
 // Pattern: Two-observation seven-day grace, all FK references and local backup snapshots protected.
 // Usage: Database startup invokes maintenance after migrations; ambiguity skips collection safely.
-// Related: filesystem/collection.rs, V12__shared_ppt_packages.sql, migrations.rs.
+// Related: filesystem/collection.rs, V1__baseline.sql, migrations.rs.
 use crate::adapters::filesystem::CollectionFiles;
 use anyhow::ensure;
 use rusqlite::{Connection, OpenFlags, params};

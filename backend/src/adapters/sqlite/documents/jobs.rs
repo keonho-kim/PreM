@@ -1,7 +1,7 @@
 // Purpose: Own durable job admission, leases, retry/cancel receipts and model pinning.
 // Pattern: Short conditional transactions reject stale writes and retain checkpoints.
 // Usage: Common engine driver claims from this store; HTTP commands use version and request keys.
-// Related: queries.rs, results.rs, V8__document_processing.sql.
+// Related: queries.rs, results.rs, V1__baseline.sql.
 use super::*;
 use rusqlite::{OptionalExtension, params};
 pub(super) fn enqueue(
@@ -143,6 +143,9 @@ pub(super) fn finish(
     tx.execute("UPDATE document_jobs SET status=?,error_code=?,retry_at=?,lease=NULL,lease_until=NULL,version=version+1,updated_at=? WHERE id=?",params![status,error,now()+job.attempt*3000,now(),job.id.to_string()]).map_err(failure)?;
     queries::event(&tx, job.id, status)?;
     tx.commit().map_err(failure)?;
+    if let Some(code) = error {
+        tracing::warn!(job_id = %job.id, attempt = job.attempt, status, error_code = %code, "document processing outcome");
+    }
     Ok(())
 }
 pub(super) fn command(
@@ -196,6 +199,7 @@ pub(super) fn command(
     queries::event(&tx, id, status)?;
     let result = queries::get(&tx, id)?;
     tx.commit().map_err(failure)?;
+    tracing::info!(job_id = %id, %action, status, "document command accepted");
     Ok(result)
 }
 pub(super) fn save_settings(
@@ -225,16 +229,6 @@ fn decision_config(
     db: &rusqlite::Connection,
     connection: Option<Uuid>,
 ) -> Result<Option<String>, Error> {
-    let Some(connection) = connection else {
-        return Ok(None);
-    };
-    let row:Option<(String,String,bool)>=db.query_row("SELECT c.id,c.provider_type,c.enabled FROM llm_provider_connections p JOIN llm_provider_config_versions c ON c.id=p.current_config_version_id WHERE p.id=?",[connection.to_string()],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?))).optional().map_err(failure)?;
-    match row {
-        Some((id, kind, true)) => {
-            let kind: crate::modules::model_registry::ProviderKind =
-                kind.parse().map_err(|_| Error::Storage)?;
-            Ok((kind.is_system() || kind.descriptor().structured).then_some(id))
-        }
-        _ => Ok(None),
-    }
+    super::super::decision_settings::resolve(db, connection.map(|id| id.to_string()))
+        .map_err(failure)
 }

@@ -72,10 +72,21 @@ pub(super) fn history(
     db: &rusqlite::Connection,
     kind: &str,
     item: Uuid,
+    file_version: Option<i64>,
 ) -> Result<Vec<Job>, Error> {
     visible(db, kind, item)?;
     let p = prefix(kind)?;
-    let mut rows:Vec<Job>=db.prepare(&format!("{SELECT} WHERE j.{p}_version_id IN(SELECT id FROM {p}_versions WHERE item_id=?) ORDER BY coalesce(rv.number,tv.number,sv.number) DESC,j.generation DESC,j.id DESC LIMIT 50")).map_err(failure)?.query_map([item.to_string()],row).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
+    let sql = format!("{SELECT}
+        WHERE j.{p}_version_id IN (SELECT id FROM {p}_versions WHERE item_id=?1 AND (?2 IS NULL OR number=?2))
+        ORDER BY coalesce(rv.number,tv.number,sv.number) DESC,j.generation DESC,j.id DESC LIMIT ?3");
+    let limit = if file_version.is_some() { 1 } else { 50 };
+    let mut rows = db
+        .prepare(&sql)
+        .map_err(failure)?
+        .query_map(params![item.to_string(), file_version, limit], row)
+        .map_err(failure)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(failure)?;
     for job in &mut rows {
         job.steps = execution::steps(db, job.id)?;
     }

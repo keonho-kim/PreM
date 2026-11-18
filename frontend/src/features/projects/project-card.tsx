@@ -8,6 +8,16 @@ import { Folder } from 'lucide-react';
 import type { Project } from './api';
 import { deadline } from './calendar';
 import { ProjectContextMenu, ProjectMenu, type ProjectCommand } from './project-menu';
+const savedStages = {
+  created: '원본 등록 전',
+  sources: '원본 등록됨',
+  review: '원본 확인 완료',
+  guide: '작성 방향 저장됨',
+  outline: '목차 저장됨',
+  evidence: '근거 선택 저장됨',
+  design: '디자인 선택 저장됨',
+  presentation: '발표 자료 생성됨',
+};
 const dateTime = (value: number) =>
   new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(value);
 export function ProjectCard({
@@ -36,7 +46,7 @@ export function ProjectCard({
           aria-label={`${project.name} 열기`}
         >
           <Folder size={28} aria-hidden="true" />
-          <span>아직 생성된 PPT가 없습니다</span>
+          <span>{project.saved_stage ? savedStages[project.saved_stage] : '프로젝트 열기'}</span>
         </Link>
         <header>
           <div className="project-card-status">

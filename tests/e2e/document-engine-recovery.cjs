@@ -32,6 +32,7 @@ async function poll(read, done) {
       let raw = '';
       for await (const part of req) raw += part;
       const body = JSON.parse(raw);
+      if (require('./draft-probe.cjs').replyToProbe(res, body)) return;
       const input = JSON.parse(body.messages[1].content);
       calls++;
       models.push(body.model);

@@ -7,16 +7,20 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, screen, waitFor, act } from '@testing-library/react';
 import { createMemoryHistory, RouterProvider, useParams, useSearch } from '@tanstack/react-router';
 import { renderRouted } from '@/test/render-routed';
+import { getModelSetup } from '@/shared/api/model-setup';
 import { createAppRouter } from './router';
+vi.mock('@/shared/api/model-setup', () => ({
+  getModelSetup: vi.fn(async () => ({ llm: true, decision: true })),
+}));
 vi.mock('../feedback', () => ({ Feedback: () => null }));
 vi.mock('@/features/search', () => ({
   GlobalSearch: () => null,
-  SearchPage: () => <p>Search body</p>,
+  loadSearchPage: async () => ({ SearchPage: () => <p>Search body</p> }),
 }));
 vi.mock('@/pages/projects-page', () => ({ ProjectsPage: () => <p>Home body</p> }));
 vi.mock('@/pages/space-page', () => ({ SpacePage: () => <p>Library body</p> }));
-vi.mock('@/pages/studio-page', () => ({
-  StudioPage: () => <p>Studio {useParams({ strict: false }).projectId}</p>,
+vi.mock('@/pages/studio-project-page', () => ({
+  StudioProjectPage: () => <p>Studio {useParams({ strict: false }).projectId}</p>,
 }));
 vi.mock('@/pages/admin-page', () => ({
   AdminPage: () => <p>Admin {JSON.stringify(useSearch({ strict: false }))}</p>,
@@ -73,3 +77,19 @@ it('renders the product not-found page for unknown paths', async () => {
   await renderRouted(<RouterProvider router={router} />);
   expect(await screen.findByRole('heading', { name: '페이지를 찾을 수 없습니다' })).toBeVisible();
 });
+
+it.each([
+  [false, false, 'llm'],
+  [false, true, 'llm'],
+  [true, false, 'decision'],
+] as const)(
+  'redirects Home for missing setup (LLM %s, Decision %s)',
+  async (llm, decision, section) => {
+    vi.mocked(getModelSetup).mockResolvedValueOnce({ llm, decision });
+    const router = createAppRouter(createMemoryHistory({ initialEntries: ['/home/'] }));
+    await renderRouted(<RouterProvider router={router} />);
+    await screen.findByText(/Admin.*required/);
+    expect(router.state.location.search).toMatchObject({ setup: 'required', section });
+    expect(screen.queryByText('Home body')).toBeNull();
+  },
+);

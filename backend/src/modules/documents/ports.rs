@@ -52,7 +52,7 @@ pub(crate) trait Store: Send + Sync {
     fn decisions(&self, job: Job, values: Vec<DecisionCommit>) -> Work<()>;
     fn finish(&self, job: Job, status: String, error: Option<String>, retry: bool) -> Work<()>;
     fn detail(&self, kind: String, item: Uuid, job: Option<Uuid>) -> Work<Detail>;
-    fn history(&self, kind: String, item: Uuid) -> Work<Vec<Job>>;
+    fn history(&self, kind: String, item: Uuid, file_version: Option<i64>) -> Work<Vec<Job>>;
     fn command(&self, id: Uuid, expected: i64, key: Uuid, action: String) -> Work<Job>;
     fn artifact(&self, job: Uuid, hash: String) -> Work<(String, u64)>;
     fn materials(

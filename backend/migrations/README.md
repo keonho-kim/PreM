@@ -1,9 +1,9 @@
-# SQLite Migration
+# SQLite 마이그레이션
 
-`V1__projects.sql`은 실제 공유 프로젝트와 생성 요청 키를 저장한다. `adapters/sqlite/migrations.rs`가 refinery로 실행 파일에 포함하고 시작 시 검사·적용한다.
+[V1 기준 스키마](V1__baseline.sql)는 이전 V36의 테이블·인덱스·뷰·트리거·FTS와 기본 설정 행을 포함한다. [V2](V2__provider_thinking.sql)는 연결별 Thinking 설정과 저장 전 진단을 추가한다. 신규 DB는 V1부터 차례로 적용한다. 이후 변경도 번호를 순서대로 올리고 파일 마지막에 해당 번호로 `PRAGMA user_version`을 설정한다. 적용한 SQL은 변경하지 않는다.
 
-배포한 SQL은 수정하지 않는다. 새 기능의 schema는 다음 번호의 Migration으로 추가한다. 기존 데이터에는 적용 전에 일관 백업을 만들고, 더 새로운 DB·checksum 불일치·손상 파일은 자동 초기화하지 않는다. 테스트용 테이블은 제품 Migration에 넣지 않는다.
+## 기존 DB 전환
 
-`V2__project_home.sql`은 종료일, 논리 삭제 시각, 생성 요청의 종료일과 Home 조회 인덱스를 추가한다. V1 프로젝트의 종료일은 null로 유지한다.
-
-`V3__project_due_date.sql`은 마감일 단일 값의 이름을 `due_date`/`original_due_date`로 정리한다. V2의 값과 요청 기록을 그대로 이관하며 프로젝트 시작일은 만들지 않는다.
+- **이전 V33~V36**은 서버를 시작하면 자동 전환된다. 서버는 이전 refinery 이력과 체크섬을 확인한 뒤 저장 루트의 `backups/before-migration-*.sqlite`에 DB를 백업한다. 필요한 테이블과 열을 추가하고 기준 스키마 및 외래 키를 검증한 다음, 같은 트랜잭션에서 이력을 새 V1로 전환한다.
+- **이전 V1~V32**는 먼저 [이전 마이그레이션을 포함한 소스](https://github.com/keonho-kim/PreM/tree/d196e23bd9fc78d044281a294817d752be31657d)로 빌드한 서버를 기존 저장 루트에서 한 번 시작해 V36까지 올린다. 그 서버를 종료한 뒤 새 서버를 시작한다. 새 서버는 이전 계열을 첫 마이그레이션 이름과 체크섬으로 식별한다.
+- 이력이 손상됐거나 지원 범위보다 새로운 DB는 시작 단계에서 거부한다. 업그레이드 전 전체 저장소 백업과 복원 방법은 [운영 문서](../../dev-docs/06-development-operations.md)를 따른다.

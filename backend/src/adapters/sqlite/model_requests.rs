@@ -1,7 +1,7 @@
 // Purpose: Persist sanitized model request history without prompts, outputs or credentials.
 // Pattern: One write owner for llm_requests and config-version lineage.
 // Usage: Shared model execution starts and finalizes records around external work.
-// Related: modules/model_execution/, V5__model_registry.sql.
+// Related: modules/model_execution/, V1__baseline.sql.
 use super::{Queue, Unavailable};
 use crate::modules::model_execution::{
     CallFuture, Capacity, Error, Limits, RequestRecord, RequestStore,

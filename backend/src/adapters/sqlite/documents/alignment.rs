@@ -1,7 +1,7 @@
 // Purpose: Store source-alignment checkpoints under the active document lease.
 // Pattern: Derive page views only from results for this exact processing job.
 // Usage: Document worker and shared project/reference detail projection.
-// Related: V34__document_page_alignment.sql, modules/documents/alignment/.
+// Related: V1__baseline.sql, modules/documents/alignment/.
 use super::*;
 use std::collections::HashMap;
 pub(super) fn load(

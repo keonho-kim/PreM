@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select';
 import { errorMessage } from '@/shared/api/http';
 import { getProviderCatalog, listProviders, providerKeys, type Provider } from './api';
+import { ConnectionDiagnostic } from './connection-diagnostic';
+import { modelSetupKey } from '@/shared/api/model-setup';
 import { ProviderForm } from './connection-form';
 import { ProviderPanels, type ProviderTab } from './provider-panels';
 import './providers.css';
@@ -70,6 +72,7 @@ export function ProviderDirectory({
       ...(items ?? []).filter((p) => p.id !== updated.id),
       updated,
     ]);
+    void cache.invalidateQueries({ queryKey: modelSetupKey });
     if (!provider) onSelect(updated.id, 'settings');
     void cache.invalidateQueries({ queryKey: providerKeys.all });
   };
@@ -140,6 +143,11 @@ export function ProviderDirectory({
                   </div>
                 )}
               </div>
+              <ConnectionDiagnostic
+                key={family + (provider?.config_id ?? 'new')}
+                provider={provider ?? null}
+                decision={family === 'system'}
+              />
               {provider ? (
                 <ProviderPanels
                   key={provider.id}
@@ -153,6 +161,7 @@ export function ProviderDirectory({
                 />
               ) : (
                 <ProviderForm
+                  decision={family === 'system'}
                   key={`new:${option.id}`}
                   provider={null}
                   catalog={[option]}

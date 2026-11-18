@@ -5,6 +5,8 @@
 mod decision_catalog;
 mod discovery;
 pub(crate) use discovery::DiscoveryInput;
+mod thinking;
+pub(crate) use thinking::{Effort, Thinking};
 mod kind;
 mod ports;
 pub(crate) use kind::{ProviderDescriptor, ProviderKind};
@@ -38,6 +40,7 @@ pub(crate) struct Settings {
     pub max_output_tokens: Option<u32>,
     pub context_length: Option<u32>,
     pub physical_batch_size: Option<u32>,
+    pub thinking: Thinking,
     pub enabled: bool,
 }
 impl Settings {
@@ -96,6 +99,11 @@ impl Settings {
                 ));
             }
         }
+        if (self.thinking.enabled != Some(true) && self.thinking.effort.is_some())
+            || (self.provider_type.is_system() && self.thinking.enabled == Some(true))
+        {
+            return Err(Error::Invalid("Thinking과 effort 조합을 확인하세요."));
+        }
         self.base_url = normalize_base_url(&self.base_url)?;
         Ok(self)
     }
@@ -110,6 +118,7 @@ pub(crate) struct Provider {
     pub created_at: i64,
 }
 pub(crate) struct Credentials {
+    pub probe_effort_validation: bool,
     pub connection_id: Uuid,
     pub config_id: Uuid,
     pub kind: ProviderKind,
@@ -119,7 +128,13 @@ pub(crate) struct Credentials {
     pub max_output_tokens: Option<u32>,
     pub context_length: Option<u32>,
     pub physical_batch_size: Option<u32>,
+    pub thinking: Thinking,
     pub token: Option<SecretString>,
+}
+#[derive(serde::Serialize)]
+pub(crate) struct ModelSetup {
+    pub llm: bool,
+    pub decision: bool,
 }
 #[derive(Clone)]
 pub(crate) struct Registry {
@@ -129,6 +144,25 @@ pub(crate) struct Registry {
 impl Registry {
     pub fn new(store: Arc<dyn ProviderStore>, secrets: Arc<dyn SecretCodec>) -> Self {
         Self { store, secrets }
+    }
+    pub async fn certify(
+        &self,
+        id: Uuid,
+        hash: String,
+        effort: Option<Effort>,
+    ) -> Result<Uuid, Error> {
+        self.store.certify(id, hash, effort).await
+    }
+    pub async fn certified_effort(
+        &self,
+        id: Uuid,
+        token: Uuid,
+        hash: String,
+    ) -> Result<Option<Effort>, Error> {
+        self.store.certified_effort(id, token, hash).await
+    }
+    pub async fn setup(&self) -> Result<ModelSetup, Error> {
+        self.store.setup().await
     }
     pub async fn list(&self) -> Result<Vec<Provider>, Error> {
         self.store.list().await
@@ -226,6 +260,7 @@ impl Registry {
             .map(|value| self.secrets.decrypt(provider.config_id, value))
             .transpose()?;
         Ok(Credentials {
+            probe_effort_validation: false,
             connection_id: provider.id,
             config_id: provider.config_id,
             kind: provider.settings.provider_type,
@@ -235,6 +270,7 @@ impl Registry {
             max_output_tokens: provider.settings.max_output_tokens,
             context_length: provider.settings.context_length,
             physical_batch_size: provider.settings.physical_batch_size,
+            thinking: provider.settings.thinking,
             token,
         })
     }

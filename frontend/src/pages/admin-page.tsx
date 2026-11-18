@@ -12,11 +12,16 @@ import { ProviderDirectory, type ProviderTab } from '@/features/providers';
 import './admin-layout.css';
 import { ProcessingSettings } from '@/features/document-processing';
 import { AdminGate, GeneralSettings } from '@/features/admin-access';
+import { ModelSetupNotice } from './admin/model-setup-notice';
 export function AdminPage() {
+  const [params] = useUrlSearch();
   return (
-    <AdminGate>
-      <AdminContent />
-    </AdminGate>
+    <>
+      {params.get('setup') === 'required' && <ModelSetupNotice />}
+      <AdminGate>
+        <AdminContent />
+      </AdminGate>
+    </>
   );
 }
 function AdminContent() {

@@ -1,7 +1,7 @@
 // Purpose: Enforce frontend dependency direction and feature public entry points.
 // Pattern: Development-only graph checks; production bundles contain no audit tooling.
 // Usage: pnpm --filter @prem/frontend check:architecture.
-// Related: src/app/, src/features/*/index.ts, ../scripts/check-source-size.mjs.
+// Related: src/app/, src/features/*/index.ts, ../scripts/quality/source-size.mjs.
 const { readdirSync } = require('node:fs');
 const { join } = require('node:path');
 const features = readdirSync(join(__dirname, 'src/features'), { withFileTypes: true })

@@ -60,14 +60,10 @@ All paths below are relative to **this repository root**. `./data/` never means 
 | `dev-docs/`              | Current implementation, development, verification, and operational readiness documentation |
 | `blueprint/`             | Product, architecture, API, data, workflow, UI, and operations requirements                |
 | `backend/src/app/`       | Current application startup, composition, shutdown, and configuration                      |
-| `backend/src/adapters/`  | Current HTTP, SQLite and filesystem implementations                                        |
+| `backend/src/adapters/`  | HTTP, SQLite, filesystem, model protocols and external processes                           |
 | `backend/src/modules/`   | Implemented feature domains and consumer-owned persistence ports                           |
-| `backend/src/domain/`    | Project, document, guide, outline, library, presentation, and slide decisions              |
-| `backend/src/database/`  | SQLite connections, models, and repositories                                               |
 | `backend/src/workflows/` | Durable execution, scheduling, node state, checkpoints, and recovery                       |
-| `backend/src/llm/`       | Provider gateway, routing, configuration versions, and protocol adapters                   |
-| `backend/src/tools/`     | Explicit external-process adapters                                                         |
-| `backend/src/storage/`   | Blob and artifact ownership, paths, and library storage                                    |
+| `backend/src/prompts/`   | Static model instructions grouped by task                                                  |
 | `backend/migrations/`    | Embedded, append-only refinery migrations once implemented                                 |
 | `frontend/src/`          | Production React app, feature UI, state, and API integration                               |
 | `data/`                  | Application-owned runtime data only                                                        |
@@ -238,7 +234,7 @@ Run checks appropriate to the changed boundary and report only observed results.
 
 - React Compiler is explicitly enabled for the production frontend through the official Vite reactCompilerPreset targeting React 19. Keep compiler packages as development dependencies and use React's built-in compiler runtime. Preserve source-level tests and verify compiled behavior separately; do not infer measured performance gains from successful compilation.
 
-- Pin development CLI versions in scripts/dev-tools.json. pnpm tools:install is the explicit setup boundary; application startup never installs tools. Keep cargo-machete free of speculative ignore entries and connect dependencies only when a product or test consumer exists.
+- Pin development CLI versions in scripts/quality/dev-tools.json. pnpm tools:install is the explicit setup boundary; application startup never installs tools. Keep cargo-machete free of speculative ignore entries and connect dependencies only when a product or test consumer exists.
 - pnpm check includes nextest, Cargo doctests, cargo-deny and npm advisory checks. Keep duplicate dependency warnings visible; do not silence advisories to obtain a passing result. Coverage is a separate report command with outputs under tests/.artifacts/coverage, not application data. Use the pinned rustup compiler and matching LLVM tools for Rust coverage.
 
 - Project right-click and overflow menus share stable-ID commands, keyboard access and lifecycle cleanup. Confirm deletion, cancel only the removed project's sample work and preserve the empty-gallery creation path.

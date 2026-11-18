@@ -15,6 +15,26 @@ use std::sync::{
 use uuid::Uuid;
 struct RegistryStore(Provider);
 impl ProviderStore for RegistryStore {
+    fn certify(&self, _: Uuid, _: String, _: Option<model_registry::Effort>) -> StoreFuture<Uuid> {
+        unreachable!()
+    }
+    fn certified_effort(
+        &self,
+        _: Uuid,
+        _: Uuid,
+        _: String,
+    ) -> StoreFuture<Option<model_registry::Effort>> {
+        unreachable!()
+    }
+    fn setup(&self) -> StoreFuture<model_registry::ModelSetup> {
+        let llm = self.0.settings.enabled && !self.0.settings.provider_type.is_system();
+        Box::pin(async move {
+            Ok(model_registry::ModelSetup {
+                llm,
+                decision: false,
+            })
+        })
+    }
     fn list(&self) -> StoreFuture<Vec<Provider>> {
         let p = self.0.clone();
         Box::pin(async move { Ok(vec![p]) })
@@ -95,6 +115,7 @@ impl ModelClient for Model {
             assert_eq!(c.model_identifier, "fixture");
             assert_eq!(i.prompt, "Summarize the supplied content");
             Ok(Completion {
+                reasoned: false,
                 text,
                 prompt_tokens: Some(4),
                 completion_tokens: Some(3),
@@ -116,6 +137,7 @@ fn setup(answer: &str) -> (Inference, Arc<Records>, Arc<AtomicUsize>, Uuid) {
             max_output_tokens: None,
             context_length: None,
             physical_batch_size: None,
+            thinking: Default::default(),
             timeout_seconds: 5,
             enabled: true,
         },

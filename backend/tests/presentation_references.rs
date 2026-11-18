@@ -295,7 +295,7 @@ async fn native_slides_charts_and_images_insert_without_copying_source_blobs_and
         0
     );
     app.shutdown().await.unwrap();
-    db.execute_batch("DROP TABLE presentation_render_layers; DROP TABLE presentation_canvas_commands; DROP TABLE presentation_manual_designs; DROP TABLE presentation_quality_checks; DROP TABLE presentation_render_cache; DROP TRIGGER slide_edit_workflow_register; DROP TRIGGER slide_edit_workflow_interrupt; DROP TABLE slide_edit_workflows; DELETE FROM workflow_events WHERE workflow_id LIKE 'edit:%'; DELETE FROM workflow_nodes WHERE workflow_id LIKE 'edit:%'; DELETE FROM workflow_executions WHERE id LIKE 'edit:%'; ALTER TABLE llm_provider_config_versions DROP COLUMN physical_batch_size; ALTER TABLE llm_provider_config_versions DROP COLUMN context_length; ALTER TABLE llm_provider_config_versions DROP COLUMN max_output_tokens; DROP TABLE IF EXISTS document_source_entries; DROP TABLE IF EXISTS document_page_alignments; DROP TABLE IF EXISTS document_alignment; DROP TABLE IF EXISTS decision_settings; DELETE FROM refinery_schema_history WHERE version>=28; PRAGMA user_version=27;").unwrap();
+    common::legacy::mark(&db, 36);
     let prior = f.model.calls.load(std::sync::atomic::Ordering::SeqCst);
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();

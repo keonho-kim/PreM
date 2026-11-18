@@ -6,7 +6,8 @@ import { SourceOutline } from './source-outline';
 import { ReferenceMaterials } from './reference-materials';
 import { ExtractedTable } from './extracted-table';
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { SlideGroups } from './slide-groups';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,11 +44,47 @@ export function ExtractedContent({
             ? 'materials'
             : 'content',
     );
-  const result = useQuery({
+  const groupSlides = !source && detail.page_mode === 'slide';
+  const result = useInfiniteQuery({
     queryKey: processingKeys.blocks(detail.job.id, page, query, offset),
-    queryFn: ({ signal }) => getBlocks(detail.job.id, page, query, offset, signal),
+    initialPageParam: offset,
+    queryFn: ({ signal, pageParam }) => getBlocks(detail.job.id, page, query, pageParam, signal),
+    getNextPageParam: (last, _pages, start) => (last.length === 50 ? start + 50 : undefined),
+    enabled: tab === 'content',
     refetchInterval: detail.job.status === 'classifying' ? 2000 : false,
   });
+  const blocks = result.data?.pages.flat() ?? [];
+  const pageLabels = new Map(detail.pages.map((p) => [p.id, p.label]));
+  const renderBlock = (b: (typeof blocks)[number]) => (
+    <article key={b.id} className="processing-block">
+      {(!groupSlides || b.is_table_of_contents === 1) && (
+        <header>
+          <span>
+            {!groupSlides && `${pageLabels.get(b.page_id) ?? '원본 위치 미상'} · `}
+            {b.kind === 'table'
+              ? '표'
+              : b.kind === 'image'
+                ? '이미지'
+                : b.kind === 'heading'
+                  ? '제목'
+                  : b.kind === 'code'
+                    ? '코드'
+                    : b.kind === 'list'
+                      ? '목록'
+                      : '문단'}
+          </span>
+          {b.is_table_of_contents === 1 && <span>목차</span>}
+        </header>
+      )}
+      {b.image ? (
+        <img loading="lazy" src={fileUrl(detail.job.id, b.image)} alt={b.text} />
+      ) : b.kind === 'table' ? (
+        <ExtractedTable text={b.text} attributes={b.attributes} />
+      ) : (
+        <pre>{b.text}</pre>
+      )}
+    </article>
+  );
   return (
     <Tabs value={tab} onValueChange={setTab} className="processing-tabs">
       <TabsList aria-label="자료 보기">
@@ -61,7 +98,7 @@ export function ExtractedContent({
             일부 이미지는 개별 자료로 준비하지 못했습니다. 원본 파일에서 확인해 주세요.
           </p>
         )}
-        <ReferenceMaterials job={detail.job.id} />
+        <ReferenceMaterials job={detail.job.id} groupSlides={groupSlides} />
       </TabsContent>
       <TabsContent value="content">
         {detail.warnings.includes('MARKDOWN_PASSIVE_RESOURCES') && (
@@ -115,64 +152,63 @@ export function ExtractedContent({
         </div>
         {result.isPending ? (
           <p role="status">내용을 불러옵니다.</p>
-        ) : result.isError ? (
+        ) : result.isError && !result.data ? (
           <p role="status">
             {errorMessage(result.error)}{' '}
             <Button variant="secondary" onClick={() => void result.refetch()}>
               다시 시도
             </Button>
           </p>
-        ) : !result.data.length ? (
+        ) : !blocks.length ? (
           <p>표시할 내용이 없습니다.</p>
         ) : (
           <div className="processing-blocks">
-            {result.data.map((b) => (
-              <article key={b.id} className="processing-block">
-                <header>
-                  <span>
-                    {detail.pages.find((p) => p.id === b.page_id)?.label} ·{' '}
-                    {b.kind === 'table'
-                      ? '표'
-                      : b.kind === 'image'
-                        ? '이미지'
-                        : b.kind === 'heading'
-                          ? '제목'
-                          : b.kind === 'code'
-                            ? '코드'
-                            : b.kind === 'list'
-                              ? '목록'
-                              : '문단'}
-                  </span>
-                  {b.is_table_of_contents === 1 && <span>목차</span>}
-                </header>
-                {b.image ? (
-                  <img loading="lazy" src={fileUrl(detail.job.id, b.image)} alt={b.text} />
-                ) : b.kind === 'table' ? (
-                  <ExtractedTable text={b.text} attributes={b.attributes} />
-                ) : (
-                  <pre>{b.text}</pre>
-                )}
-              </article>
-            ))}
+            {groupSlides ? (
+              <SlideGroups
+                items={blocks}
+                label={(b) => pageLabels.get(b.page_id) ?? '원본 위치 미상'}
+              >
+                {(parts) => parts.map(renderBlock)}
+              </SlideGroups>
+            ) : (
+              blocks.map(renderBlock)
+            )}
           </div>
         )}
-        <div className="processing-pagination">
-          <Button
-            variant="secondary"
-            disabled={offset === 0}
-            onClick={() => setOffset(Math.max(0, offset - 50))}
-          >
-            이전
-          </Button>
-          <span>{Math.floor(offset / 50) + 1} 페이지</span>
-          <Button
-            variant="secondary"
-            disabled={(result.data?.length ?? 0) < 50}
-            onClick={() => setOffset(offset + 50)}
-          >
-            다음
-          </Button>
-        </div>
+        {groupSlides ? (
+          result.hasNextPage && (
+            <div className="processing-pagination">
+              {result.isFetchNextPageError && (
+                <span role="alert">다음 내용을 불러오지 못했습니다.</span>
+              )}
+              <Button
+                variant="secondary"
+                disabled={result.isFetching}
+                onClick={() => void result.fetchNextPage()}
+              >
+                {result.isFetchNextPageError ? '다시 시도' : '내용 더 보기'}
+              </Button>
+            </div>
+          )
+        ) : (
+          <div className="processing-pagination">
+            <Button
+              variant="secondary"
+              disabled={offset === 0}
+              onClick={() => setOffset(Math.max(0, offset - 50))}
+            >
+              이전
+            </Button>
+            <span>{Math.floor(offset / 50) + 1} 페이지</span>
+            <Button
+              variant="secondary"
+              disabled={blocks.length < 50}
+              onClick={() => setOffset(offset + 50)}
+            >
+              다음
+            </Button>
+          </div>
+        )}
       </TabsContent>
       <TabsContent value="pages">
         <SourceOutline entries={detail.source_outline} />

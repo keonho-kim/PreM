@@ -142,7 +142,8 @@ async function poll(check) {
     await poll(async () => (await read()).confirmed === true);
     await notifications(a, true);
     await click(a, '완료 항목 정리');
-    await a.waitForSelector('.work-dock', { hidden: true });
+    await a.waitForSelector('.work-panel-empty');
+    await a.click('button[aria-label="작업 패널 닫기"]');
     await a.evaluate(() => window.scrollTo(0, 0));
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/studio-outline-authoring.png'),

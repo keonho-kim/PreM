@@ -19,6 +19,7 @@ pub(super) async fn complete(
     if let Some(schema) = i.schema {
         body["text"] = json!({"format":{"type":"json_schema","name":"response","strict":true,"schema":schema}});
     }
+    super::thinking::apply(&mut body, c);
     let r = read(request(t, c, "responses", true)?.json(&body).send().await).await?;
     if r["status"] != "completed" || r.get("error").is_some_and(|e| !e.is_null()) {
         return Err(Error::InvalidResponse);
@@ -40,6 +41,11 @@ pub(super) async fn complete(
         }
     }
     Ok(Completion {
+        reasoned: r
+            .pointer("/usage/output_tokens_details/reasoning_tokens")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0)
+            > 0,
         text: text(Some(&content))?,
         prompt_tokens: tokens(&r, "/usage/input_tokens"),
         completion_tokens: tokens(&r, "/usage/output_tokens"),

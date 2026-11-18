@@ -48,6 +48,7 @@ function decide(state, key, question) {
     for await (const chunk of req) raw += chunk;
     assert.equal(req.url, '/v1/systemone');
     const ctx = JSON.parse(raw);
+    if (require('./draft-probe.cjs').replyToProbe(res, ctx)) return;
     const answers = Object.fromEntries(
       Object.entries(ctx.questions).map(([key, question]) => {
         const choice = decide(ctx.state, key, question);

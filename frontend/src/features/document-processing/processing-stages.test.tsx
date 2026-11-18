@@ -6,13 +6,13 @@ import '@testing-library/jest-dom/vitest';
 import { it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { ProcessingStatus } from './status';
-import { UploadProcessing } from './upload-processing';
-import { getDetail, command, type Job, type Detail } from './api';
+import { UploadProcessing, uploadJobOptions } from './upload-processing';
+import { getUploadJob, command, type Job } from './api';
 vi.mock('./api', async (original) => ({
   ...(await original<typeof import('./api')>()),
-  getDetail: vi.fn(),
+  getUploadJob: vi.fn(),
   command: vi.fn(),
 }));
 const job: Job = {
@@ -84,29 +84,25 @@ it('limits progress percentage to measured block decisions and keeps template st
   expect(screen.getByText('템플릿 미리보기 준비')).toBeVisible();
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
 });
+function Row() {
+  const result = useQuery(uploadJobOptions('references', 'item', 1));
+  return <UploadProcessing result={result} assetVersion={1} />;
+}
 it('cancels preparation explicitly and reuses the retry receipt after a network failure', async () => {
-  let detail: Detail = {
-    job,
-    pages: [],
-    page_mode: 'section',
-    warnings: [],
-    reuse_ready: true,
-    template: null,
-    template_extractable: false,
-    template_bundle: null,
-  };
-  vi.mocked(getDetail).mockImplementation(async () => detail);
+  let current = job;
+  vi.mocked(getUploadJob).mockImplementation(async () => current);
   vi.mocked(command).mockImplementation(async (j, action) => {
-    detail = {
-      ...detail,
-      job: { ...j, status: action === 'cancel' ? 'cancelled' : 'queued', version: j.version + 1 },
+    current = {
+      ...j,
+      status: action === 'cancel' ? 'cancelled' : 'queued',
+      version: j.version + 1,
     };
-    return detail.job;
+    return current;
   });
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   render(
     <QueryClientProvider client={client}>
-      <UploadProcessing kind="references" id="item" />
+      <Row />
     </QueryClientProvider>,
   );
   await userEvent.click(await screen.findByRole('button', { name: '자료 준비 취소' }));

@@ -3,24 +3,43 @@
 // Usage: Space/Studio upload rows; dismissing this local panel never cancels server work.
 // Related: status.tsx, api.ts, features/space/upload-panel.tsx.
 import { useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  type UseQueryResult,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { errorMessage } from '@/shared/api/http';
-import { getDetail, processingKeys, terminal, command, type Job } from './api';
+import { ApiError, errorMessage } from '@/shared/api/http';
+import { getUploadJob, processingKeys, terminal, command, enqueue, type Job } from './api';
 import { ProcessingStatus } from './status';
-export function UploadProcessing({ kind, id }: { kind: string; id: string }) {
+export function uploadJobOptions(kind: string, id: string, version: number) {
+  return queryOptions({
+    queryKey: [...processingKeys.all, 'upload', kind, id, version],
+    queryFn: ({ signal }) => getUploadJob(kind, id, version, signal),
+    retry: false,
+    refetchInterval: (query) =>
+      (query.state.error instanceof ApiError && query.state.error.status === 404) ||
+      (query.state.data && terminal(query.state.data.status))
+        ? false
+        : 2000,
+  });
+}
+export function UploadProcessing({
+  result,
+  assetVersion,
+}: {
+  result: UseQueryResult<Job | null>;
+  assetVersion: number;
+}) {
   const cache = useQueryClient(),
     receipt = useRef<{ stamp: string; key: string } | null>(null);
-  const result = useQuery({
-    queryKey: processingKeys.detail(kind, id),
-    queryFn: ({ signal }) => getDetail(kind, id, undefined, signal),
-    retry: false,
-    refetchInterval: (q) => (q.state.data && terminal(q.state.data.job.status) ? false : 2000),
-  });
   const update = useMutation({
     mutationFn: ({ job, action }: { job: Job; action: 'retry' | 'cancel' }) => {
       const stamp = `${job.id}:${job.version}:${action}`;
       if (receipt.current?.stamp !== stamp) receipt.current = { stamp, key: crypto.randomUUID() };
+      if (action === 'retry' && job.error_code === 'profile_unavailable')
+        return enqueue(job.kind, job.item_id, assetVersion, receipt.current.key);
       return command(job, action, receipt.current.key);
     },
     retry: false,
@@ -34,10 +53,10 @@ export function UploadProcessing({ kind, id }: { kind: string; id: string }) {
       void cache.invalidateQueries({ queryKey: ['studio'] });
     },
   });
-  const job = result.data?.job;
+  const job = result.data;
   return (
     <div className="upload-preparation">
-      {job ? (
+      {job && !result.isError ? (
         <>
           <ProcessingStatus job={job} compact />
           {job.status !== 'succeeded' && (

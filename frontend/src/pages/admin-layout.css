@@ -93,3 +93,9 @@
     border-color: Highlight;
   }
 }
+
+.model-setup-notice {
+  margin-block-start: 16px;
+  padding-block: 12px;
+  border-block-end: 1px solid var(--color-rule);
+}

@@ -29,12 +29,12 @@ const homeRedirect: Plugin = {
   },
 };
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: '/home/',
   plugins: [
     homeRedirect,
     react(),
-    babel({ presets: [reactCompilerPreset({ target: '19' })] }),
+    command === 'build' && babel({ presets: [reactCompilerPreset({ target: '19' })] }),
     tailwindcss(),
   ],
   resolve: {
@@ -47,4 +47,4 @@ export default defineConfig({
     },
   },
   build: { outDir: 'dist', emptyOutDir: true },
-});
+}));

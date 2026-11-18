@@ -6,3 +6,6 @@ pub(crate) const SYSTEM: &str =
     "This is a connectivity diagnostic. Answer directly without reasoning.";
 pub(crate) const TEXT: &str = "Reply with only: PreM connection OK";
 pub(crate) const STRUCTURED: &str = r#"Return exactly the JSON object {"status":"ok"}."#;
+
+pub(crate) const PROBE: &str =
+    "This is a connectivity diagnostic. Return the requested final text.";

@@ -3,4 +3,4 @@
 // Usage: App shell and the search route.
 // Related: search-box.tsx, search-page.tsx.
 export { GlobalSearch } from './search-box';
-export { SearchPage } from './search-page';
+export const loadSearchPage = () => import('./search-page');

@@ -179,7 +179,7 @@ async fn waiting_model_and_publish_failure_reuse_extraction_decisions_and_search
     app.shutdown().await.unwrap();
 }
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn migration_backfills_completed_documents_and_templates_without_regeneration() {
+async fn baseline_preserves_document_and_template_checkpoints_without_regeneration() {
     let root = common::storage();
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
@@ -210,7 +210,7 @@ async fn migration_backfills_completed_documents_and_templates_without_regenerat
     let count: i64 = db
         .query_row("SELECT count(*) FROM file_blobs", [], |r| r.get(0))
         .unwrap();
-    db.execute_batch("DROP TABLE presentation_render_layers; DROP TABLE presentation_canvas_commands; DROP TABLE presentation_manual_designs; DROP TABLE presentation_quality_checks; DROP TABLE presentation_render_cache; DROP TRIGGER slide_edit_workflow_register; DROP TRIGGER slide_edit_workflow_interrupt; DROP TABLE slide_edit_workflows; DROP TRIGGER presentation_slide_key; DROP TABLE presentation_edit_target_imports; DROP TABLE presentation_edit_imports; DROP TABLE presentation_slide_imports; DROP TABLE presentation_generation_imports; DROP TABLE presentation_reference_drafts; DROP TABLE presentation_material_imports; ALTER TABLE presentation_slide_versions DROP COLUMN slide_key; DROP TRIGGER relation_workflow_register; DROP TRIGGER relation_workflow_interrupt; DROP TABLE relation_workflows; DROP TRIGGER outline_workflow_register; DROP TRIGGER outline_workflow_interrupt; DROP TABLE outline_workflows; DROP TRIGGER document_workflow_register; DROP TRIGGER document_workflow_interrupt; DROP TABLE document_workflows; DELETE FROM workflow_events WHERE workflow_id LIKE 'edit:%' OR workflow_id LIKE 'relation:%'; DELETE FROM workflow_nodes WHERE workflow_id LIKE 'edit:%' OR workflow_id LIKE 'relation:%'; DELETE FROM workflow_executions WHERE id LIKE 'edit:%' OR id LIKE 'relation:%'; DELETE FROM workflow_events WHERE workflow_id LIKE 'document:%'; DELETE FROM workflow_nodes WHERE workflow_id LIKE 'document:%'; DELETE FROM workflow_executions WHERE id LIKE 'document:%'; ALTER TABLE llm_provider_config_versions DROP COLUMN physical_batch_size; ALTER TABLE llm_provider_config_versions DROP COLUMN context_length; ALTER TABLE llm_provider_config_versions DROP COLUMN max_output_tokens; DROP TABLE IF EXISTS document_source_entries; DROP TABLE IF EXISTS document_page_alignments; DROP TABLE IF EXISTS document_alignment; DROP TABLE IF EXISTS decision_settings; DELETE FROM refinery_schema_history WHERE version>=24; PRAGMA user_version=23;").unwrap();
+    common::legacy::mark(&db, 36);
     drop(db);
     let app = Application::open(root.path()).unwrap();
     let restored = wait_status(&app, item["id"].as_str().unwrap(), "waiting_configuration").await;

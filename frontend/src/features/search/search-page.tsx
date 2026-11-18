@@ -18,6 +18,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { LibraryUpload } from '@/features/space';
 import { MatchText } from '@/shared/ui/match-text';
 import { errorMessage } from '@/shared/api/http';
 import {
@@ -152,9 +153,12 @@ export function SearchPage() {
           <p className="workspace-label">팀 공용 자료</p>
           <h1>Space</h1>
         </div>
-        <Button variant="secondary" asChild>
-          <Link to="/space/library">자료 관리</Link>
-        </Button>
+        <div className="space-search-actions">
+          <Button variant="secondary" asChild>
+            <Link to="/space/library">자료 관리</Link>
+          </Button>
+          <LibraryUpload kind={input.scope} />
+        </div>
       </header>
       <section className="search-page-heading" aria-label="Space 자료 찾기">
         <h2>필요한 자료를 찾아보세요</h2>
@@ -168,7 +172,10 @@ export function SearchPage() {
       <Tabs
         value={input.scope}
         activationMode="manual"
-        onValueChange={(scope) => navigate({ ...input, scope, offset: 0 })}
+        onValueChange={(scope) => {
+          if (scope === 'all' || scope === 'references' || scope === 'templates')
+            navigate({ ...input, scope, offset: 0 });
+        }}
       >
         <TabsList aria-label="검색 자료 종류">
           <TabsTrigger value="all">전체</TabsTrigger>
