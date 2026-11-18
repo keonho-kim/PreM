@@ -51,13 +51,11 @@ async function main() {
   const bytes = await fs.readFile(input);
   const parsed = await parse(bytes, {
     images: true,
-    dropBlankImages: true,
     ocr: true,
-    ocrRec: 'printed',
-    ocrDet: 'mobile',
-    ocrLines: true,
-    formulaOcr: false,
-    tableFormat: 'gfm',
+    removeHeaderFooter: false,
+    dropBlankImages: true,
+    scriptTags: true,
+    htmlTables: true,
   });
   if (!parsed.success) throw new Error('extract_failed');
   const incomplete = parsed.warnings?.find((w) =>
@@ -158,10 +156,6 @@ async function main() {
     } catch {
       warnings.push('PAGE_PREVIEW_UNAVAILABLE');
     }
-  }
-  for (const p of parsed.ocrLines ?? []) {
-    const page = pageFor(p.pageNumber ?? p.page);
-    for (const block of page.blocks) block.attributes.ocr = true;
   }
   const result = {
     schema_version: 2,

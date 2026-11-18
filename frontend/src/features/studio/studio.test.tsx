@@ -66,7 +66,7 @@ it('does not complete a source step by visiting it or allow empty confirmation',
   });
   await mount(<StudioWorkspace projectId="p" />);
   expect(await screen.findByText('첫 원본 문서를 추가하세요')).toBeVisible();
-  expect(screen.getByRole('button', { name: '원본 확인하고 계속' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: '원본 확인하고 계속' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '작성 방향' })).toBeDisabled();
   expect(confirmSources).not.toHaveBeenCalled();
 });

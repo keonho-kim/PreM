@@ -38,7 +38,7 @@ function AdminContent() {
     value === 'tests' || value === 'history' || value === 'decision' || value === 'capacity'
       ? value
       : 'settings';
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(() => !window.matchMedia?.('(max-width: 850px)').matches);
   const main = useRef<HTMLElement>(null),
     previous = useRef(section);
   useEffect(() => {
@@ -65,7 +65,15 @@ function AdminContent() {
       <aside className="admin-sidebar" aria-label="Admin 탐색">
         <Collapsible open={open} onOpenChange={setOpen}>
           <div className="admin-sidebar-heading">
-            {open && <span>Admin</span>}
+            <span className={open ? undefined : 'admin-collapsed-label'}>
+              {open
+                ? 'Admin'
+                : section === 'general'
+                  ? '일반'
+                  : section === 'decision'
+                    ? 'Decision Model 연결'
+                    : 'LLM 연결'}
+            </span>
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"

@@ -40,6 +40,7 @@ export function OutlineEditor(props: EditorProps) {
       {!historical && (
         <Generation
           project={project}
+          active={props.active ?? true}
           state={server}
           disabled={!editable || dirty || busy || conflict}
           selected={active}
@@ -47,8 +48,7 @@ export function OutlineEditor(props: EditorProps) {
       )}
       {(server.stale || inputChanged) && (
         <p role="status">
-          원본 또는 작성 방향이 바뀌었습니다. 이전 목차는 보존되어 있습니다. 새 목차를 만들거나 새
-          입력으로 직접 구성하세요.
+          원본 또는 작성 방향이 바뀌었습니다. 기존 목차를 검토하고 새 원문을 연결하세요.
         </p>
       )}
       {(!session.draft.nodes.length || server.stale || inputChanged) && !historical && (

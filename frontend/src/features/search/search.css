@@ -224,10 +224,10 @@
 .space-kind-tabs [role="tab"] {
   min-block-size: 44px;
 }
-.search-result-tools {
+.space-browse-tools {
   display: flex;
-  align-items: start;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
   gap: 8px 16px;
   padding-block-start: 12px;
@@ -246,4 +246,14 @@
   .space-kind-tabs [role="tab"]:focus-visible {
     outline-color: Highlight;
   }
+}
+
+.space-browse-tools:has(.search-options[data-state="open"]) {
+  align-items: start;
+}
+.search-workspace .search-page-heading {
+  margin-block-end: 16px;
+}
+.search-workspace .space-search-heading {
+  margin-block-end: 20px;
 }

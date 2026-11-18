@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 type PanelView = 'expanded' | 'collapsed' | 'hidden';
 type PanelState = { view: PanelView; height: number };
-const initialState: PanelState = { view: 'expanded', height: 0 };
+const initialState: PanelState = { view: 'collapsed', height: 0 };
 const panel = createSlice({
   name: 'workPanel',
   initialState,

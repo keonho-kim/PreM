@@ -30,21 +30,17 @@ export function UploadWorkPanel() {
   const current = tasks.find((task) => task.state === 'active');
 
   useEffect(() => {
-    const added = () => setView('expanded');
     const saved = (file: UploadFile | undefined) => {
       if (file) notify(`${file.name} 등록 완료`);
     };
     const failure = (file: UploadFile | undefined) => {
       if (file) notify(`${file.name} 등록 실패. 작업 패널에서 다시 시도하세요.`, 'error');
     };
-    engine.uppy.on('file-added', added).on('upload-success', saved).on('upload-error', failure);
+    engine.uppy.on('upload-success', saved).on('upload-error', failure);
     return () => {
-      engine.uppy
-        .off('file-added', added)
-        .off('upload-success', saved)
-        .off('upload-error', failure);
+      engine.uppy.off('upload-success', saved).off('upload-error', failure);
     };
-  }, [engine, setView]);
+  }, [engine]);
   useEffect(() => {
     if (!present || !region.current) {
       onHeightChange(0);

@@ -10,6 +10,7 @@ export type EditorProps = {
   server: OutlineState;
   editable: boolean;
   historical: boolean;
+  active?: boolean;
   onDirty?: (dirty: boolean) => void;
 };
 export function useOutlineSession({ project, server, editable, historical, onDirty }: EditorProps) {

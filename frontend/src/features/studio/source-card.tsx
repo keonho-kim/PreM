@@ -24,28 +24,20 @@ export function SourceCard({
 }) {
   return (
     <article className="studio-source-card" aria-label={item.title}>
-      <Button
-        variant="ghost"
-        className="studio-source-preview"
-        onClick={(e) => onAction('preview', item, e.currentTarget)}
-      >
-        <FileText aria-hidden="true" />
-        <span>{item.format.toUpperCase()}</span>
-        <span className="sr-only">{item.title} 미리보기</span>
-      </Button>
       <div>
         <h3>
           <Button
             variant="ghost"
-            type="button"
-            className="studio-source-title"
+            className="studio-source-title studio-source-open"
+            aria-label={item.title + ' 미리보기'}
             onClick={(e) => onAction('preview', item, e.currentTarget)}
           >
-            {item.title}
+            <FileText aria-hidden="true" />
+            <span>{item.title}</span>
           </Button>
         </h3>
         <p className="muted">
-          {sizeLabel(item.size_bytes)} · 버전 {item.file_version}
+          {item.format.toUpperCase()} · {sizeLabel(item.size_bytes)} · 버전 {item.file_version}
         </p>
         <p>
           {item.processing === 'waiting_configuration'

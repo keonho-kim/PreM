@@ -1,27 +1,49 @@
-// Purpose: Start and monitor explicit outline generation or scoped content mapping.
+// Purpose: Start the initial outline on entry and monitor generation or scoped content mapping.
 // Pattern: Server-selected saved models, stable retry receipts and shared durable run projections.
 // Usage: OutlineEditor disables commands while local changes are unsaved.
 // Related: api.ts, features/providers public facade, workspace.tsx.
-import { useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { WandSparkles, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { WorkflowStatus } from './workflow-status';
 import { errorMessage } from '@/shared/api/http';
 import { createRun, commandRun, outlineKeys, type OutlineState, type Generate } from './api';
+// Equivalent first visits from separate tabs must share the server's command receipt.
+async function initialOutlineKey(project: string, input: string) {
+  const bytes = new Uint8Array(
+    await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(JSON.stringify(['initial-outline', project, input])),
+    ),
+  );
+  const uuid = new DataView(bytes.buffer);
+  uuid.setUint8(6, (uuid.getUint8(6) & 15) | 0x80);
+  uuid.setUint8(8, (uuid.getUint8(8) & 63) | 0x80);
+  const hex = Array.from(bytes.subarray(0, 16), (b) => b.toString(16).padStart(2, '0')).join('');
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join('-');
+}
 export function Generation({
   project,
   state,
   disabled,
   selected,
+  active,
 }: {
   project: string;
   state: OutlineState;
   disabled: boolean;
   selected: string;
+  active: boolean;
 }) {
-  const [expanded, setExpanded] = useState(!state.version);
+  const attempted = useRef<string | null>(null);
   const client = useQueryClient();
   const receipt = useRef<{ stamp: string; key: string } | null>(null);
   const running = !!state.run && ['queued', 'running'].includes(state.run.status);
@@ -37,12 +59,13 @@ export function Generation({
       };
       const stamp = JSON.stringify(input);
       if (receipt.current?.stamp !== stamp) receipt.current = { stamp, key: crypto.randomUUID() };
-      return createRun(project, receipt.current.key, input);
+      const key =
+        kind === 'generate' ? await initialOutlineKey(project, stamp) : receipt.current.key;
+      return createRun(project, key, input);
     },
     retry: false,
     onSuccess: () => {
       receipt.current = null;
-      setExpanded(false);
       refresh();
     },
     onError: () => {
@@ -63,44 +86,50 @@ export function Generation({
     onError: refresh,
   });
   const busy = disabled || running || generate.isPending;
+  const { mutate } = generate;
+  const inputKey = JSON.stringify([project, state.source_snapshot, state.guide_version]);
+  const initial =
+    active &&
+    !disabled &&
+    state.ready &&
+    !state.version &&
+    !state.draft.nodes.length &&
+    (!state.run || state.run.error_code === 'inputs_changed');
+  useEffect(() => {
+    if (initial && attempted.current !== inputKey) {
+      attempted.current = inputKey;
+      mutate({ kind: 'generate' });
+    }
+  }, [initial, inputKey, mutate]);
+
   return (
-    <section className="outline-generation" aria-label="자동 구성">
-      <Collapsible open={expanded} onOpenChange={setExpanded}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost">
-            <WandSparkles aria-hidden="true" />
-            AI로 구성
-            <ChevronDown aria-hidden="true" />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="outline-generation-controls">
+    <section className="outline-generation" aria-label="목차 및 내용 연결">
+      {generate.isPending && !state.run && <p role="status">목차 초안을 준비하고 있습니다.</p>}
+      {state.version > 0 && (
+        <div className="outline-generation-controls">
           <Button
-            disabled={busy || !state.ready}
-            onClick={() => generate.mutate({ kind: 'generate' })}
+            variant="secondary"
+            disabled={busy || state.stale}
+            onClick={() => generate.mutate({ kind: 'map', all: true })}
           >
-            <WandSparkles aria-hidden="true" />
-            {state.version ? '새 목차 만들기' : '목차 만들기'}
+            전체 내용 자동 연결
           </Button>
-          {state.version > 0 && (
-            <Button
-              variant="secondary"
-              disabled={busy || state.stale}
-              onClick={() => generate.mutate({ kind: 'map', all: true })}
-            >
-              전체 내용 자동 연결
-            </Button>
-          )}
-          {state.version > 0 && (
+          {selected && (
             <Button
               variant="secondary"
               disabled={busy || state.stale}
               onClick={() => generate.mutate({ kind: 'map' })}
             >
-              {selected ? '선택 목차 자동 연결' : '내용 자동 연결'}
+              선택 목차 자동 연결
             </Button>
           )}
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      )}
+      {initial && generate.isError && (
+        <Button variant="secondary" onClick={() => mutate({ kind: 'generate' })}>
+          다시 시도
+        </Button>
+      )}
       {(generate.isError || control.isError) && (
         <p role="alert">{errorMessage(generate.error ?? control.error)}</p>
       )}

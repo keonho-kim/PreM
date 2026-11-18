@@ -34,7 +34,6 @@ export function ExtractedContent({
   const [page, setPage] = useState(initialPage ?? ''),
     [query, setQuery] = useState(''),
     [draft, setDraft] = useState(''),
-    [offset, setOffset] = useState(0),
     [tab, setTab] = useState(
       initialPage
         ? 'content'
@@ -46,8 +45,8 @@ export function ExtractedContent({
     );
   const groupSlides = !source && detail.page_mode === 'slide';
   const result = useInfiniteQuery({
-    queryKey: processingKeys.blocks(detail.job.id, page, query, offset),
-    initialPageParam: offset,
+    queryKey: processingKeys.blocks(detail.job.id, page, query, 0),
+    initialPageParam: 0,
     queryFn: ({ signal, pageParam }) => getBlocks(detail.job.id, page, query, pageParam, signal),
     getNextPageParam: (last, _pages, start) => (last.length === 50 ? start + 50 : undefined),
     enabled: tab === 'content',
@@ -57,31 +56,19 @@ export function ExtractedContent({
   const pageLabels = new Map(detail.pages.map((p) => [p.id, p.label]));
   const renderBlock = (b: (typeof blocks)[number]) => (
     <article key={b.id} className="processing-block">
-      {(!groupSlides || b.is_table_of_contents === 1) && (
-        <header>
-          <span>
-            {!groupSlides && `${pageLabels.get(b.page_id) ?? '원본 위치 미상'} · `}
-            {b.kind === 'table'
-              ? '표'
-              : b.kind === 'image'
-                ? '이미지'
-                : b.kind === 'heading'
-                  ? '제목'
-                  : b.kind === 'code'
-                    ? '코드'
-                    : b.kind === 'list'
-                      ? '목록'
-                      : '문단'}
-          </span>
-          {b.is_table_of_contents === 1 && <span>목차</span>}
-        </header>
-      )}
+      {b.is_table_of_contents === 1 && <span className="field-hint">목차</span>}
       {b.image ? (
         <img loading="lazy" src={fileUrl(detail.job.id, b.image)} alt={b.text} />
       ) : b.kind === 'table' ? (
         <ExtractedTable text={b.text} attributes={b.attributes} />
+      ) : b.kind === 'heading' ? (
+        <h3>{b.text}</h3>
+      ) : b.kind === 'code' ? (
+        <pre>
+          <code>{b.text}</code>
+        </pre>
       ) : (
-        <pre>{b.text}</pre>
+        <p>{b.text}</p>
       )}
     </article>
   );
@@ -112,7 +99,6 @@ export function ExtractedContent({
             onSubmit={(e) => {
               e.preventDefault();
               setQuery(draft);
-              setOffset(0);
             }}
           >
             <Label htmlFor="block-search">문서 내용 검색</Label>
@@ -133,7 +119,6 @@ export function ExtractedContent({
             value={page || 'all'}
             onValueChange={(value) => {
               setPage(value === 'all' ? '' : value);
-              setOffset(0);
             }}
           >
             <SelectTrigger id="processing-page">
@@ -163,49 +148,25 @@ export function ExtractedContent({
           <p>표시할 내용이 없습니다.</p>
         ) : (
           <div className="processing-blocks">
-            {groupSlides ? (
-              <SlideGroups
-                items={blocks}
-                label={(b) => pageLabels.get(b.page_id) ?? '원본 위치 미상'}
-              >
-                {(parts) => parts.map(renderBlock)}
-              </SlideGroups>
-            ) : (
-              blocks.map(renderBlock)
-            )}
+            <SlideGroups
+              items={blocks}
+              label={(b) => pageLabels.get(b.page_id) ?? '원본 위치 미상'}
+            >
+              {(parts) => parts.map(renderBlock)}
+            </SlideGroups>
           </div>
         )}
-        {groupSlides ? (
-          result.hasNextPage && (
-            <div className="processing-pagination">
-              {result.isFetchNextPageError && (
-                <span role="alert">다음 내용을 불러오지 못했습니다.</span>
-              )}
-              <Button
-                variant="secondary"
-                disabled={result.isFetching}
-                onClick={() => void result.fetchNextPage()}
-              >
-                {result.isFetchNextPageError ? '다시 시도' : '내용 더 보기'}
-              </Button>
-            </div>
-          )
-        ) : (
+        {result.hasNextPage && (
           <div className="processing-pagination">
+            {result.isFetchNextPageError && (
+              <span role="alert">다음 내용을 불러오지 못했습니다.</span>
+            )}
             <Button
               variant="secondary"
-              disabled={offset === 0}
-              onClick={() => setOffset(Math.max(0, offset - 50))}
+              disabled={result.isFetching}
+              onClick={() => void result.fetchNextPage()}
             >
-              이전
-            </Button>
-            <span>{Math.floor(offset / 50) + 1} 페이지</span>
-            <Button
-              variant="secondary"
-              disabled={blocks.length < 50}
-              onClick={() => setOffset(offset + 50)}
-            >
-              다음
+              {result.isFetchNextPageError ? '다시 시도' : '내용 더 보기'}
             </Button>
           </div>
         )}
@@ -258,7 +219,6 @@ export function ExtractedContent({
                 aria-describedby={p.alignment ? `page-chapter-${p.id}` : undefined}
                 onClick={() => {
                   setPage(p.id);
-                  setOffset(0);
                   setTab('content');
                 }}
               >

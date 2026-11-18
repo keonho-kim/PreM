@@ -25,12 +25,11 @@ const { configureDocuments } = require('./configure-documents.cjs');
     const page = await session.browser.newPage();
     await setViewport(page, { width: 390, height: 844, isMobile: true, hasTouch: true });
     await page.goto(`${server.base}/home/studio/${project.id}`, { waitUntil: 'networkidle0' });
-    await page.click('.studio-section-heading button');
-    await (await page.waitForSelector('.space-dialog input[type=file]')).uploadFile(
+    await (await page.waitForSelector('.studio-upload input[type=file]')).uploadFile(
       path.join(projectRoot, 'tests/fixtures/documents/text.pdf'),
     );
-    await page.click('.space-dialog button[type=submit]');
-    await page.waitForSelector('.space-dialog', { hidden: true });
+    await page.waitForSelector('.work-dock');
+    await page.click('[aria-label="작업 패널 펼치기"]');
     await page.waitForSelector('.studio-source-card');
     await page.waitForFunction(() => !document.querySelector('.studio-review button').disabled, {
       timeout: 90000,

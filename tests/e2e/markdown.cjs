@@ -58,7 +58,7 @@ async function click(page, name, role = 'button') {
     await a.keyboard.press('Enter');
     await a.waitForFunction(
       () =>
-        [...document.querySelectorAll('.processing-block pre')].every((node) =>
+        [...document.querySelectorAll('.processing-block')].every((node) =>
           node.textContent.includes('120'),
         ) && document.querySelectorAll('.processing-block').length === 1,
     );
@@ -88,15 +88,13 @@ async function click(page, name, role = 'button') {
       })
     ).json();
     await a.goto(`${server.base}/home/studio/${project.id}`, { waitUntil: 'networkidle0' });
-    await click(a, '문서 추가');
-    const input = await a.waitForSelector('.space-dialog input[type=file]');
+    const input = await a.waitForSelector('.studio-upload input[type=file]');
     assert.match(await input.evaluate((node) => node.accept), /\.md,\.markdown/);
     await input.uploadFile(source);
-    await a.click('.space-dialog button[type=submit]');
-    await a.waitForSelector('.space-dialog', { hidden: true });
+
     await a.waitForSelector('.studio-source-card');
     await notifications(a, false);
-    await a.click('.studio-source-preview');
+    await a.click('.studio-source-open');
     await a.waitForSelector('.processing-block');
     assert.match(await a.$eval('.processing-blocks', (node) => node.textContent), /실행 계획/);
     assert.equal((await (await fetch(server.base + '/api/v1/space/references')).json()).total, 1);
@@ -110,8 +108,8 @@ async function click(page, name, role = 'button') {
     await server.stop();
     await server.start();
     await a.reload({ waitUntil: 'networkidle0' });
-    await a.waitForSelector('.studio-source-preview');
-    await a.click('.studio-source-preview');
+    await a.waitForSelector('.studio-source-open');
+    await a.click('.studio-source-open');
     await a.waitForSelector('.processing-block');
     assert.equal(await a.evaluate(() => window.premMarkdownExecuted), undefined);
     assert.deepEqual(external, []);

@@ -4,7 +4,14 @@
 // Related: upload-panel.tsx, api.ts, backend/src/adapters/http/space/uploads.rs.
 import Uppy, { type UppyFile } from '@uppy/core';
 import XHRUpload from '@uppy/xhr-upload';
-import { assetPath, assetSchema, cancelUpload, type Asset, type LibraryKind } from './api';
+import {
+  assetPath,
+  assetSchema,
+  cancelUpload,
+  metadataSchema,
+  type Asset,
+  type LibraryKind,
+} from './api';
 import { notify } from '@/shared/notifications';
 import { errorMessage } from '@/shared/api/http';
 type UploadMeta = {
@@ -76,6 +83,11 @@ export function createUploadEngine(onSaved: () => void) {
       );
     if (uppy.getFiles().length + files.length > 20)
       throw new Error('대기열은 최대 20개입니다. 완료된 항목을 먼저 정리하세요.');
+    if (title.trim() && files.length === 1 && !target) {
+      const result = metadataSchema.safeParse({ title, tags });
+      if (!result.success)
+        throw new Error(result.error.issues[0]?.message ?? '자료 이름을 확인하세요.');
+    }
     for (const file of files) {
       const extension = file.name.split('.').pop()?.toLowerCase();
       if (

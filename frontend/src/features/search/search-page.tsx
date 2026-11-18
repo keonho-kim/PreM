@@ -153,13 +153,11 @@ export function SearchPage() {
         <LibraryUpload kind={input.scope} />
       </header>
       <section className="search-page-heading" aria-label="Space 자료 찾기">
-        <h2>필요한 자료를 찾아보세요</h2>
         <SearchBox
           key={input.q || params.get('name') || ''}
           initial={input.q || params.get('name') || ''}
           onSearch={(q) => navigate({ ...input, q, offset: 0 })}
         />
-        <p className="muted">파일 이름·태그와 레퍼런스 본문을 검색합니다.</p>
       </section>
       <Tabs
         value={input.scope}
@@ -172,22 +170,23 @@ export function SearchPage() {
           });
         }}
       >
-        <TabsList className="space-kind-tabs" aria-label="검색 자료 종류">
-          <TabsTrigger value="all">전체</TabsTrigger>
-          <TabsTrigger value="references">레퍼런스</TabsTrigger>
-          <TabsTrigger value="templates">템플릿</TabsTrigger>
-        </TabsList>
+        <div className="space-browse-tools">
+          <TabsList className="space-kind-tabs" aria-label="검색 자료 종류">
+            <TabsTrigger value="all">전체</TabsTrigger>
+            <TabsTrigger value="references">레퍼런스</TabsTrigger>
+            <TabsTrigger value="templates">템플릿</TabsTrigger>
+          </TabsList>
+
+          <Filters key={key} input={input} apply={navigate} />
+          {input.q && (
+            <Button asChild variant="ghost">
+              <Link to="/space" search={{ scope: input.scope }}>
+                자료 목록으로
+              </Link>
+            </Button>
+          )}
+        </div>
         <TabsContent value={input.scope}>
-          <div className="search-result-tools">
-            <Filters key={key} input={input} apply={navigate} />
-            {input.q && (
-              <Button asChild variant="ghost">
-                <Link to="/space" search={{ scope: input.scope }}>
-                  자료 목록으로
-                </Link>
-              </Button>
-            )}
-          </div>
           {!input.q ? (
             <Suspense fallback={<p role="status">자료 목록을 불러오고 있습니다.</p>}>
               <SpaceDirectory kind={input.scope} />

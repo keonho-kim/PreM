@@ -65,13 +65,11 @@ async function poll(check) {
     for (const page of [a, b]) page.on('pageerror', (e) => errors.push(e.message));
     await a.setViewport({ width: 1440, height: 1000 });
     await a.goto(route, { waitUntil: 'networkidle0' });
-    await click(a, '문서 추가');
-    await (await a.waitForSelector('.space-dialog input[type=file]')).uploadFile(
+    await (await a.waitForSelector('.studio-upload input[type=file]')).uploadFile(
       path.join(projectRoot, 'tests/fixtures/documents/reference.md'),
     );
-    await a.click('.space-dialog button[type=submit]');
-    await a.waitForSelector('.space-dialog', { hidden: true });
-    await a.waitForFunction(() => !document.querySelector('.studio-review button')?.disabled);
+
+    await a.waitForSelector('.studio-review button:enabled');
     await notifications(a, false);
     await click(a, '원본 확인하고 계속');
     await a.waitForSelector('#guide-do', { visible: true });
@@ -79,7 +77,7 @@ async function poll(check) {
     assert.equal(await a.$eval('button[aria-label="목차·내용"]', (n) => n.disabled), true);
     await click(a, '저장하고 목차로');
     assert.equal(await a.$('#outline-model'), null);
-    await click(a, '목차 만들기');
+    assert.equal(await a.$('::-p-aria(AI로 구성[role="button"])'), null);
     await poll(async () => (await read()).version === 1);
     await a.waitForFunction(
       () => document.querySelectorAll('.outline-content-tabs [role=tab]').length === 3,
@@ -112,7 +110,6 @@ async function poll(check) {
     await click(a, '편집 마치기');
     await click(a, '목차·연결 저장');
     await poll(async () => (await read()).version === 4);
-    await click(a, 'AI로 구성');
     await click(a, '전체 내용 자동 연결');
     await poll(async () => {
       const s = await read();

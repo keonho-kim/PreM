@@ -99,3 +99,15 @@
   padding-block: 12px;
   border-block-end: 1px solid var(--color-rule);
 }
+
+.admin-collapsed-label {
+  display: none;
+}
+@media (max-width: 850px) {
+  .admin-collapsed-label {
+    display: inline;
+  }
+  .admin-sidebar {
+    padding-block: 8px;
+  }
+}

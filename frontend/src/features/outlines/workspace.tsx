@@ -93,6 +93,7 @@ export function OutlineWorkspace({
             key={`${project}:${revision}`}
             project={project}
             server={state.data}
+            active={active}
             editable={editable}
             historical={revision !== 'current'}
             onDirty={reportDirty}

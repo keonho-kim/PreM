@@ -176,8 +176,12 @@ async function capture(page, name) {
     );
     await a.$eval('.presentation-deck', (n) => n.scrollIntoView({ block: 'start' }));
     await capture(a, 'reference-generated-native.png');
-    await a.$eval('.presentation-quality', (n) => n.scrollIntoView({ block: 'center' }));
+    await click(a, '발표자료 더보기');
+    await click(a, '처리 및 검사 결과', 'menuitem');
+    await a.waitForSelector('.presentation-report-dialog .presentation-quality', { visible: true });
     await capture(a, 'presentation-quality-desktop.png');
+    await a.keyboard.press('Escape');
+    await a.waitForSelector('.presentation-report-dialog', { hidden: true });
     await click(a, '참고 자료', 'tab');
     const sourceRows = await json(
       base,

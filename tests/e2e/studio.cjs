@@ -57,12 +57,11 @@ async function capture(page, name) {
     const project = new URL(a.url()).pathname.split('/').at(-1);
     const route = server.base + `/home/studio/${project}`;
     await capture(a, 'studio-empty.png');
-    assert.equal(await a.$eval('.studio-review button', (n) => n.disabled), true);
-    await click(a, '문서 추가');
-    await upload(
-      a,
-      [path.join(projectRoot, 'tests/fixtures/documents/text.pdf')],
-      '프로젝트 보고서',
+    assert.equal(await a.$('.studio-review button'), null);
+    await click(a, '파일 형식·이름 설정');
+    await a.type('.studio-upload input:not([type=file])', '프로젝트 보고서');
+    await (await a.waitForSelector('.studio-upload input[type=file]')).uploadFile(
+      path.join(projectRoot, 'tests/fixtures/documents/text.pdf'),
     );
     await a.waitForSelector('.studio-source-card');
     await a.waitForFunction(() => !document.querySelector('.studio-review button').disabled, {
@@ -78,7 +77,7 @@ async function capture(page, name) {
     const space = await (await fetch(server.base + '/api/v1/space/all')).json();
     assert.equal(space.total, 0);
     await capture(a, 'studio-sources.png');
-    await a.click('.studio-source-preview');
+    await a.click('.studio-source-open');
     await a.waitForSelector('.processing-pages img');
     assert.equal(await a.$$eval('.processing-stages li', (nodes) => nodes.length), 3);
     assert((await a.$eval('.processing-stages', (n) => n.textContent)).includes('문서 읽기'));

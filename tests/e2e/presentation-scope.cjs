@@ -163,11 +163,12 @@ const { poll, click } = require('./canvas-browser-helpers.cjs');
     );
     assert.equal(await page.$('::-p-aria(직접 작성[role="tab"])'), null);
     assert.equal(await parent.evaluate((n) => n.getAttribute('aria-checked')), 'mixed');
-    await click(page, '이 발표자료 새 버전 만들기');
+    await click(page, '발표자료 더보기');
+    await click(page, '새 버전 만들기', 'menuitem');
     assert.equal(await page.$eval('#presentation-title', (n) => n.value), run.title);
     assert(await page.$eval('#presentation-title', (n) => n === document.activeElement));
     assert.equal(fixture.calls(), beforeCalls + 1);
-    await page.$eval('.presentation-run-status', (n) => n.scrollIntoView({ block: 'start' }));
+    await page.$eval('.presentation-command-row', (n) => n.scrollIntoView({ block: 'start' }));
     await page.screenshot({
       path: path.join(
         projectRoot,

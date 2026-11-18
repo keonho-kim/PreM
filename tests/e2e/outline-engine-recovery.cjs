@@ -123,7 +123,6 @@ async function capture(page, name) {
     await a.setViewport({ width: 1440, height: 1000 });
     const route = server.base + `/home/studio/${p}?step=outline`;
     await a.goto(route, { waitUntil: 'networkidle0' });
-    await click(a, 'AI로 구성');
     await click(a, '전체 내용 자동 연결');
     const running = await poll(read, (s) => s.run.completed === 1 && batches.length === 2);
     assert.equal(running.version, generated.version);

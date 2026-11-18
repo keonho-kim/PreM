@@ -47,6 +47,7 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
     await a.waitForSelector('.projects-empty');
     assert.equal(await a.$('.projects-heading .workspace-label'), null);
     assert.equal(await a.$('.projects-footer'), null);
+    await a.click('::-p-aria(프로젝트 검색·필터[role="button"])');
     const dueInput = '.project-filters input[name="due_date"]';
     assert.equal(await a.$('.project-filters button[aria-label="마감일 달력 열기"]'), null);
     const devtools = await a.createCDPSession();
@@ -79,6 +80,7 @@ const { homeChecks, setDate, openAction } = require('./home-checks.cjs');
     await a.waitForFunction(() => !location.search);
     await a.waitForNetworkIdle({ idleTime: 250 });
     await setViewport(a, { width: 390, height: 900 });
+    if (!(await a.$(dueInput))) await a.click('::-p-aria(프로젝트 검색·필터[role="button"])');
     await a.click(dueInput);
     await a.waitForSelector('.due-date-calendar');
     assert.equal(

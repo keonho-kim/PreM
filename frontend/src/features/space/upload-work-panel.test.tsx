@@ -56,9 +56,6 @@ it('keeps the work queue alive through collapse, close, reopen and completion', 
   const { engine, client } = await mount();
   expect(screen.queryByRole('region', { name: '작업 진행 상황' })).not.toBeInTheDocument();
   act(() => engine.add([new File(['data'], 'own.pdf')], 'references', '', []));
-  expect(screen.getByText('own.pdf')).toBeVisible();
-  const collapse = screen.getByRole('button', { name: '작업 패널 접기' });
-  await user.click(collapse);
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   expect(engine.uppy.getFiles()).toHaveLength(1);
   await user.click(screen.getByRole('button', { name: '작업 패널 펼치기' }));

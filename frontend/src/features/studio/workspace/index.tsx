@@ -41,7 +41,6 @@ export function StudioWorkspace({ projectId }: { projectId: string }) {
     engine = useUploadEngine();
   const [params, setParams] = useUrlSearch();
   const [offset, setOffset] = useState(0),
-    [upload, setUpload] = useState(false),
     [guideDirty, setGuideDirty] = useState(false),
     [outlineDirty, setOutlineDirty] = useState(false),
     [session, setSession] = useState<Session | null>(null);
@@ -177,7 +176,7 @@ export function StudioWorkspace({ projectId }: { projectId: string }) {
         review={review}
         confirm={confirm}
         onOffset={setOffset}
-        onUpload={() => setUpload(true)}
+        onUpload={(files, title) => engine.add(files, kind, title, [])}
         onBlank={() => setParams({ step: 'generation', start: 'blank' })}
         onAction={onAction}
       />
@@ -197,7 +196,6 @@ export function StudioWorkspace({ projectId }: { projectId: string }) {
           onDirty={setOutlineDirty}
         />
       </section>
-      {upload && <UploadDialog kind={kind} engine={engine} onClose={() => setUpload(false)} />}
       {session?.action === 'preview' && (
         <ProcessingDialog
           item={session.item}

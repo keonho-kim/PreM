@@ -146,7 +146,8 @@ it('keeps the current editor ahead of inline creation and opens version authorin
   expect(editor.compareDocumentPosition(composer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(screen.getByRole('checkbox', { name: '전체 목차' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'PPT 생성 설정' })).not.toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: '이 발표자료 새 버전 만들기' }));
+  await userEvent.click(screen.getByRole('button', { name: '발표자료 더보기' }));
+  await userEvent.click(screen.getByRole('menuitem', { name: '새 버전 만들기' }));
   expect(screen.queryByRole('tab', { name: '직접 작성' })).not.toBeInTheDocument();
   await waitFor(() => expect(screen.getByLabelText('발표자료 제목')).toHaveFocus());
   expect(screen.getByLabelText('발표자료 제목')).toHaveValue('현재 발표');

@@ -70,19 +70,16 @@ async function click(page, name, role = 'button') {
     await setViewport(a, { width: 1440, height: 1000 });
     const route = `${server.base}/home/studio/${project.id}`;
     await a.goto(route, { waitUntil: 'networkidle0' });
-    await click(a, '문서 추가');
-    await (await a.waitForSelector('.space-dialog input[type=file]')).uploadFile(
+    await (await a.waitForSelector('.studio-upload input[type=file]')).uploadFile(
       path.join(projectRoot, 'tests/fixtures/documents/reference.md'),
     );
-    await a.click('.space-dialog button[type=submit]');
-    await a.waitForSelector('.space-dialog', { hidden: true });
-    await a.waitForFunction(() => !document.querySelector('.studio-review button')?.disabled);
+
+    await a.waitForSelector('.studio-review button:enabled');
     await notifications(a, false);
     await click(a, '원본 확인하고 계속');
     await a.waitForSelector('#guide-do', { visible: true });
     await a.type('#guide-do', '실행 계획을 간결하게');
     await click(a, '저장하고 목차로');
-    await click(a, '목차 만들기');
     await a.waitForFunction(() =>
       document.querySelector('.outline-save')?.textContent.includes('저장된 버전 1'),
     );
@@ -119,6 +116,10 @@ async function click(page, name, role = 'button') {
     assert.equal(await a.$('#presentation-model'), null);
     await click(a, 'PPT 만들기');
     await a.waitForSelector('.presentation-output', { visible: true, timeout: 90000 });
+    await a.waitForSelector('a[aria-label="PPTX 다운로드"]');
+    assert.equal(await a.$('.presentation-step .presentation-workflow-status'), null);
+    await click(a, '발표자료 더보기');
+    await click(a, '처리 및 검사 결과', 'menuitem');
     await a.waitForFunction(
       () => document.querySelectorAll('.presentation-workflow-status li').length === 3,
     );
@@ -134,8 +135,12 @@ async function click(page, name, role = 'button') {
       ),
       3,
     );
+    await a.keyboard.press('Escape');
+    await a.waitForFunction(
+      () => document.activeElement?.getAttribute('aria-label') === '발표자료 더보기',
+    );
     assert.equal(await a.$eval('button[aria-label="템플릿"]', (n) => n.disabled), false);
-    await a.$eval('.presentation-run-status', (n) => n.scrollIntoView({ block: 'start' }));
+    await a.$eval('.presentation-command-row', (n) => n.scrollIntoView({ block: 'start' }));
     const chrome = await a.evaluate(() => ({
       header: document.querySelector('.app-header').getBoundingClientRect().bottom,
       step: document.querySelector('.studio-stepper').getBoundingClientRect().top,
@@ -180,7 +185,7 @@ async function click(page, name, role = 'button') {
     await expandRight.focus();
     await a.keyboard.press('Enter');
     await click(a, '이전 슬라이드');
-    await a.$eval('.presentation-run-status', (n) => n.scrollIntoView({ block: 'start' }));
+    await a.$eval('.presentation-command-row', (n) => n.scrollIntoView({ block: 'start' }));
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/presentation-generated.png'),
     });
@@ -217,11 +222,12 @@ async function click(page, name, role = 'button') {
     await a.waitForSelector('.processing-block');
     await a.keyboard.press('Escape');
     await a.waitForSelector('.processing-dialog', { hidden: true });
-    await click(a, '이 발표자료 새 버전 만들기');
+    await click(a, '발표자료 더보기');
+    await click(a, '새 버전 만들기', 'menuitem');
     await click(a, '새 버전 만들기');
     await a.waitForFunction(
       (first) => {
-        const link = document.querySelector('.presentation-run-status a[href$="/download"]');
+        const link = document.querySelector('.presentation-command-row a[href$="/download"]');
         return link && link.href !== first;
       },
       { timeout: 90000 },
@@ -232,6 +238,21 @@ async function click(page, name, role = 'button') {
     assert.equal(revisions[0].presentation_id, revisions[1].presentation_id);
     assert.equal(revisions[0].presentation_version, 2);
     assert.equal((await fetch(url)).status, 200, 'Earlier output remains available');
+    await click(a, '발표자료 더보기');
+    const previous = await a.waitForSelector(
+      '[role="menuitem"]:not([aria-current]) .presentation-menu-copy',
+    );
+    await previous.click();
+    await a.waitForFunction(
+      (first) => document.querySelector('a[aria-label="PPTX 다운로드"]')?.href === first,
+      {},
+      url,
+    );
+    await click(a, '발표자료 더보기');
+    await a.keyboard.press('Escape');
+    await a.waitForFunction(
+      () => document.activeElement?.getAttribute('aria-label') === '발표자료 더보기',
+    );
     await b.goto(route + '?step=generation', { waitUntil: 'networkidle0' });
     await b.waitForSelector('.presentation-output');
     for (const width of [390, 320]) {

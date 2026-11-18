@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Folder, RefreshCw, Plus } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { notify } from '@/shared/notifications';
 import { errorMessage } from '@/shared/api/http';
@@ -74,6 +75,42 @@ export function ProjectDirectory({ studio, filters, offset, onFilter, onPage }: 
   const firstInStudio = studio && list.data?.total === 0 && !hasFilters;
   const page = Math.floor(offset / pageSize) + 1,
     pages = Math.max(1, Math.ceil((total ?? 0) / pageSize));
+  const emptyDirectory = total === 0 && !hasFilters && !list.isError;
+  const filtersAndCount = (
+    <>
+      <ProjectFilterForm
+        filters={filters}
+        onChange={(next) => {
+          setNotice('');
+          onFilter(next);
+        }}
+      />
+      <div className="projects-summary">
+        <p role="status" className="projects-notice">
+          {notice ||
+            (list.isPending
+              ? '프로젝트를 불러오고 있습니다.'
+              : list.isFetching
+                ? '목록을 갱신하고 있습니다.'
+                : list.isError && !list.data
+                  ? '목록을 불러오지 못했습니다.'
+                  : `${total ?? 0}개 프로젝트`)}
+        </p>
+        <Button
+          variant="secondary"
+          disabled={list.isFetching}
+          title="프로젝트 목록 새로고침"
+          aria-label="프로젝트 목록 새로고침"
+          onClick={() => {
+            setNotice('');
+            void list.refetch();
+          }}
+        >
+          <RefreshCw size={18} aria-hidden="true" />
+        </Button>
+      </div>
+    </>
+  );
   return (
     <>
       <ProjectContextMenu onCommand={command}>
@@ -97,37 +134,7 @@ export function ProjectDirectory({ studio, filters, offset, onFilter, onPage }: 
               </Button>
             )}
           </div>
-          <ProjectFilterForm
-            filters={filters}
-            onChange={(next) => {
-              setNotice('');
-              onFilter(next);
-            }}
-          />
-          <div className="projects-summary">
-            <p role="status" className="projects-notice">
-              {notice ||
-                (list.isPending
-                  ? '프로젝트를 불러오고 있습니다.'
-                  : list.isFetching
-                    ? '목록을 갱신하고 있습니다.'
-                    : list.isError && !list.data
-                      ? '목록을 불러오지 못했습니다.'
-                      : `${total ?? 0}개 프로젝트`)}
-            </p>
-            <Button
-              variant="secondary"
-              disabled={list.isFetching}
-              title="프로젝트 목록 새로고침"
-              aria-label="프로젝트 목록 새로고침"
-              onClick={() => {
-                setNotice('');
-                void list.refetch();
-              }}
-            >
-              <RefreshCw size={18} aria-hidden="true" />
-            </Button>
-          </div>
+          {!emptyDirectory && filtersAndCount}
           {list.isError && (
             <div className="projects-error" role="alert">
               <p>{errorMessage(list.error)}</p>
@@ -208,6 +215,14 @@ export function ProjectDirectory({ studio, filters, offset, onFilter, onPage }: 
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
+          )}
+          {emptyDirectory && (
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost">프로젝트 검색·필터</Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>{filtersAndCount}</CollapsibleContent>
+            </Collapsible>
           )}
         </main>
       </ProjectContextMenu>

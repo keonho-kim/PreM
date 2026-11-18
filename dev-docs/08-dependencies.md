@@ -76,7 +76,7 @@ Redux store는 app의 composition root에서 생성하고, reducer는 해당 기
 
 Kordoc은 `runtime/kordoc/package.json`에서 **4.24.83**으로 고정하고 npm lockfile의 integrity로 설치한다. PDF 텍스트는 패키지에 포함된 `dist/hayro-pdf.wasm`을 사용하며, OCR 래스터·페이지 미리보기는 기존 PDFium을 사용한다. PDF 처리에 `pdfjs-dist`·`@napi-rs/canvas`가 필요하지 않다. hayro WASM과 해당 `THIRD_PARTY` 고지는 Kordoc 디렉터리와 함께 번들에 포함된다. [공식 변경 사항](https://github.com/chrisryugj/kordoc/blob/main/CHANGELOG.md)을 따른다.
 
-프로덕션 OCR 설정은 `ocrRec: printed`, `ocrDet: mobile`, `formulaOcr: false`다. 인쇄 한국어 검출·인식·사전 파일을 빌드 때 검증하고, 실행 시 쓰기 가능한 앱 전용 캐시에 복사한 뒤 `KORDOC_OFFLINE=1`로 사용한다. 런타임 manifest는 실제 설치 버전과 PDF WASM의 SHA-256도 포함한다. 이미지 필터는 검토된 Kordoc 버전에 고정하고 upstream 함수를 그대로 연결한다.
+문서 파서는 기본 `ocr: true`와 `removeHeaderFooter: false`, `dropBlankImages: true`, `scriptTags: true`, `htmlTables: true`를 사용한다. OCR 줄·수식 인식 등 추가 OCR 옵션은 지정하지 않는다. 인쇄 한국어 검출·인식·사전 파일을 빌드 때 검증하고, 실행 시 쓰기 가능한 앱 전용 캐시에 복사한 뒤 `KORDOC_OFFLINE=1`로 사용한다. 런타임 manifest는 실제 설치 버전과 PDF WASM의 SHA-256도 포함한다. 이미지 필터는 검토된 Kordoc 버전에 고정하고 upstream 함수를 그대로 연결한다.
 
 ## System One / Decisions API 지원 조사
 
