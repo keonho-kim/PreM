@@ -8,6 +8,13 @@
   line-height: 1.5;
   color: var(--color-muted);
 }
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-block-start: 12px;
+}
 .ui-button {
   cursor: pointer;
   font-family: var(--font-body);

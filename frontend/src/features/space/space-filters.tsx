@@ -1,10 +1,7 @@
-// Purpose: Collect URL-bound library search and lifecycle filters.
-// Pattern: Local form drafts are applied together by the owning route.
-// Usage: SpaceDirectory supplies the current query and navigation callback.
+// Purpose: Select which lifecycle states appear in the Space list.
+// Pattern: Apply the selected lifecycle filter to the current list.
+// Usage: SpaceDirectory supplies the current status and navigation callback.
 // Related: space-directory.tsx, api.ts, space.css.
-import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -14,47 +11,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 export function SpaceFilters({
-  q,
   status,
-  onSubmit,
+  onChange,
 }: {
-  q: string;
   status: string;
-  onSubmit: (q: string, status: string) => void;
+  onChange: (status: string) => void;
 }) {
-  const [state, setState] = useState(status);
   return (
-    <form
-      className="space-filters"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit(q, state);
-      }}
-    >
-      <div>
-        <Label htmlFor="space-status">상태</Label>
-        <Select value={state} onValueChange={setState}>
-          <SelectTrigger id="space-status">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">활성</SelectItem>
-            <SelectItem value="archived">보관됨</SelectItem>
-            <SelectItem value="all">전체</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <Button type="submit" variant="secondary">
-        적용
-      </Button>
-      <Button variant="ghost" asChild>
-        <Link to="/search">자료 통합 검색</Link>
-      </Button>
-      {(q || status !== 'active') && (
-        <Button variant="ghost" onClick={() => onSubmit('', 'active')}>
-          초기화
-        </Button>
-      )}
-    </form>
+    <div className="space-list-filter">
+      <Label htmlFor="space-status">상태</Label>
+      <Select value={status} onValueChange={onChange}>
+        <SelectTrigger id="space-status">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="active">활성</SelectItem>
+          <SelectItem value="archived">보관됨</SelectItem>
+          <SelectItem value="all">전체</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

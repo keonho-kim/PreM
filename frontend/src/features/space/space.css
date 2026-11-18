@@ -3,46 +3,37 @@
  * Pattern: Task-focused tabs, factual file cards and measured file-level progress.
  * Usage: Imported by SpaceDirectory only.
  * Related: upload-panel.tsx, asset-card.tsx, design/refract.tokens.json. */
-.workspace.space-workspace {
-  padding-block: 40px 80px;
-}
-.space-heading {
+.space-list-toolbar,
+.space-list-actions,
+.space-list-summary,
+.space-list-filter {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin-block-end: 28px;
-}
-.space-heading h1 {
-  margin-block: 8px 12px;
-}
-.space-filters {
-  display: flex;
-  align-items: end;
   flex-wrap: wrap;
-  gap: 12px;
-  padding-block: 24px;
+}
+.space-list-toolbar {
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding-block: 16px;
   border-block-end: 1px solid var(--color-rule);
 }
-.space-filters > div {
-  display: grid;
-  gap: 10px;
-  min-width: 0;
+.space-list-toolbar h2 {
+  font-size: 20px;
 }
-.space-filters > div:first-child {
-  flex: 0 1 220px;
+.space-list-filter,
+.space-list-actions,
+.space-list-summary {
+  gap: 8px;
 }
-.space-filters > div:nth-child(2) {
-  min-width: 140px;
+.space-list-filter [role="combobox"] {
+  inline-size: 7rem;
 }
-.space-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-block: 24px;
-  gap: 16px;
+.space-list-summary p {
   color: var(--color-muted);
   font-size: 14px;
+}
+.space-list-toolbar {
+  margin-block-end: 16px;
 }
 .space-gallery {
   display: grid;
@@ -236,10 +227,6 @@
   }
 }
 @media (max-width: 42rem) {
-  .space-heading {
-    align-items: start;
-    flex-direction: column;
-  }
   .space-gallery {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -257,28 +244,6 @@
   .space-tags li {
     border: 1px solid CanvasText;
   }
-}
-
-.space-workspace [role="tablist"] {
-  height: auto;
-  max-inline-size: 100%;
-  overflow-x: auto;
-}
-.space-workspace [role="tab"] {
-  position: relative;
-  min-block-size: 44px;
-  flex-shrink: 0;
-}
-@media (pointer: coarse) {
-  .space-workspace [role="tab"] {
-    min-block-size: 48px;
-  }
-}
-.space-workspace [role="tab"][aria-selected="true"]::after {
-  content: "";
-  position: absolute;
-  inset: auto 12px 2px;
-  border-block-end: 2px solid currentColor;
 }
 
 .space-title-button {

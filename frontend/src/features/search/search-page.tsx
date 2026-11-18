@@ -2,7 +2,7 @@
 // Pattern: URL filters and pagination, Query cancellation and link navigation without a modal.
 // Usage: /home/space; project originals never enter this search scope.
 // Related: api.ts, search-box.tsx, search.css, document-processing document-page.
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useUrlSearch } from '@/shared/routing/search';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +18,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { LibraryUpload } from '@/features/space';
+import { LibraryUpload, SpaceDirectory } from '@/features/space';
 import { MatchText } from '@/shared/ui/match-text';
 import { errorMessage } from '@/shared/api/http';
 import {
@@ -147,24 +147,16 @@ export function SearchPage() {
   const navigate = (next: SearchInput) => setParams(new URLSearchParams(encodeSearch(next)));
   return (
     <main className="container workspace search-workspace">
-      <title>Space · 자료 검색 | PreM</title>
+      <title>Space | PreM</title>
       <header className="space-search-heading">
-        <div>
-          <p className="workspace-label">팀 공용 자료</p>
-          <h1>Space</h1>
-        </div>
-        <div className="space-search-actions">
-          <Button variant="secondary" asChild>
-            <Link to="/space/library">자료 관리</Link>
-          </Button>
-          <LibraryUpload kind={input.scope} />
-        </div>
+        <h1>Space</h1>
+        <LibraryUpload kind={input.scope} />
       </header>
       <section className="search-page-heading" aria-label="Space 자료 찾기">
         <h2>필요한 자료를 찾아보세요</h2>
         <SearchBox
-          key={input.q}
-          initial={input.q}
+          key={input.q || params.get('name') || ''}
+          initial={input.q || params.get('name') || ''}
           onSearch={(q) => navigate({ ...input, q, offset: 0 })}
         />
         <p className="muted">파일 이름·태그와 레퍼런스 본문을 검색합니다.</p>
@@ -173,22 +165,33 @@ export function SearchPage() {
         value={input.scope}
         activationMode="manual"
         onValueChange={(scope) => {
-          if (scope === 'all' || scope === 'references' || scope === 'templates')
-            navigate({ ...input, scope, offset: 0 });
+          setParams((next) => {
+            next.set('scope', scope);
+            next.delete('offset');
+            return next;
+          });
         }}
       >
-        <TabsList aria-label="검색 자료 종류">
+        <TabsList className="space-kind-tabs" aria-label="검색 자료 종류">
           <TabsTrigger value="all">전체</TabsTrigger>
           <TabsTrigger value="references">레퍼런스</TabsTrigger>
           <TabsTrigger value="templates">템플릿</TabsTrigger>
         </TabsList>
         <TabsContent value={input.scope}>
-          <Filters key={key} input={input} apply={navigate} />
+          <div className="search-result-tools">
+            <Filters key={key} input={input} apply={navigate} />
+            {input.q && (
+              <Button asChild variant="ghost">
+                <Link to="/space" search={{ scope: input.scope }}>
+                  자료 목록으로
+                </Link>
+              </Button>
+            )}
+          </div>
           {!input.q ? (
-            <div className="search-empty">
-              <h2>자료 이름이나 기억나는 문장을 입력하세요.</h2>
-              <p>프로젝트 원본은 검색에 포함하지 않습니다.</p>
-            </div>
+            <Suspense fallback={<p role="status">자료 목록을 불러오고 있습니다.</p>}>
+              <SpaceDirectory kind={input.scope} />
+            </Suspense>
           ) : result.isPending ? (
             <p role="status">자료를 찾고 있습니다.</p>
           ) : result.isError ? (

@@ -31,7 +31,7 @@
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 4px;
+  gap: 8px;
 }
 .admin-sidebar nav a {
   display: flex;

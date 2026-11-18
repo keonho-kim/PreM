@@ -38,12 +38,6 @@
 .provider-form {
   max-inline-size: 680px;
 }
-.provider-form > .dialog-actions,
-.provider-confirmation .dialog-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
 .provider-options-trigger {
   justify-content: start;
   padding-inline: 0;
@@ -171,7 +165,7 @@
 .provider-tabs [role="tab"][aria-selected="true"]::after {
   content: "";
   position: absolute;
-  inset: auto 8px -4px;
+  inset: auto 8px 0;
   border-block-end: 3px solid var(--color-focus);
 }
 .provider-tabs [role="tabpanel"] {
@@ -189,11 +183,11 @@
 }
 @media (max-width: 600px) {
   .provider-tabs [role="tablist"] {
-    gap: 0;
+    flex-wrap: wrap;
+    gap: 8px;
   }
   .provider-tabs [role="tab"] {
-    flex: 1 0 auto;
-    padding-inline: 8px;
+    padding-inline: 10px;
   }
 }
 @media (pointer: coarse) {
@@ -312,4 +306,20 @@
 .thinking-feedback {
   color: var(--color-error);
   font-size: 0.8125rem;
+}
+
+.provider-form > .provider-actions {
+  align-items: center;
+  gap: 8px;
+  margin-block-start: 16px;
+}
+.provider-form > .provider-actions > [role="status"] {
+  flex-basis: 100%;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.provider-form > .dialog-actions {
+  margin-block-start: 24px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--color-rule);
 }

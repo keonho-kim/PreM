@@ -62,7 +62,7 @@ impl Extractor for Runtime {
                 .env("KORDOC_MODEL_CACHE", &this.cache)
                 .env("KORDOC_MAX_UNZIP_MB", "256")
                 .env("TMPDIR", dir.path());
-            let status = this.run_status(cmd, cancel.clone()).await?;
+            let status = supervision::document_status("read_document", cmd, cancel.clone()).await?;
             if !status.success() {
                 tracing::warn!(job_id = %job.id, %status, "document reader exited");
                 let code = match status.code() {

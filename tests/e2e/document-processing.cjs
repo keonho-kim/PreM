@@ -175,8 +175,6 @@ async function capture(page, name) {
         ?.textContent.includes('설정을 저장했습니다.'),
     );
     await a.click('.app-navigation a[href="/home/space"]');
-    await a.waitForSelector('a[href="/home/space/library"]');
-    await a.click('a[href="/home/space/library"]');
     await a.waitForSelector('.space-asset');
     await click(a, '프로젝트 가이드 미리보기');
     await stage(a, '자료 준비 완료');

@@ -131,6 +131,8 @@ function failureReason(code: string | null) {
       return '서버에서 문서 처리 도구를 실행할 수 없습니다. 도구 설치 후 다시 시도하세요.';
     case 'storage_unavailable':
       return '처리 결과를 저장하지 못했습니다. 서버 저장소 상태를 확인한 뒤 다시 시도하세요.';
+    case 'document_step_timeout':
+      return '문서 읽기 또는 자료 준비 단계가 제한 시간(30분)을 넘겼습니다. 다시 시도하거나 파일을 나누어 등록해 보세요.';
     case 'extraction_timeout':
       return '문서 읽기가 제한 시간(3분)을 넘겼습니다. 파일을 나누어 등록해 보세요.';
     case 'ocr_failed':

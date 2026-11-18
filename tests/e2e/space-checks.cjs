@@ -54,7 +54,7 @@ async function notifications(page, open = true) {
 }
 async function upload(page, files, title) {
   await notifications(page, false);
-  await page.click('.space-heading button');
+  await page.click('.space-search-heading button');
   if (await page.$('[role="menuitem"]')) await button(page, '[role="menuitem"]', '레퍼런스 올리기');
   await page.waitForSelector('.space-dialog input[type="file"]');
   await (await page.$('.space-dialog input[type="file"]')).uploadFile(...files);

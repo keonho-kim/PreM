@@ -1,6 +1,6 @@
 // Purpose: Expose Space route and global work-panel integration without eagerly loading the directory.
 // Pattern: Public feature facade with a lazy route component and tab-local notifications.
-// Usage: App loads the work panel independently; SpacePage uses the lazy directory.
+// Usage: App loads the work panel independently; Space search mounts the directory when browsing.
 // Related: space-directory.tsx, upload-work-panel.tsx, app/app.tsx.
 import { lazy } from 'react';
 export const SpaceDirectory = lazy(() =>

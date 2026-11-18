@@ -137,7 +137,7 @@ Studio에서는 후보 제목을 선택할 때 검토 영역의 원문을 조회
 
 ## Space 탐색과 Studio 근거의 역할
 
-Space의 홈은 검색이다. `/home/space`에서 공용 자료를 찾고 뉴스형 결과를 읽으며 `/home/space/documents/:kind/:id`의 문서 상세로 이동한다. 검색 조건과 결과 복귀를 유지하고 업로드·버전·보관은 `/home/space/library`의 자료 관리에서 수행한다. 기존 `/home/search`, `/home/documents/...`와 구형 Space 자산 탭 링크는 새 내부 경로로 연결한다.
+Space의 홈은 검색이다. `/home/space`에서 공용 자료를 찾고 뉴스형 결과를 읽으며 `/home/space/documents/:kind/:id`의 문서 상세로 이동한다. 검색 전에는 자료 목록과 상태 필터를 제공하고 카드에서 버전과 보관을 관리한다. 상단에서 바로 업로드하며 기존 `/home/space/library` 북마크는 목록 조건을 보존해 Space로 연결된다. 기존 `/home/search`, `/home/documents/...`와 구형 Space 자산 탭 링크는 새 내부 경로로 연결한다.
 
 Studio 근거는 검색 포털이 아닌 자료 선택 작업 영역이다. 선택한 근거를 기본으로 표시하고 추가 검색 탭에서 후보를 수집한다. 후보 목록은 짧은 발췌와 선택 상태를 보여주며 제목을 선택하면 옆 검토 영역의 원문/비교 자료 탭에서 읽는다. 원문을 모든 결과 행 아래에 펼치지 않는다.
 

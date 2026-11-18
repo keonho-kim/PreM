@@ -101,9 +101,9 @@ async function click(page, name, role = 'button') {
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/space-search-home.png'),
     });
-    await click(a, '자료 관리', 'link');
+    assert.equal(await a.$('a[href="/home/space/library"]'), null);
     await a.waitForSelector('.space-gallery');
-    await click(a, 'Space 검색으로', 'link');
+    await a.waitForSelector('.space-asset button[aria-label$="메뉴"]');
     await a.waitForSelector('#library-search', { visible: true });
     await a.type('#library-search', '운영');
     await a.keyboard.press('Enter');

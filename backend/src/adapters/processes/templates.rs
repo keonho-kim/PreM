@@ -25,6 +25,7 @@ impl templates::Extractor for Runtime {
                     Error::Processing("template_runtime_missing") => {
                         templates::Error::MissingRuntime
                     }
+                    Error::Processing("document_step_timeout") => templates::Error::TimedOut,
                     Error::Storage => templates::Error::Storage,
                     _ => templates::Error::Failed,
                 })

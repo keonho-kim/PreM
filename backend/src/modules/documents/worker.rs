@@ -34,6 +34,7 @@ impl Documents {
             }
         })
     }
+    #[tracing::instrument(skip_all, fields(job_id = %job.id, format = %job.format))]
     pub(super) async fn extract_job(
         &self,
         mut job: Job,
@@ -60,6 +61,9 @@ impl Documents {
                 .await
                 .map_err(|e| match e {
                     crate::modules::templates::Error::Cancelled => Error::Cancelled,
+                    crate::modules::templates::Error::TimedOut => {
+                        Error::Processing("document_step_timeout")
+                    }
                     crate::modules::templates::Error::MissingRuntime => {
                         Error::Processing("template_runtime_missing")
                     }

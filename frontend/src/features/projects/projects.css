@@ -41,12 +41,6 @@
 .form-message.error {
   color: var(--color-error);
 }
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-block-start: 12px;
-}
 @media (max-width: 40rem) {
   .project-dialog {
     padding: 20px;

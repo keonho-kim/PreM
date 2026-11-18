@@ -179,3 +179,5 @@ Admin 일반 설정의 토큰 변경은 현재 서버 실행에만 적용한다.
 `scripts/release/verify.py`는 다른 경로에 풀고 PATH에서 개발 도구를 제거한 환경에서 OCR 모델·Sharp·Python 패키지 로딩, 스캔 PDF/Office/HWP 추출, PPTX 생성·PNG 렌더링, HTTP 시작과 재시작을 검증한다. Linux는 libstdc++·libgcc·libatomic과 시스템 인증서가 없을 때 사용할 공개 CA 인증서를 포함하며 `scripts/release/verify-linux.sh`로 추가 패키지가 없는 Ubuntu 24.04를 네트워크 없이 검사한다. 각 아카이브와 함께 SHA-256 체크섬을 생성한다. Linux OS 요구사항은 glibc 2.39 이상, macOS는 14 이상이다. libc/OS 프레임워크와 외부 LLM 추론 서비스는 호스트 책임이다. 파일 이름은 `PreM-vYYYYMMDD-{linux-arm64,linux-amd64,macos-arm64}.tar.gz`다.
 
 PDF 해석에 필요한 Kordoc 내장 WASM과 제3자 고지도 문서 런타임의 일부다. manifest는 WASM 파일을 포함해 검증하며, OCR 모델은 설치 번들을 읽어 앱 전용의 쓰기 가능한 캐시에 준비한다. 패키지 검증에서도 설치 경로에 쓰는 대신 독립 OCR 캐시를 사용한다.
+
+문서 읽기와 PPTX 자료 준비는 외부 프로세스 호출마다 최대 30분을 허용한다. 사용자 취소·서버 종료 시 자식을 회수한다. 파일·메모리·CPU 보호 한도와 모델 요청 제한 시간은 별도로 적용한다.

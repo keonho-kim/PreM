@@ -65,19 +65,29 @@ const project = createRoute({
   path: 'studio/$projectId',
   component: lazyRouteComponent(() => import('@/pages/studio-project-page'), 'StudioProjectPage'),
 });
+function librarySearch({ tab, q, ...rest }: Record<string, string>) {
+  return { ...rest, scope: tab ?? rest.scope ?? 'all', ...(q ? { name: q } : {}) };
+}
 const space = createRoute({
   getParentRoute: () => root,
   path: 'space',
   beforeLoad: ({ search }) => {
-    if ('tab' in search || 'status' in search)
-      throw redirect({ to: '/space/library', search, replace: true });
+    if ('tab' in search || (search.q && 'status' in search && !('scope' in search)))
+      throw redirect({ to: '/space', search: librarySearch(search), replace: true });
   },
   component: lazyRouteComponent(loadSearchPage, 'SearchPage'),
 });
 const library = createRoute({
   getParentRoute: () => root,
   path: 'space/library',
-  component: lazyRouteComponent(() => import('@/pages/space-page'), 'SpacePage'),
+  beforeLoad: ({ search, location }) => {
+    throw redirect({
+      to: '/space',
+      search: librarySearch(search),
+      hash: location.hash,
+      replace: true,
+    });
+  },
 });
 const document = createRoute({
   getParentRoute: () => root,

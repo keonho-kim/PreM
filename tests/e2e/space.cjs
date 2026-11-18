@@ -87,8 +87,6 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
     });
     await notifications(a, false);
     await a.click('.app-navigation a[href="/home/space"]');
-    await a.waitForSelector('a[href="/home/space/library"]');
-    await a.click('a[href="/home/space/library"]');
     await a.waitForSelector('.space-asset');
     await b.reload({ waitUntil: 'networkidle0' });
     await b.waitForSelector('.space-asset');
@@ -146,7 +144,7 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
     await a.waitForFunction(() => document.activeElement?.getAttribute('title') === '자료 메뉴');
     const old = await fetch(base + `/api/v1/space/references/${originalId}/download?version=1`);
     assert.deepEqual(Buffer.from(await old.arrayBuffer()), fs.readFileSync(file('팀 운영.docx')));
-    await a.click('#space-templates-tab');
+    await a.click('[role="tab"][aria-controls$="-content-templates"]');
     await a.waitForSelector('.space-empty');
     await upload(a, [file('사내 소개.pptx')], '사내 발표 템플릿');
     await a.waitForSelector('.space-asset');
@@ -154,8 +152,13 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
       path: path.join(captures, 'space-templates-production.png'),
       fullPage: true,
     });
-    await a.click('#space-all-tab');
-    assert.ok(await a.$eval('#space-all-tab', (n) => n.getBoundingClientRect().height >= 44));
+    await a.click('[role="tab"][aria-controls$="-content-all"]');
+    assert.ok(
+      await a.$eval(
+        '[role="tab"][aria-controls$="-content-all"]',
+        (n) => n.getBoundingClientRect().height >= 44,
+      ),
+    );
     await a.waitForFunction(() => document.querySelectorAll('.space-asset').length === 2);
     assert.match(await a.$eval('.space-gallery', (n) => n.textContent), /레퍼런스/);
     assert.match(await a.$eval('.space-gallery', (n) => n.textContent), /템플릿/);
@@ -164,34 +167,52 @@ const { fixtures, button, action, upload, rename, notifications } = require('./s
     );
     assert.ok(links.some((url) => url.includes('/references/')));
     assert.ok(links.some((url) => url.includes('/templates/')));
-    await a.focus('#space-all-tab');
+    await a.focus('[role="tab"][aria-controls$="-content-all"]');
     const beforeArrow = a.url();
     await a.keyboard.press('ArrowRight');
-    await a.waitForFunction(() => document.activeElement?.id === 'space-references-tab');
+    await a.waitForFunction(() =>
+      document.activeElement?.matches('[role="tab"][aria-controls$="-content-references"]'),
+    );
     assert.equal(a.url(), beforeArrow);
     await a.keyboard.press('Enter');
     await a.waitForFunction(
       () =>
-        document.querySelector('#space-references-tab')?.getAttribute('aria-selected') === 'true',
+        document
+          .querySelector('[role="tab"][aria-controls$="-content-references"]')
+          ?.getAttribute('aria-selected') === 'true',
     );
     await a.goBack({ waitUntil: 'networkidle0' });
     await a.waitForFunction(
-      () => document.querySelector('#space-all-tab')?.getAttribute('aria-selected') === 'true',
+      () =>
+        document
+          .querySelector('[role="tab"][aria-controls$="-content-all"]')
+          ?.getAttribute('aria-selected') === 'true',
     );
     await notifications(a);
     await button(a, '.space-uploads button', '완료 항목 정리');
     await notifications(a, false);
     await a.screenshot({ path: path.join(captures, 'space-all-production.png'), fullPage: true });
-    await a.click('.space-heading button');
+    await a.click('.space-search-heading button');
     await button(a, '[role="menuitem"]', '템플릿 올리기');
     await a.waitForSelector('.space-dialog input[type="file"]');
+    assert.ok(
+      await a.$eval('.space-dialog .dialog-actions', (row) => {
+        const [cancel, submit] = Array.from(row.children, (button) =>
+          button.getBoundingClientRect(),
+        );
+        return submit.left - cancel.right >= 8 || submit.top - cancel.bottom >= 8;
+      }),
+      'Upload actions must retain a gap on direct Space entry',
+    );
     assert.equal(await a.$eval('.space-dialog input[type="file"]', (n) => n.accept), '.pptx');
     await a.keyboard.press('Escape');
     await a.waitForSelector('.space-dialog', { hidden: true });
     // Failed transmission can retry with the original idempotency key.
-    await a.click('#space-references-tab');
+    await a.click('[role="tab"][aria-controls$="-content-references"]');
     await a.waitForFunction(() =>
-      document.querySelector('.space-heading button')?.textContent.includes('레퍼런스 올리기'),
+      document
+        .querySelector('.space-search-heading button')
+        ?.textContent.includes('레퍼런스 올리기'),
     );
     let failUpload = true;
     await a.setRequestInterception(true);

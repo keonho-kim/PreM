@@ -48,10 +48,9 @@ impl Runtime {
             .current_dir(dir)
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .env("TMPDIR", dir);
-        self.run(cmd, cancel.clone()).await.map_err(|e| match e {
-            Error::Cancelled => Error::Cancelled,
-            _ => Error::Processing("template_extract_failed"),
-        })?;
+        supervision::run_document("import_slides", cmd, cancel.clone())
+            .await
+            .map_err(import_error)?;
         let mut result: Analysis = Self::json(&dir.join("result.json"))
             .await
             .map_err(|_| Error::Processing("template_extract_failed"))?;
@@ -68,9 +67,9 @@ impl Runtime {
             .arg(&self.root)
             .arg(dir)
             .current_dir(dir);
-        self.run(render, cancel.clone())
+        supervision::run_document("render_slides", render, cancel.clone())
             .await
-            .map_err(|_| Error::Processing("template_extract_failed"))?;
+            .map_err(import_error)?;
         let previews: Vec<Preview> = Self::json(&dir.join("previews.json"))
             .await
             .map_err(|_| Error::Processing("template_extract_failed"))?;
@@ -107,5 +106,12 @@ impl Runtime {
             .await
             .map_err(|_| Error::Storage)?;
         Ok((result, blob))
+    }
+}
+
+fn import_error(error: Error) -> Error {
+    match error {
+        Error::Cancelled | Error::Processing("document_step_timeout") => error,
+        _ => Error::Processing("template_extract_failed"),
     }
 }

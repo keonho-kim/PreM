@@ -18,6 +18,8 @@ pub(crate) struct Input {
 pub(crate) enum Error {
     #[error("템플릿 추출이 중단되었습니다.")]
     Cancelled,
+    #[error("템플릿 준비 시간이 초과되었습니다.")]
+    TimedOut,
     #[error("템플릿을 추출할 수 없습니다.")]
     Failed,
     #[error("템플릿 도구가 준비되지 않았습니다.")]

@@ -33,7 +33,7 @@ impl Runtime {
             .current_dir(dir)
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .env("TMPDIR", dir);
-        self.run(scan, cancel.clone()).await?;
+        supervision::run_document("extract_reference_objects", scan, cancel.clone()).await?;
         let mut render = Command::new(&manifest.node);
         render
             .arg("--max-old-space-size=512")
@@ -47,7 +47,7 @@ impl Runtime {
             .arg(&self.root)
             .arg(dir)
             .current_dir(dir);
-        self.run(render, cancel.clone()).await?;
+        supervision::run_document("render_reference_objects", render, cancel.clone()).await?;
         let prepared: Prepared = Self::json(&dir.join("material-previews.json")).await?;
         if prepared.files.len() > 1000 || prepared.materials.len() > 10000 {
             return Err(Error::Processing("extraction_limit"));

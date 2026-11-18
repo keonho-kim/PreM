@@ -18,7 +18,6 @@ vi.mock('@/features/search', () => ({
   loadSearchPage: async () => ({ SearchPage: () => <p>Search body</p> }),
 }));
 vi.mock('@/pages/projects-page', () => ({ ProjectsPage: () => <p>Home body</p> }));
-vi.mock('@/pages/space-page', () => ({ SpacePage: () => <p>Library body</p> }));
 vi.mock('@/pages/studio-project-page', () => ({
   StudioProjectPage: () => <p>Studio {useParams({ strict: false }).projectId}</p>,
 }));
@@ -51,7 +50,6 @@ it('keeps query values as literal strings and preserves browser back/forward', a
 });
 it.each([
   ['/home/search?q=분기', '/home/space'],
-  ['/home/space?tab=templates', '/home/space/library'],
   [
     '/home/documents/references/abc?job=job-001&page=page-001',
     '/home/space/documents/references/abc',
@@ -93,3 +91,18 @@ it.each([
     expect(screen.queryByText('Home body')).toBeNull();
   },
 );
+
+it.each([
+  '/home/space/library?tab=templates&q=old&status=archived',
+  '/home/space?tab=templates&q=old&status=archived',
+])('preserves bookmarked asset-list filters on the Space home for %s', async (path) => {
+  const router = createAppRouter(createMemoryHistory({ initialEntries: [path] }));
+  await renderRouted(<RouterProvider router={router} />);
+  await screen.findByText('Search body');
+  expect(router.history.location.pathname).toBe('/home/space');
+  expect(router.state.location.search).toEqual({
+    scope: 'templates',
+    name: 'old',
+    status: 'archived',
+  });
+});

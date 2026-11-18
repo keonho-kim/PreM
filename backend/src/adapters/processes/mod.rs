@@ -14,6 +14,7 @@ mod presentation_layers;
 mod presentation_media;
 mod presentations;
 mod reference_pptx;
+mod supervision;
 mod templates;
 use crate::modules::{assets::AssetService, documents::Error};
 use serde::Deserialize;
@@ -21,7 +22,6 @@ use sha2::{Digest, Sha256};
 use std::{
     path::{Path, PathBuf},
     sync::Arc,
-    time::Duration,
 };
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -188,35 +188,7 @@ impl Runtime {
         Ok((dir, source))
     }
     async fn run(&self, cmd: Command, cancel: CancellationToken) -> Result<(), Error> {
-        if self.run_status(cmd, cancel).await?.success() {
-            Ok(())
-        } else {
-            Err(Error::Processing("extract_failed"))
-        }
-    }
-    async fn run_status(
-        &self,
-        mut cmd: Command,
-        cancel: CancellationToken,
-    ) -> Result<std::process::ExitStatus, Error> {
-        cmd.stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .kill_on_drop(true);
-        let mut child = cmd
-            .spawn()
-            .map_err(|_| Error::Processing("runtime_missing"))?;
-        let outcome = tokio::select! {
-            () = cancel.cancelled() => Err(Error::Cancelled),
-            result = tokio::time::timeout(Duration::from_secs(180), child.wait()) => match result {
-                Ok(status) => status.map_err(|_| Error::Processing("extract_failed")),
-                Err(_) => Err(Error::Processing("extraction_timeout")),
-            }
-        };
-        if outcome.is_err() {
-            let _ = child.kill().await;
-            let _ = child.wait().await;
-        }
-        outcome
+        supervision::run_auxiliary(cmd, cancel).await
     }
     async fn json<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, Error> {
         let file = tokio::fs::File::open(path)
