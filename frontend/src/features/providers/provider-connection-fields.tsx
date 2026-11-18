@@ -2,6 +2,7 @@
 // Pattern: Replacement-only sensitive fields and an optional disclosure for operational details.
 // Usage: ProviderForm owns drafts; blank replacement fields preserve the saved connection.
 // Related: provider-form.tsx, model-picker.tsx, api.ts.
+import { ModelTokenFields } from './model-token-fields';
 import { ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -126,6 +127,13 @@ export function ProviderConnectionFields({
         </CollapsibleContent>
       </Collapsible>
       {modelPicker}
+      <ModelTokenFields
+        prefix={prefix}
+        draft={draft}
+        llm={option?.category === 'llm'}
+        disabled={pending}
+        update={update}
+      />
       <Collapsible>
         <CollapsibleTrigger asChild>
           <Button type="button" variant="ghost" className="provider-options-trigger">
@@ -176,30 +184,6 @@ export function ProviderConnectionFields({
               </SelectContent>
             </Select>
           </div>
-          {option?.category === 'llm' && (
-            <div>
-              <Label htmlFor={`${prefix}-output`}>작성 출력 한도 (토큰) · 선택</Label>
-              <Input
-                id={`${prefix}-output`}
-                name="max_output_tokens"
-                type="number"
-                min={256}
-                max={65536}
-                step={1}
-                value={draft.max_output_tokens ?? ''}
-                aria-describedby={`${prefix}-output-help`}
-                readOnly={pending}
-                onChange={(e) =>
-                  update('max_output_tokens', e.target.value === '' ? null : Number(e.target.value))
-                }
-              />
-              <p id={`${prefix}-output-help`} className="muted">
-                빈 값은 작업별 기본 한도입니다. 256~65,536 범위로 지정하며, 추론형 모델은 추론과
-                최종 답변이 이 한도를 함께 사용합니다. 모델 문맥 크기는 모델 서버에서 별도로
-                설정합니다.
-              </p>
-            </div>
-          )}
         </CollapsibleContent>
       </Collapsible>
     </div>

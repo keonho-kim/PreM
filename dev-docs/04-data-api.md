@@ -212,3 +212,17 @@ PPT 생성 UI는 `connection_id`와 `model_version`을 보내지 않는다. `POS
 ## V20 슬라이드 대화 수정
 
 대화 요청은 원본 deck revision과 선택 slide/object/field 범위를 고정한다. 수정안은 즉시 적용하지 않고 비교·검토 후 새 revision으로 게시한다. 여러 장표는 개별 제안을 checkpoint하고 전체 준비 후 함께 적용한다. 후속 객체·세션·실행 계약은 V21 이후 절을 따른다.
+
+## V34 원본 페이지 대목차
+
+문서 상세 API의 `pages[].alignment`는 완료한 처리 작업에 귀속된다. `section`·`preceding_section`은 현재 장 및 페이지 중간 전환 시 확인한 이전 장이다. `toc_block`·`toc_line`(0부터 시작)·`toc_printed_start`는 원본 목차 근거, `evidence_block`은 현재 페이지의 근거다. `source_page`는 원본 위치이고 `alignment.printed_page`는 선택적으로 보정한 추정값이다. `unknown`은 미확정, `range`는 앞뒤 장 시작점에 따른 범위 추정이다. `null`은 결과가 없는 과거 작업·처리 중인 페이지·물리 경계가 없는 형식 등을 뜻한다. V34는 기존 추출과 목차를 변경하지 않는다.
+
+## V35 모델별 토큰 설정
+
+LLM 연결의 `max_output_tokens`는 작성·연결 테스트·LLM 기반 판정 요청의 생성 한도다. LM Studio의 LLM·Decision 연결은 `context_length`와 `physical_batch_size`를 선택적으로 같은 설정 리비전에 저장한다. 미지정한 값은 서버 기본값을 따른다. Admin의 모델 준비 명령(`POST /api/v1/admin/llm/providers/{id}/prepare`, `expected_version`)은 현재 인벤토리에서 같은 모델·설정을 먼저 찾고, 필요할 때만 LM Studio의 `/api/v1/models/load`를 호출한다. 물리 배치를 지정하면 평가 배치도 같은 값으로 요청한다. 모델 키를 선택하면 재로딩 후에도 같은 모델을 찾을 수 있다.
+
+토큰 로딩 설정이 있는 추론은 각 요청에 고정된 조건으로 실제 인스턴스를 선택한다. 서버 재시작 등으로 일치하는 인스턴스가 사라지면 Admin에서 다시 준비한다. 준비한 인스턴스의 메모리 사용·언로드는 LM Studio에서 관리한다. 컨텍스트, 물리 배치, 최대 출력은 별도 값이며 로딩 설정은 LM Studio 프로토콜에서 제공한다.
+
+## V36 원문 목차
+
+문서 상세의 `source_outline`은 작업별 대목차와 그 아래 `children`을 원본 순서로 반환한다. 각 행은 제목·선택적 인쇄 쪽수·원본 블록 ID·블록 안의 줄 번호를 가진다. `document_source_entries`는 작업/순번과 같은 작업 내 부모 순번을 참조하며 페이지 소속과 같은 트랜잭션에서 공개된다. 이전 완료 작업에는 빈 목록을 반환한다. 새 LM Studio 연결의 Admin 물리 배치 기본값은 2048이며 저장된 연결의 값과 서버에서 관리하도록 명시한 빈 값은 유지한다.

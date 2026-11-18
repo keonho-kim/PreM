@@ -31,6 +31,8 @@ it('sends only editable settings and the explicit version precondition', () => {
     enabled: true,
     expected_version: 2,
     max_output_tokens: null,
+    context_length: null,
+    physical_batch_size: null,
     clear_secret: false,
   });
 });

@@ -15,6 +15,8 @@ const providerSchema = z.object({
   base_url: z.string(),
   model_identifier: z.string(),
   timeout_seconds: z.number().int(),
+  context_length: z.number().int().positive().nullish(),
+  physical_batch_size: z.number().int().positive().nullish(),
   max_output_tokens: z.number().int().min(256).max(65536).nullish(),
   enabled: z.boolean(),
   has_secret: z.boolean(),
@@ -29,6 +31,8 @@ export type ProviderDraft = Pick<
   | 'model_identifier'
   | 'timeout_seconds'
   | 'max_output_tokens'
+  | 'context_length'
+  | 'physical_batch_size'
   | 'enabled'
 >;
 export const recordSchema = z.object({
@@ -68,6 +72,8 @@ export const saveProvider = (
       base_url: draft.base_url,
       model_identifier: draft.model_identifier,
       timeout_seconds: draft.timeout_seconds,
+      context_length: draft.context_length ?? null,
+      physical_batch_size: draft.physical_batch_size ?? null,
       max_output_tokens: draft.max_output_tokens ?? null,
       enabled: draft.enabled,
       expected_version,
@@ -109,4 +115,11 @@ export const discoverModels = (input: DiscoveryInput, signal: AbortSignal) =>
     body: JSON.stringify(input),
     signal,
     timeout: 635000,
+  });
+
+export const prepareModel = (provider: Provider) =>
+  request(`${root}/${provider.id}/prepare`, z.object({ instance_id: z.string() }), {
+    method: 'POST',
+    body: JSON.stringify({ expected_version: provider.version }),
+    timeout: (provider.timeout_seconds + capacityBounds.wait + 5) * 1000,
   });

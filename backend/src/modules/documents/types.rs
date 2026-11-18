@@ -37,6 +37,14 @@ pub(crate) enum Error {
     #[error("문서 처리 설정을 기다리고 있습니다.")]
     WaitingConfiguration,
 }
+impl From<crate::modules::model_execution::Error> for Error {
+    fn from(e: crate::modules::model_execution::Error) -> Self {
+        match e {
+            crate::modules::model_execution::Error::Cancelled => Self::Cancelled,
+            other => Self::Processing(other.code()),
+        }
+    }
+}
 #[derive(Clone, Debug, Serialize)]
 pub(crate) struct Job {
     pub id: Uuid,
@@ -99,6 +107,7 @@ pub(crate) struct Block {
 }
 #[derive(Serialize)]
 pub(crate) struct Page {
+    pub alignment: Option<super::PageAlignment>,
     pub preview: Option<String>,
     pub id: Uuid,
     pub ordinal: i64,
@@ -108,6 +117,7 @@ pub(crate) struct Page {
 }
 #[derive(Serialize)]
 pub(crate) struct Detail {
+    pub source_outline: Vec<super::SourceEntry>,
     pub reuse_ready: bool,
     pub template: Option<crate::modules::templates::Analysis>,
     pub template_extractable: bool,

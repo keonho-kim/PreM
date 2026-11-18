@@ -54,7 +54,7 @@ async fn complete(
 ) -> axum::response::Response {
     let input: Value =
         serde_json::from_str(body["messages"][1]["content"].as_str().unwrap()).unwrap();
-    if input["state"].get("regions").is_some() {
+    if input.get("state").is_some() && input["questions"].is_object() {
         let answers = input["questions"]
             .as_object()
             .unwrap()

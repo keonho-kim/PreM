@@ -58,13 +58,35 @@ async fn complete(State(m): State<Arc<Model>>, Json(input): Json<Value>) -> Json
         serde_json::from_str(input["messages"][1]["content"].as_str().unwrap()).unwrap();
     let mut answers = serde_json::Map::new();
     for (id, _) in prompt["questions"].as_object().unwrap() {
-        let text = prompt["state"]["regions"][id]["text"].as_str().unwrap();
-        let value =
-            if text.contains("...") || text.contains("Contents") || text.contains("CONTENTS") {
+        let state = &prompt["state"];
+        let text = state["regions"][id]["text"].as_str().unwrap_or_default();
+        let value = if let Some(lines) = state["lines"].as_array() {
+            let i = id.trim_start_matches('r').parse::<usize>().unwrap();
+            if lines[i].as_str().unwrap().contains("Plan") {
                 "1"
             } else {
                 "0"
-            };
+            }
+        } else if state["current"].is_array() {
+            if state["current"].to_string().contains("delivery process") {
+                if id == "section" {
+                    prompt["questions"][id]["criteria"]
+                        .as_object()
+                        .unwrap()
+                        .iter()
+                        .find(|(_, v)| v.as_str().unwrap().contains("Delivery Plan"))
+                        .map_or("0", |(k, _)| k.as_str())
+                } else {
+                    "1"
+                }
+            } else {
+                "0"
+            }
+        } else if text.contains("...") || text.contains("Contents") || text.contains("CONTENTS") {
+            "1"
+        } else {
+            "0"
+        };
         answers.insert(id.clone(), json!({"type":"choice","choice":value}));
     }
     let text = if m.invalid.load(Ordering::SeqCst) {

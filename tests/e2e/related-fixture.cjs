@@ -31,7 +31,7 @@ async function model() {
       for await (const chunk of req) text += chunk;
       assert.ok(Buffer.byteLength(text) < 32768);
       const body = JSON.parse(text);
-      if (body.state?.regions) {
+      if (body.state && body.questions && !body.state.candidates) {
         res.setHeader('Content-Type', 'application/json');
         res.end(
           JSON.stringify({
@@ -39,7 +39,14 @@ async function model() {
             answers: Object.fromEntries(
               Object.keys(body.questions).map((id) => [
                 id,
-                { type: 'choice', choice: '0', probabilities: { 0: 0.9, 1: 0.1 }, confidence: 0.9 },
+                {
+                  type: 'choice',
+                  choice: '0',
+                  probabilities: Object.fromEntries(
+                    Object.keys(body.questions[id].criteria).map((k) => [k, k === '0' ? 1 : 0]),
+                  ),
+                  confidence: 1,
+                },
               ]),
             ),
           }),

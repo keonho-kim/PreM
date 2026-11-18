@@ -27,7 +27,7 @@ pub(super) async fn evaluate(
         system: crate::prompts::decisions::EVALUATE.into(),
         prompt: serde_json::to_string(&batch).map_err(|_| Error::InvalidResponse)?,
         schema: Some(schema.clone()),
-        max_tokens: 2048,
+        max_tokens: c.max_output_tokens.unwrap_or(2048),
     };
     let r = client.complete(c, input).await?;
     let v: Value = crate::adapters::model_http::parse_json(r.text.as_bytes())

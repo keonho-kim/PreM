@@ -7,6 +7,7 @@ pub(crate) mod diagnostics;
 pub(crate) mod documents;
 pub(crate) mod editing;
 pub(crate) mod outlines;
+pub(crate) mod page_alignment;
 pub(crate) mod presentations;
 pub(crate) mod relations;
 

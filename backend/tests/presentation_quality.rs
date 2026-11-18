@@ -100,7 +100,7 @@ async fn successful_slide_is_reused_after_later_render_commit_failure_and_restar
         .unwrap()
         .collect::<Result<_, _>>()
         .unwrap();
-    db.execute_batch("DROP TABLE presentation_render_layers; DROP TABLE presentation_canvas_commands; DROP TABLE presentation_manual_designs; DROP TABLE presentation_quality_checks; DROP TABLE presentation_render_cache; ALTER TABLE llm_provider_config_versions DROP COLUMN max_output_tokens; DROP TABLE IF EXISTS decision_settings; DELETE FROM refinery_schema_history WHERE version>=29; PRAGMA user_version=28;").unwrap();
+    db.execute_batch("DROP TABLE presentation_render_layers; DROP TABLE presentation_canvas_commands; DROP TABLE presentation_manual_designs; DROP TABLE presentation_quality_checks; DROP TABLE presentation_render_cache; ALTER TABLE llm_provider_config_versions DROP COLUMN physical_batch_size; ALTER TABLE llm_provider_config_versions DROP COLUMN context_length; ALTER TABLE llm_provider_config_versions DROP COLUMN max_output_tokens; DROP TABLE IF EXISTS document_source_entries; DROP TABLE IF EXISTS document_page_alignments; DROP TABLE IF EXISTS document_alignment; DROP TABLE IF EXISTS decision_settings; DELETE FROM refinery_schema_history WHERE version>=29; PRAGMA user_version=28;").unwrap();
     let mut app = Application::open(root.path()).unwrap();
     app.start_processing();
     let preserved = wait_run(&app, &project, "succeeded").await;

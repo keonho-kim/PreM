@@ -6,6 +6,23 @@ use super::*;
 use std::{future::Future, pin::Pin};
 pub(crate) type Work<T> = Pin<Box<dyn Future<Output = Result<T, Error>> + Send>>;
 pub(crate) trait Store: Send + Sync {
+    fn alignment_checkpoints(
+        &self,
+        job: Uuid,
+    ) -> Work<std::collections::HashMap<String, serde_json::Value>>;
+    fn save_alignment(
+        &self,
+        job: Job,
+        key: String,
+        result: serde_json::Value,
+        request: Uuid,
+    ) -> Work<()>;
+    fn publish_alignment(
+        &self,
+        job: Job,
+        entries: Vec<SourceEntry>,
+        pages: Vec<(Uuid, PageAlignment)>,
+    ) -> Work<()>;
     fn current_job(&self, id: Uuid) -> Work<Job>;
     fn begin_node(&self, j: Job, n: crate::workflows::engine::Node) -> Work<bool>;
     fn finish_node(&self, j: Job, n: crate::workflows::engine::Node) -> Work<()>;

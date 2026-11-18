@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[derive(Clone)]
 pub(crate) struct ProviderApi {
+    pub model_loader: super::ModelLoader,
     pub execution: crate::modules::model_execution::Execution,
     pub decisions: crate::modules::decisions::Decisions,
     pub registry: Registry,
@@ -40,6 +41,10 @@ pub(super) fn router(api: ProviderApi) -> Router {
         .route("/api/v1/admin/llm/providers", get(list))
         .route("/api/v1/admin/llm/providers/{id}", get(detail).put(save))
         .route("/api/v1/admin/llm/providers/{id}/models", get(models))
+        .route(
+            "/api/v1/admin/llm/providers/{id}/prepare",
+            axum::routing::post(super::model_load::prepare),
+        )
         .route(
             "/api/v1/admin/llm/providers/{id}/test",
             axum::routing::post(test),
@@ -67,6 +72,8 @@ struct ProviderDto {
     model_identifier: String,
     timeout_seconds: u32,
     max_output_tokens: Option<u32>,
+    context_length: Option<u32>,
+    physical_batch_size: Option<u32>,
     enabled: bool,
     has_secret: bool,
     created_at: i64,
@@ -84,6 +91,8 @@ impl From<Provider> for ProviderDto {
             model_identifier: s.model_identifier,
             timeout_seconds: s.timeout_seconds,
             max_output_tokens: s.max_output_tokens,
+            context_length: s.context_length,
+            physical_batch_size: s.physical_batch_size,
             enabled: s.enabled,
             has_secret: p.encrypted_secret.is_some(),
             created_at: p.created_at,
@@ -100,6 +109,8 @@ struct SaveBody {
     model_identifier: String,
     timeout_seconds: u32,
     max_output_tokens: Option<u32>,
+    context_length: Option<u32>,
+    physical_batch_size: Option<u32>,
     enabled: bool,
     api_key: Option<String>,
     #[serde(default)]
@@ -223,6 +234,8 @@ async fn save(
                 model_identifier: b.model_identifier,
                 timeout_seconds: b.timeout_seconds,
                 max_output_tokens: b.max_output_tokens,
+                context_length: b.context_length,
+                physical_batch_size: b.physical_batch_size,
                 enabled: b.enabled,
             },
             b.api_key,

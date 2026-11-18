@@ -20,7 +20,7 @@ async function model(options = {}) {
     for await (const part of req) body += part;
     const input = JSON.parse(body);
     const context = JSON.parse(input.messages[1].content);
-    if (context.state?.regions) {
+    if (context.state && context.questions) {
       const answers = Object.fromEntries(
         Object.keys(context.questions).map((key) => [key, { type: 'choice', choice: '0' }]),
       );

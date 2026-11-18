@@ -33,6 +33,7 @@ impl Evaluator for DecisionAdapter {
         let this = self.clone();
         Box::pin(async move {
             if c.kind.is_system() {
+                let c = crate::adapters::model_http::lm_load::resolve(&this.http, c).await?;
                 native::evaluate(&this.http, c, batch).await
             } else {
                 llm::evaluate(this.llm, c, batch).await

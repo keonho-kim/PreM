@@ -2,11 +2,13 @@
 // Pattern: Async library calls wrap short synchronous transactions, never external work.
 // Usage: App wires this store to Documents and its common-engine driver.
 // Related: queries.rs, jobs.rs, results.rs, modules/documents/ports.rs.
+mod alignment;
 mod execution;
 mod jobs;
 mod materials;
 mod queries;
 mod results;
+mod source_outline;
 use super::{Queue, Unavailable};
 use crate::modules::documents::*;
 use rusqlite::params;
@@ -23,6 +25,38 @@ fn failure(e: rusqlite::Error) -> Error {
     Error::Storage
 }
 impl Store for SqliteDocuments {
+    fn alignment_checkpoints(
+        &self,
+        job: Uuid,
+    ) -> Work<std::collections::HashMap<String, serde_json::Value>> {
+        let q = self.0.clone();
+        Box::pin(async move { q.call(move |db| alignment::load(db, job)).await })
+    }
+    fn save_alignment(
+        &self,
+        job: Job,
+        key: String,
+        result: serde_json::Value,
+        request: Uuid,
+    ) -> Work<()> {
+        let q = self.0.clone();
+        Box::pin(async move {
+            q.call(move |db| alignment::save(db, job, key, result, request))
+                .await
+        })
+    }
+    fn publish_alignment(
+        &self,
+        job: Job,
+        entries: Vec<SourceEntry>,
+        pages: Vec<(Uuid, PageAlignment)>,
+    ) -> Work<()> {
+        let q = self.0.clone();
+        Box::pin(async move {
+            q.call(move |db| alignment::publish(db, job, entries, pages))
+                .await
+        })
+    }
     fn current_job(&self, id: Uuid) -> Work<Job> {
         let q = self.0.clone();
         Box::pin(async move { q.call(move |db| queries::get(db, id)).await })

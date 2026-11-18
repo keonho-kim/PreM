@@ -37,6 +37,12 @@ pub(crate) struct ProviderDescriptor {
     pub structured_reason: Option<&'static str>,
 }
 impl ProviderKind {
+    pub fn is_lm_studio(self) -> bool {
+        matches!(
+            self,
+            Self::LmStudio | Self::LmStudioNative | Self::LmStudioDecision
+        )
+    }
     pub const ALL: &[Self] = &[
         Self::LmStudioNative,
         Self::Openai,

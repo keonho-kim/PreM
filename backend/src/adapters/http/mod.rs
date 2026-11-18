@@ -10,6 +10,8 @@ mod documents;
 mod frontend;
 mod health;
 mod model_capacity;
+mod model_load;
+pub(crate) use model_load::ModelLoader;
 mod model_discovery;
 mod outline_authoring;
 mod outlines;

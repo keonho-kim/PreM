@@ -63,12 +63,25 @@ async fn evaluate(State(m): State<Arc<Model>>, Json(v): Json<Value>) -> Json<Val
     } else {
         serde_json::from_str::<Value>(v["messages"][1]["content"].as_str().unwrap()).unwrap()
     };
-    if payload["state"].get("regions").is_some() {
+    if payload["questions"].is_object() && payload["state"].get("candidates").is_none() {
         let answers = payload["questions"]
             .as_object()
             .unwrap()
-            .keys()
-            .map(|id| (id.clone(), if native { json!({"type":"choice","choice":"0","probabilities":{"0":0.9,"1":0.1},"confidence":0.9}) } else { json!({"type":"choice","choice":"0"}) }))
+            .iter()
+            .map(|(id, q)| {
+                let answer = if native {
+                    let probs = q["criteria"]
+                        .as_object()
+                        .unwrap()
+                        .keys()
+                        .map(|k| (k.clone(), json!(if k == "0" { 1.0 } else { 0.0 })))
+                        .collect::<serde_json::Map<_, _>>();
+                    json!({"type":"choice","choice":"0","probabilities":probs,"confidence":1.0})
+                } else {
+                    json!({"type":"choice","choice":"0"})
+                };
+                (id.clone(), answer)
+            })
             .collect::<serde_json::Map<_, _>>();
         return Json(if native {
             json!({"model":v["model"],"answers":answers})

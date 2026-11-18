@@ -31,6 +31,16 @@ const jobSchema = z.object({
 });
 export type Job = z.infer<typeof jobSchema>;
 const pageSchema = z.object({
+  alignment: z
+    .object({
+      role: z.enum(['start', 'body', 'contents', 'divider', 'divider_start', 'range', 'unknown']),
+      section: z.string().nullable(),
+      preceding_section: z.string().nullable(),
+      printed_page: z.number().nullable(),
+      toc_block: z.uuid().nullable(),
+      evidence_block: z.uuid().nullable(),
+    })
+    .nullish(),
   id: z.uuid(),
   ordinal: z.number(),
   source_page: z.number().nullable(),
@@ -48,7 +58,16 @@ const templateSchema = z.object({
     )
     .default([]),
 });
+const sourceEntry = z.object({
+  title: z.string(),
+  block: z.uuid(),
+  line: z.number().int(),
+  printed: z.number().int().nullable(),
+});
 const detailSchema = z.object({
+  source_outline: z
+    .array(sourceEntry.extend({ children: z.array(sourceEntry).optional() }))
+    .optional(),
   reuse_ready: z.boolean().default(false),
   job: jobSchema,
   pages: z.array(pageSchema),

@@ -38,7 +38,7 @@ async fn every_catalog_provider_discovers_without_creating_configuration_or_hist
         let (status, output) = request(&router, "POST", DISCOVER, Some(body), None).await;
         assert_eq!(status, StatusCode::OK, "{kind}: {output}");
         if kind == "lm_studio_decision" {
-            assert_eq!(output, json!(["decision-instance"]));
+            assert_eq!(output, json!(["decision-instance", "download-key"]));
         } else {
             assert!(
                 output.as_array().unwrap().contains(&json!("model-test")),

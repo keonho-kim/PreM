@@ -109,7 +109,8 @@ pub(super) fn detail(
     } else {
         (None, "[]".into())
     };
-    let pages=db.prepare("SELECT p.id,p.ordinal,p.source_page,p.label,p.preview_blob_sha256,(SELECT count(*) FROM content_blocks b WHERE b.page_id=p.id) FROM document_pages p WHERE p.extraction_id=? ORDER BY ordinal").map_err(failure)?.query_map([job.extraction_id.map(|i|i.to_string())],|r|Ok(Page{id:uuid(r.get(0)?)?,ordinal:r.get(1)?,source_page:r.get(2)?,label:r.get(3)?,preview:r.get(4)?,block_count:r.get(5)?})).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
+    let mut pages=db.prepare("SELECT p.id,p.ordinal,p.source_page,p.label,p.preview_blob_sha256,(SELECT count(*) FROM content_blocks b WHERE b.page_id=p.id) FROM document_pages p WHERE p.extraction_id=? ORDER BY ordinal").map_err(failure)?.query_map([job.extraction_id.map(|i|i.to_string())],|r|Ok(Page{alignment:None,id:uuid(r.get(0)?)?,ordinal:r.get(1)?,source_page:r.get(2)?,label:r.get(3)?,preview:r.get(4)?,block_count:r.get(5)?})).map_err(failure)?.collect::<Result<Vec<_>,_>>().map_err(failure)?;
+    alignment::attach(db, job.id, &mut pages)?;
     let template:Option<(String,String,String)>=db.query_row("SELECT manifest_json,native_structure_json,bundle_blob_sha256 FROM template_extractions WHERE id=?",[job.id.to_string()],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?))).optional().map_err(failure)?;
     let (template, template_bundle) = match template {
         Some((m, n, b)) => (
@@ -131,6 +132,7 @@ pub(super) fn detail(
         )
         .map_err(failure)?;
     Ok(Detail {
+        source_outline: source_outline::load(db, job.id)?,
         reuse_ready,
         template,
         template_bundle,

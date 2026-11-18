@@ -11,6 +11,8 @@ export const draftFields = [
   'model_identifier',
   'timeout_seconds',
   'max_output_tokens',
+  'context_length',
+  'physical_batch_size',
   'enabled',
 ] as const;
 export type ConnectionValues = {
@@ -27,6 +29,10 @@ export function formValues(provider: Provider | null, option: ProviderOption): C
       base_url: provider?.base_url ?? option.base,
       model_identifier: provider?.model_identifier ?? '',
       timeout_seconds: provider?.timeout_seconds ?? 180,
+      context_length: provider?.context_length ?? null,
+      physical_batch_size: provider
+        ? (provider.physical_batch_size ?? null)
+        : (option.default_physical_batch_size ?? null),
       max_output_tokens: provider?.max_output_tokens ?? null,
       enabled: provider?.enabled ?? true,
     },

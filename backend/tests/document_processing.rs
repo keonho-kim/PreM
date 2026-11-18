@@ -186,6 +186,7 @@ async fn supported_documents_extract_offline_with_an_explicit_model() {
     let mut app = Application::open(root.path()).unwrap();
     configure(&app, &f).await;
     app.start_processing();
+    let mut pdf = None;
     for name in [
         "text.pdf",
         "scan.pdf",
@@ -216,6 +217,15 @@ async fn supported_documents_extract_offline_with_an_explicit_model() {
                 "{d}"
             );
         }
+        if name == "text.pdf" {
+            let a = &d["pages"][1]["alignment"];
+            assert_eq!(a["role"], "start", "{d}");
+            assert!(a["section"].as_str().unwrap().contains("Delivery Plan"));
+            assert_eq!(a["printed_page"], 8);
+            pdf = Some((item["id"].as_str().unwrap().to_string(), d["pages"].clone()));
+            assert_eq!(d["pages"][1]["source_page"], 2);
+            assert!(a["toc_block"].is_string() && a["evidence_block"].is_string());
+        }
         if name == "scan.pdf" {
             assert!(
                 d["warnings"]
@@ -226,6 +236,14 @@ async fn supported_documents_extract_offline_with_an_explicit_model() {
         }
     }
     app.shutdown().await.unwrap();
+    let (id, pages) = pdf.unwrap();
+    let calls = f.model.calls.load(Ordering::SeqCst);
+    let mut reopened = Application::open(root.path()).unwrap();
+    reopened.start_processing();
+    let d = wait(&reopened, "references", &id, "succeeded").await;
+    assert_eq!(d["pages"], pages);
+    assert_eq!(f.model.calls.load(Ordering::SeqCst), calls);
+    reopened.shutdown().await.unwrap();
 }
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn cancellation_fences_late_results_and_retry_reuses_extraction() {

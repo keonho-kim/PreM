@@ -82,6 +82,7 @@ impl Application {
             Arc::new(crate::adapters::decisions::DecisionAdapter::new(client)?),
         );
         let providers = http::ProviderApi {
+            model_loader: http::ModelLoader::new()?,
             execution,
             registry,
             decisions: decisions.clone(),

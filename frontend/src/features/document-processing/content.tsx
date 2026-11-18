@@ -2,6 +2,7 @@
 // Pattern: Server paging/filtering, safe React text and separate preview/selection controls.
 // Usage: ProcessingDialog supplies a fixed job revision; no source HTML is executed.
 // Related: api.ts, processing.css, status.tsx.
+import { SourceOutline } from './source-outline';
 import { ReferenceMaterials } from './reference-materials';
 import { ExtractedTable } from './extracted-table';
 import { useState } from 'react';
@@ -105,7 +106,8 @@ export function ExtractedContent({
               <SelectItem value="all">전체 영역</SelectItem>
               {detail.pages.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
-                  {p.label} · {p.block_count}개 항목
+                  {p.label}
+                  {p.alignment?.section && ` · ${p.alignment.section}`} · {p.block_count}개 항목
                 </SelectItem>
               ))}
             </SelectContent>
@@ -173,6 +175,7 @@ export function ExtractedContent({
         </div>
       </TabsContent>
       <TabsContent value="pages">
+        <SourceOutline entries={detail.source_outline} />
         <p className="field-hint">
           {detail.page_mode === 'section'
             ? '문서 구성에 따라 원본과 페이지 구분이 다를 수 있습니다.'
@@ -195,8 +198,28 @@ export function ExtractedContent({
                   <span>이 형식의 원본 미리보기는 제공되지 않습니다.</span>
                 )}
               </div>
+              {p.alignment && (
+                <p className="field-hint" id={`page-chapter-${p.id}`}>
+                  {p.alignment.preceding_section && `${p.alignment.preceding_section} → `}
+                  {p.alignment.section && `${p.alignment.section} · `}
+                  {
+                    {
+                      start: '장 시작',
+                      body: '본문',
+                      contents: '목차',
+                      divider: '간지',
+                      divider_start: '간지 · 장 시작',
+                      range: '장 경계 기준',
+                      unknown: '대목차 미확정',
+                    }[p.alignment.role]
+                  }
+                  {p.alignment.printed_page != null &&
+                    ` · 인쇄 쪽수 추정 ${p.alignment.printed_page}쪽`}
+                </p>
+              )}
               <Button
                 variant="ghost"
+                aria-describedby={p.alignment ? `page-chapter-${p.id}` : undefined}
                 onClick={() => {
                   setPage(p.id);
                   setOffset(0);

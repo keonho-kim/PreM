@@ -6,6 +6,8 @@ mod materials;
 pub(crate) use materials::NativeLocator;
 mod ports;
 pub(crate) use materials::{Material, MaterialCatalog, NativeMaterial, NativePackage};
+mod alignment;
+pub(crate) use alignment::{Entry as SourceEntry, PageAlignment};
 mod classification;
 mod execution;
 mod types;

@@ -3,10 +3,7 @@
 // Usage: Common document classify node; templates never enter this module.
 // Related: execution.rs, decisions/, adapters/sqlite/documents/results.rs.
 use super::*;
-use crate::modules::{
-    decisions::{Batch, Question},
-    model_execution,
-};
+use crate::modules::decisions::{Batch, Question};
 use std::collections::BTreeMap;
 use tokio_util::sync::CancellationToken;
 impl Documents {
@@ -21,13 +18,22 @@ impl Documents {
             .await?
             .is_empty()
         {
-            return Ok(());
+            return self.align_pages(&job, &cancel).await;
         }
         job = self.store.pin(job).await?;
         if job.status == "waiting_configuration" {
             return Err(Error::WaitingConfiguration);
         }
         let config = job.config_id.ok_or(Error::Storage)?;
+        let detail = self
+            .store
+            .detail(job.kind.clone(), job.item_id, Some(job.id))
+            .await?;
+        if matches!(detail.page_mode.as_deref(), Some("layout" | "slide")) {
+            pages::classify(self, &job, config, &detail.pages, &cancel).await?;
+            return self.align_pages(&job, &cancel).await;
+        }
+        let (_, batch_size) = self.decisions.execution_limits(config).await?;
         loop {
             if cancel.is_cancelled() {
                 return Err(Error::Cancelled);
@@ -37,14 +43,15 @@ impl Documents {
                 .blocks(job.id, None, true, String::new(), 0)
                 .await?;
             if blocks.is_empty() {
-                return Ok(());
+                return self.align_pages(&job, &cancel).await;
             }
-            let (batch, selected) = batch(blocks)?;
-            let outcome = self.decisions.pinned(config, batch, cancel.clone()).await;
-            let (evaluation, record) = outcome.map_err(|e| match e {
-                model_execution::Error::Cancelled => Error::Cancelled,
-                other => Error::Processing(other.code()),
-            })?;
+            let (batch, selected) = batch(
+                blocks
+                    .into_iter()
+                    .take(if batch_size == 1 { 1 } else { 16 })
+                    .collect(),
+            )?;
+            let (evaluation, record) = self.decisions.pinned(config, batch, cancel.clone()).await?;
             let mut commit = Vec::new();
             for (key, id) in selected {
                 let answer = evaluation
@@ -64,3 +71,5 @@ impl Documents {
 }
 mod request;
 use request::batch;
+
+mod pages;

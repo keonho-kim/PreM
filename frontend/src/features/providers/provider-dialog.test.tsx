@@ -56,7 +56,7 @@ it('keeps the output budget optional and reviews a per-model limit before saving
   mount(provider);
   await user.click(screen.getByRole('button', { name: '연결 주소·인증 변경' }));
   await user.click(screen.getByRole('button', { name: '추가 연결 설정' }));
-  const budget = screen.getByLabelText('작성 출력 한도 (토큰) · 선택');
+  const budget = screen.getByLabelText('최대 출력 토큰 · 선택');
   const timeout = screen.getByLabelText('응답 제한 시간 (초) · 필수');
   await user.clear(timeout);
   await user.type(timeout, '600');
@@ -64,7 +64,7 @@ it('keeps the output budget optional and reviews a per-model limit before saving
   await user.type(budget, '30000');
   await user.keyboard('{Escape}');
   await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
-  expect(screen.getByRole('alertdialog')).toHaveTextContent('작성 출력 한도');
+  expect(screen.getByRole('alertdialog')).toHaveTextContent('최대 출력 토큰');
   expect(saveProvider).not.toHaveBeenCalled();
   vi.mocked(saveProvider).mockResolvedValue({ ...provider, version: 2, max_output_tokens: 30000 });
   await user.click(screen.getByRole('button', { name: '확인하고 저장' }));

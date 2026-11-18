@@ -12,6 +12,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { PrepareModel } from '../prepare-model';
 import { ModelPicker } from '../model-picker';
 import { ProviderConnectionFields } from '../provider-connection-fields';
 import { useProviderForm, type ProviderFormProps } from './use-provider-form';
@@ -102,6 +103,9 @@ export function ProviderForm(props: ProviderFormProps) {
           />
         }
       />
+      {base?.enabled && (base.context_length || base.physical_batch_size) ? (
+        <PrepareModel key={base.config_id} provider={base} disabled={changed || pending} />
+      ) : null}
       {addressRequired && (
         <p role="alert" className="field-hint">
           다른 접속자가 연결 대상을 변경했습니다. 새 키를 적용할 연결 주소를 다시 입력하세요.

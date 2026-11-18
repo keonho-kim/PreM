@@ -14,7 +14,11 @@ fn batch() -> Value {
     json!({"expected_version":1,"batch":{"state":{"r1":"Contents","r2":"Paragraph"},"questions":{"toc1":{"type":"choice","instructions":"Is state.r1 a table of contents?","criteria":{"0":"No","1":"Yes"}},"toc2":{"type":"choice","instructions":"Is state.r2 a table of contents?","criteria":{"0":"No","1":"Yes"}}}}})
 }
 fn settings(base: &str, mode: &str, kind: &str) -> Value {
-    json!({"expected_version":0,"name":kind,"provider_type":kind,"base_url":format!("{base}/{mode}/v1"),"model_identifier":"fixture","timeout_seconds":5,"enabled":true,"api_key":"fixture-key"})
+    let mut body = json!({"expected_version":0,"name":kind,"provider_type":kind,"base_url":format!("{base}/{mode}/v1"),"model_identifier":"fixture","timeout_seconds":5,"enabled":true,"api_key":"fixture-key"});
+    if mode == "llm" {
+        body["max_output_tokens"] = json!(3072);
+    }
+    body
 }
 async fn register(app: &Application, f: &Fixture, mode: &str, kind: &str) -> (Uuid, Value) {
     let id = Uuid::new_v4();

@@ -114,6 +114,8 @@ fn setup(answer: &str) -> (Inference, Arc<Records>, Arc<AtomicUsize>, Uuid) {
             base_url: "http://localhost/".into(),
             model_identifier: "fixture".into(),
             max_output_tokens: None,
+            context_length: None,
+            physical_batch_size: None,
             timeout_seconds: 5,
             enabled: true,
         },

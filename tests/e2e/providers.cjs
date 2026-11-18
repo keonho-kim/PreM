@@ -78,12 +78,14 @@ async function openOptions(page) {
             {
               type: 'llm',
               key: 'download-model',
-              loaded_instances: [{ id: 'ornith-1.5-35b-a3b' }],
+              loaded_instances: [
+                { id: 'ornith-1.5-35b-a3b', config: { physical_batch_size: 2048 } },
+              ],
             },
             {
               type: 'decision',
               key: 'download-decision',
-              loaded_instances: [{ id: 'd3-flash-artemis' }],
+              loaded_instances: [{ id: 'd3-flash-artemis', config: { physical_batch_size: 2048 } }],
             },
             { type: 'embedding', key: 'not-for-this-task' },
           ],
@@ -160,6 +162,7 @@ async function openOptions(page) {
     assert.equal(first.model_identifier, 'ornith-1.5-35b-a3b');
     assert.equal(first.base_url, endpoint + '/v1/');
     assert.equal(first.max_output_tokens, 30000);
+    assert.equal(first.physical_batch_size, 2048);
     assert.equal(first.timeout_seconds, 600);
     await click(a, '연결 주소·인증 변경');
     assert.equal(await a.$eval('input[name="base_url"]', (n) => n.value), '');
@@ -233,7 +236,7 @@ async function openOptions(page) {
     await click(a, '모델 목록 조회');
     await a
       .waitForFunction(() =>
-        document.querySelector('.model-picker [role="status"]')?.textContent.includes('1개 모델'),
+        document.querySelector('.model-picker [role="status"]')?.textContent.includes('2개 모델'),
       )
       .catch(async (error) => {
         console.log(
@@ -278,10 +281,9 @@ async function openOptions(page) {
     assert.equal((await list()).length, 2);
     await click(a, '설정 저장');
     await a.waitForSelector('.provider-summary');
-    assert.equal(
-      (await list()).find((p) => p.provider_type === 'lm_studio_decision').model_identifier,
-      'd3-flash-artemis',
-    );
+    const decision = (await list()).find((p) => p.provider_type === 'lm_studio_decision');
+    assert.equal(decision.model_identifier, 'd3-flash-artemis');
+    assert.equal(decision.physical_batch_size, 2048);
     await setViewport(a, { width: 1440, height: 1000 });
     await a.screenshot({
       path: path.join(projectRoot, 'tests/.artifacts/captures/folio/admin-decision-settings.png'),

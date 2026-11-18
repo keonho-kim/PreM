@@ -59,7 +59,21 @@ async function capture(page, name) {
         key,
         {
           type: 'choice',
-          choice: /목차|Contents|\.\.\./.test(input.state.regions[key].text) ? '1' : '0',
+          choice: input.state.lines
+            ? input.state.lines[Number(key.slice(1))].includes('Delivery Plan')
+              ? '1'
+              : '0'
+            : input.state.current
+              ? JSON.stringify(input.state.current).includes('delivery process')
+                ? key === 'section'
+                  ? (Object.entries(input.questions[key].criteria).find(([, v]) =>
+                      v.includes('Delivery Plan'),
+                    )?.[0] ?? '0')
+                  : '1'
+                : '0'
+              : /목차|Contents|\.\.\./.test(input.state.regions[key].text)
+                ? '1'
+                : '0',
         },
       ]),
     );
@@ -197,6 +211,13 @@ async function capture(page, name) {
       await a.$$eval('.processing-pages img', (nodes) => nodes.every((n) => n.loading === 'lazy')),
       true,
     );
+    const chapterPage = await a.$eval(
+      '.processing-pages article:nth-child(2)',
+      (n) => n.textContent,
+    );
+    assert.match(chapterPage, /Delivery Plan/);
+    assert.match(chapterPage, /인쇄 쪽수 추정 8쪽/);
+    assert.match(chapterPage, /페이지 2/);
     await capture(a, 'space-document-pages.png');
     await setViewport(a, { width: 390, height: 844 });
     assert.equal(await a.$eval('.processing-dialog', (e) => e.scrollWidth <= e.clientWidth), true);

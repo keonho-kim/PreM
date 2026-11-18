@@ -36,6 +36,8 @@ pub(crate) struct Settings {
     pub model_identifier: String,
     pub timeout_seconds: u32,
     pub max_output_tokens: Option<u32>,
+    pub context_length: Option<u32>,
+    pub physical_batch_size: Option<u32>,
     pub enabled: bool,
 }
 impl Settings {
@@ -74,6 +76,26 @@ impl Settings {
                 "판정 전용 연결에는 작성 출력 한도를 지정하지 않습니다.",
             ));
         }
+        if self.context_length.is_some() || self.physical_batch_size.is_some() {
+            if !self.provider_type.is_lm_studio() {
+                return Err(Error::Invalid(
+                    "이 연결은 LM Studio 로딩 설정을 지원하지 않습니다.",
+                ));
+            }
+            if [self.context_length, self.physical_batch_size]
+                .into_iter()
+                .flatten()
+                .any(|n| n == 0 || n > i32::MAX as u32)
+                || self
+                    .context_length
+                    .zip(self.physical_batch_size)
+                    .is_some_and(|(ctx, batch)| batch > ctx)
+            {
+                return Err(Error::Invalid(
+                    "토큰 수는 양의 정수이며 물리 배치는 컨텍스트 길이 이하여야 합니다.",
+                ));
+            }
+        }
         self.base_url = normalize_base_url(&self.base_url)?;
         Ok(self)
     }
@@ -95,6 +117,8 @@ pub(crate) struct Credentials {
     pub model_identifier: String,
     pub timeout_seconds: u32,
     pub max_output_tokens: Option<u32>,
+    pub context_length: Option<u32>,
+    pub physical_batch_size: Option<u32>,
     pub token: Option<SecretString>,
 }
 #[derive(Clone)]
@@ -209,6 +233,8 @@ impl Registry {
             model_identifier: provider.settings.model_identifier,
             timeout_seconds: provider.settings.timeout_seconds,
             max_output_tokens: provider.settings.max_output_tokens,
+            context_length: provider.settings.context_length,
+            physical_batch_size: provider.settings.physical_batch_size,
             token,
         })
     }

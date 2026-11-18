@@ -15,12 +15,15 @@ struct Entry {
     model: &'static str,
     structured: bool,
     key: bool,
+    default_physical_batch_size: Option<u32>,
     structured_reason: Option<&'static str>,
 }
-impl From<ProviderDescriptor> for Entry {
-    fn from(d: ProviderDescriptor) -> Self {
+impl From<ProviderKind> for Entry {
+    fn from(kind: ProviderKind) -> Self {
+        let d: ProviderDescriptor = kind.descriptor();
         Self {
             category: d.category,
+            default_physical_batch_size: kind.is_lm_studio().then_some(2048),
             id: d.id,
             label: d.label,
             protocol: d.protocol,
@@ -39,7 +42,8 @@ pub(super) async fn list() -> impl IntoResponse {
         Json(
             ProviderKind::ALL
                 .iter()
-                .map(|kind| Entry::from(kind.descriptor()))
+                .copied()
+                .map(Entry::from)
                 .collect::<Vec<_>>(),
         ),
     )

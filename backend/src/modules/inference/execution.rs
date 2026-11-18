@@ -76,7 +76,7 @@ impl Inference {
         &self,
         id: Uuid,
         version: i64,
-        input: CompletionInput,
+        mut input: CompletionInput,
         validate: impl FnOnce(&Completion) -> Result<(), Error> + Send + 'static,
     ) -> Result<ExecutionResult, Error> {
         let kind = if input.schema.is_some() {
@@ -102,6 +102,9 @@ impl Inference {
                                 .structured_reason
                                 .unwrap_or("구조화 출력 미지원"),
                         ));
+                    }
+                    if let Some(tokens) = c.max_output_tokens {
+                        input.max_tokens = tokens;
                     }
                     let result = client.complete(c, input).await?;
                     if let Some(schema) = schema {

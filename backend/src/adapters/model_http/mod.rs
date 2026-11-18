@@ -64,3 +64,5 @@ mod json;
 pub(crate) use json::parse as parse_json;
 
 pub(crate) mod lm_studio_models;
+
+pub(crate) mod lm_load;

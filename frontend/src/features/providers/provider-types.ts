@@ -11,6 +11,7 @@ const providerOptionSchema = z.object({
   base: z.url(),
   model: z.string(),
   structured: z.boolean(),
+  default_physical_batch_size: z.number().int().positive().nullish(),
   key: z.boolean(),
   structured_reason: z.string().nullable(),
 });

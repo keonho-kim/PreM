@@ -136,7 +136,9 @@ export function useProviderForm({ provider, catalog, onSaved }: ProviderFormProp
         draft.name !== base.name && '표시 이름',
         draft.provider_type !== base.provider_type && '연결 방식',
         draft.timeout_seconds !== base.timeout_seconds && '응답 제한 시간',
-        draft.max_output_tokens !== base.max_output_tokens && '작성 출력 한도',
+        draft.max_output_tokens !== (base.max_output_tokens ?? null) && '최대 출력 토큰',
+        draft.context_length !== (base.context_length ?? null) && '컨텍스트 길이',
+        draft.physical_batch_size !== (base.physical_batch_size ?? null) && '물리 배치 크기',
         draft.enabled !== base.enabled && '연결 상태',
       ]
         .filter(Boolean)

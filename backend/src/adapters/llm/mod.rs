@@ -49,6 +49,7 @@ impl ModelClient for ProviderClient {
     fn complete(&self, c: Credentials, i: CompletionInput) -> CallFuture<Completion> {
         let t = self.0.clone();
         Box::pin(async move {
+            let c = crate::adapters::model_http::lm_load::resolve(&t, c).await?;
             match c.kind {
                 ProviderKind::Openai => openai::complete(&t, &c, i).await,
                 ProviderKind::Claude => claude::complete(&t, &c, i).await,

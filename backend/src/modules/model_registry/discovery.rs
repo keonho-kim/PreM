@@ -66,6 +66,8 @@ impl Registry {
             model_identifier: String::new(),
             timeout_seconds: 30,
             max_output_tokens: None,
+            context_length: None,
+            physical_batch_size: None,
         })
     }
 }

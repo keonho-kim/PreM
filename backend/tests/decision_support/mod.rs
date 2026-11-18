@@ -97,6 +97,7 @@ async fn evaluate(
     }
     let answer = |choice: &str| json!({"type":"choice","choice":choice,"probabilities":{"0":if choice=="0"{0.9}else{0.1},"1":if choice=="1"{0.9}else{0.1}},"confidence":0.8});
     if llm {
+        assert_eq!(body["max_tokens"], 3072);
         let input: Value =
             serde_json::from_str(body["messages"][1]["content"].as_str().unwrap()).unwrap();
         assert_eq!(input["questions"].as_object().unwrap().len(), 2);

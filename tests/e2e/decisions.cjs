@@ -44,7 +44,17 @@ async function field(page, name, value) {
   const model = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     if (req.url === '/api/v1/models') {
-      res.end(JSON.stringify({ models: [{ type: 'decision', key: 'decision-fixture' }] }));
+      res.end(
+        JSON.stringify({
+          models: [
+            {
+              type: 'decision',
+              key: 'decision-fixture',
+              loaded_instances: [{ id: 'decision-fixture', config: { physical_batch_size: 2048 } }],
+            },
+          ],
+        }),
+      );
       return;
     }
     assert.equal(req.url, '/v1/systemone');

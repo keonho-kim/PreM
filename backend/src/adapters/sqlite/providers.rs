@@ -17,7 +17,7 @@ fn failure(error: rusqlite::Error) -> Error {
     tracing::error!(%error,"provider storage failed");
     Error::Unavailable
 }
-const COLUMNS: &str = "c.connection_id,c.id,c.version,c.name,c.provider_type,c.base_url,c.model_identifier,c.timeout_seconds,c.enabled,c.encrypted_secret,c.created_at,c.max_output_tokens";
+const COLUMNS: &str = "c.connection_id,c.id,c.version,c.name,c.provider_type,c.base_url,c.model_identifier,c.timeout_seconds,c.enabled,c.encrypted_secret,c.created_at,c.max_output_tokens,c.context_length,c.physical_batch_size";
 fn select() -> String {
     format!(
         "SELECT {COLUMNS} FROM llm_provider_config_versions c JOIN llm_provider_connections p ON p.current_config_version_id=c.id"
@@ -42,6 +42,8 @@ fn row(r: &rusqlite::Row<'_>) -> rusqlite::Result<Provider> {
             model_identifier: r.get(6)?,
             timeout_seconds: r.get(7)?,
             max_output_tokens: r.get(11)?,
+            context_length: r.get(12)?,
+            physical_batch_size: r.get(13)?,
             enabled: r.get(8)?,
         },
         encrypted_secret: r.get(9)?,
@@ -98,7 +100,7 @@ impl ProviderStore for SqliteProviders {
     if version.unwrap_or(0)!=expected {return Err(Error::Conflict);}
     if expected==0 {tx.execute("INSERT INTO llm_provider_connections(id) VALUES (?)",[p.id.to_string()]).map_err(failure)?;}
     let s=&p.settings;
-    tx.execute("INSERT INTO llm_provider_config_versions(id,connection_id,version,name,provider_type,base_url,model_identifier,timeout_seconds,enabled,encrypted_secret,created_at,max_output_tokens) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",params![p.config_id.to_string(),p.id.to_string(),p.version,s.name,s.provider_type.as_str(),s.base_url,s.model_identifier,s.timeout_seconds,s.enabled,p.encrypted_secret,p.created_at,s.max_output_tokens]).map_err(failure)?;
+    tx.execute("INSERT INTO llm_provider_config_versions(id,connection_id,version,name,provider_type,base_url,model_identifier,timeout_seconds,enabled,encrypted_secret,created_at,max_output_tokens,context_length,physical_batch_size) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",params![p.config_id.to_string(),p.id.to_string(),p.version,s.name,s.provider_type.as_str(),s.base_url,s.model_identifier,s.timeout_seconds,s.enabled,p.encrypted_secret,p.created_at,s.max_output_tokens,s.context_length,s.physical_batch_size]).map_err(failure)?;
     tx.execute("UPDATE llm_provider_connections SET current_config_version_id=? WHERE id=?",params![p.config_id.to_string(),p.id.to_string()]).map_err(failure)?;
     tx.commit().map_err(failure)?; Ok(p)
  }).await
