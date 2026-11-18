@@ -2,7 +2,7 @@
 // Purpose: Install the exact Chrome for Testing revision supported by the pinned Puppeteer.
 // Pattern: Disposable QA tools only; never include browser downloads in the application runtime.
 // Usage: node scripts/install-test-browser.mjs after installing tests/.artifacts/browser-tools.
-// Related: tests/helpers/browser.cjs, runtime-versions.json, .github/workflows/release.yml.
+// Related: tests/helpers/browser.cjs, runtime-versions.json.
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { writeFile } from 'node:fs/promises';

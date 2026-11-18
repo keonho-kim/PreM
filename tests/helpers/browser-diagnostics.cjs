@@ -1,7 +1,7 @@
 // Purpose: Preserve synthetic browser geometry when remote CI differs from local execution.
 // Pattern: Closing snapshots omit field contents and stay within disposable QA artifacts.
 // Usage: browser.cjs invokes before closing CI sessions; failures never block browser cleanup.
-// Related: .github/workflows/release.yml, tests/.artifacts/captures/ci/.
+// Related: browser.cjs, tests/.artifacts/captures/ci/.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 async function captureBrowser(browser, name, artifacts) {

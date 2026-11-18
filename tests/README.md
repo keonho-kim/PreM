@@ -9,7 +9,7 @@
 | `tests/e2e/`                        | 실제 컴파일 서버와 브라우저 여정; suites.json이 실행 목록 소유 |
 | `tests/.artifacts/`                 | 격리 DB·브라우저 프로필·보고서·캡처·임시 패키지                |
 
-`pnpm check:core`가 개발 품질 검사다. 릴리스 검사 범위는 [운영 절차](../dev-docs/06-development-operations.md#날짜-버전-릴리스)를 따른다. `pnpm test:e2e`는 모든 여정을 순서대로 실행하고 실패 후에도 나머지 결과를 모은다. 특정 검사만 재실행하려면 `pnpm test:e2e projects backup-restore`처럼 이름을 전달한다.
+`pnpm check:core`가 개발 품질 검사다. 번들 검증은 [로컬 패키징](../dev-docs/06-development-operations.md#로컬-패키징)을 따른다. `pnpm test:e2e`는 모든 여정을 순서대로 실행하고 실패 후에도 나머지 결과를 모은다. 특정 검사만 재실행하려면 `pnpm test:e2e projects backup-restore`처럼 이름을 전달한다.
 
 문서 준비에 필요한 공통 판정 연결은 테스트가 명시적으로 설정한다. `configure-documents.cjs`는 실제 문서 파서를 그대로 사용하면서 분류만 로컬 합성 응답으로 고정한다. 모델 미설정 gate는 document-processing 여정과 Rust 해당 테스트가 별도로 검증한다. 합성 테스트는 실모델의 작성 품질이나 업무 문서 전체 정확도를 보장하지 않는다.
 

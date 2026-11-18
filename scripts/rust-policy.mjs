@@ -2,7 +2,7 @@
 // Purpose: Apply identical Rust dependency/license policy checks locally and in CI.
 // Pattern: Only install explicitly requested, pinned development CLIs; no runtime consumer.
 // Usage: node scripts/rust-policy.mjs check|install; install also runs the checks.
-// Related: dev-tools.json, deny.toml, quality-check.sh, release.yml.
+// Related: dev-tools.json, deny.toml, quality-check.sh.
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 const versions = JSON.parse(readFileSync(new URL('./dev-tools.json', import.meta.url), 'utf8'));

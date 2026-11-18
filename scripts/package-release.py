@@ -2,7 +2,7 @@
 # Purpose: Package native PreM with all locally executed runtimes, models and notices.
 # Pattern: Allowlisted bundle roots, contained symlinks, relocatable launcher and complete file hashes.
 # Usage: python3 scripts/package-release.py vYYYYMMDD [binary-path].
-# Related: verify-release.py, release.yml, runtime/document-manifest.json.
+# Related: verify-release.py, runtime/document-manifest.json.
 import hashlib
 import json
 import os

@@ -2,7 +2,7 @@
 # Purpose: Verify a relocated archive without development Node/Python or networked tools.
 # Pattern: Full integrity checks, bundled native/OCR/PPT probes and isolated HTTP restart smoke.
 # Usage: python3 scripts/verify-release.py release/PreM-vYYYYMMDD-os-arch.tar.gz
-# Related: package-release.py, release.yml, tests/fixtures/documents/.
+# Related: package-release.py, tests/fixtures/documents/.
 import hashlib
 import json
 import os

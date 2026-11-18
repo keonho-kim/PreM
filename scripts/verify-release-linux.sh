@@ -2,7 +2,7 @@
 # Purpose: Reject Linux bundles that depend on libraries installed only on the build runner.
 # Pattern: Read-only Ubuntu base, disabled networking and bundled Python for the verification harness.
 # Usage: bash scripts/verify-release-linux.sh release/PreM-vYYYYMMDD-linux-arch.tar.gz
-# Related: verify-release.py, package-release.py, .github/workflows/release.yml.
+# Related: verify-release.py, package-release.py.
 set -euo pipefail
 PREM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PREM_ROOT"

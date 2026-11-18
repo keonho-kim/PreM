@@ -2,7 +2,7 @@
 # Purpose: Check source, runtime, dependencies and integration behavior during development.
 # Pattern: Pinned project dependencies; no development CLI installation during verification.
 # Usage: pnpm check:core after runtime:install for development quality verification.
-# Related: quality-check.sh, .github/workflows/release.yml, tests/helpers/.
+# Related: quality-check.sh, tests/helpers/.
 set -euo pipefail
 cd "$(dirname -- "${BASH_SOURCE[0]}")/.."
 pnpm check:versions

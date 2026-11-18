@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Purpose: Reject drift between version owners, manifests and reviewed runtime adapters.
 // Pattern: Read canonical files; no package installation or generated source mutation.
-// Usage: pnpm check:versions [vYYYYMMDD]; release workflow passes its requested tag.
+// Usage: pnpm check:versions [vYYYYMMDD] to validate the optional package tag.
 // Related: .node-version, rust-toolchain.toml, runtime-versions.json, package.json.
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
