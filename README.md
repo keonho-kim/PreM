@@ -15,13 +15,23 @@ PreM은 팀의 업무 문서를 **근거를 확인할 수 있는 PowerPoint 발�
 
 ## 설치와 실행
 
-지원 환경은 **Apple Silicon macOS**와 **Linux AMD64·ARM64**입니다. Git, Bash, tar, C/C++ 빌드 도구, rustup, Node.js와 npm, uv를 준비하세요. 프로젝트에서 사용하는 버전은 [Rust 설정](rust-toolchain.toml), [Node 설정](.node-version), [pnpm 설정](package.json)에 있습니다.
+지원 환경은 **Apple Silicon macOS**와 **Linux AMD64·ARM64**입니다. Git, Bash, tar, C/C++ 빌드 도구, rustup, Node.js와 npm, uv를 준비하세요. WSL에서는 Linux 터미널에서 `uv --version`을 확인하세요. 이 프로젝트는 CPython 3.13.18 설치에 uv 0.13.6을 사용합니다. 프로젝트에서 사용하는 버전은 [Rust 설정](rust-toolchain.toml), [Node 설정](.node-version), [pnpm 설정](package.json), [런타임 설정](scripts/runtime-versions.json)에 있습니다.
 
 ```sh
 git clone https://github.com/keonho-kim/PreM.git
 cd PreM
 npm install --global pnpm@12.16.1
-pnpm install --frozen-lockfile
+```
+
+**앱만 실행할 때**는 `pnpm install --frozen-lockfile`을 실행하세요. **개발·테스트까지 준비할 때**는 이 명령 대신 아래 스크립트를 실행하세요. [setup.sh](scripts/setup.sh)는 pnpm 의존성을 설치하고 Rust 의존성을 받아 둔 뒤, 테스트·커버리지·의존성 검사 도구를 설치합니다.
+
+```sh
+./scripts/setup.sh
+```
+
+어느 쪽이든 최초 1회 문서 처리 도구와 OCR 모델을 설치한 뒤 서버를 시작합니다. 이미 `setup.sh`를 마쳤다면 여기서 이어가세요.
+
+```sh
 pnpm runtime:install
 pnpm dev
 ```
